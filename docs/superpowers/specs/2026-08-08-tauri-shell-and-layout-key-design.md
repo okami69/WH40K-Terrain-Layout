@@ -23,6 +23,14 @@ GitHub issue: [#2](https://github.com/okami69/WH40K-Terrain-Layout/issues/2)
 - Keep the window resizable. Resizing fits the whole sheet proportionally and preserves its aspect ratio inside the available client area.
 - Clicking the map continues to open a larger viewer for inspecting fine measurements.
 
+## Disposition selectors
+
+- Replace the visible `Left Force Disposition` and `Right Force Disposition` headings with the official icon for the currently selected disposition.
+- Show each icon prominently above its select control and update it immediately when the selection changes.
+- Extract one clean icon asset for each of the five dispositions from Event Companion v1.1; do not redraw or approximate the official symbols.
+- Keep the left and right text labels as visually hidden accessible labels for their select controls.
+- Preserve the disposition name inside each select, so the symbol is reinforcement rather than the only way to identify the selection.
+
 ## Layout key
 
 - Place a compact icon-only button in the upper-right corner of the sheet.
@@ -44,6 +52,7 @@ GitHub issue: [#2](https://github.com/okami69/WH40K-Terrain-Layout/issues/2)
 ## Assets and size
 
 - Package all 45 maps and the page 8 key locally.
+- Package the five official disposition icons locally.
 - Convert packaged PNG assets to lossless WebP and update their paths.
 - Visually compare representative maps with dense labels and the key page before removing packaged PNG copies.
 - Do not package PDFs, extraction tools, tests, Electron, or development dependencies in the installer.
