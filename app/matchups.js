@@ -49,7 +49,7 @@ export function resolveMatchup(left, right) {
     rightMission: match ? item.rightMission : item.leftMission,
     image(layout) {
       if (!['A', 'B', 'C'].includes(layout)) throw new Error(`Unknown layout: ${layout}`);
-      return `assets/layouts/${item.slug}-${layout.toLowerCase()}.png`;
+      return `assets/layouts/${item.slug}-${layout.toLowerCase()}.webp`;
     },
   };
 }

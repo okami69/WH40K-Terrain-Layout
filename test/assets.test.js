@@ -1,19 +1,33 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { matchups, resolveMatchup } from '../app/matchups.js';
 
 test('all matchup layouts have unique image assets', () => {
   const images = new Set();
+  const required = [
+    'app/assets/key/layouts-key.webp',
+    'app/assets/dispositions/take-and-hold.webp',
+    'app/assets/dispositions/purge-the-foe.webp',
+    'app/assets/dispositions/disruption.webp',
+    'app/assets/dispositions/reconnaissance.webp',
+    'app/assets/dispositions/priority-assets.webp',
+  ];
 
   for (const { left, right } of matchups) {
     const matchup = resolveMatchup(left, right);
     for (const layout of ['A', 'B', 'C']) {
       const imagePath = matchup.image(layout);
       images.add(imagePath);
+      assert.match(imagePath, /\.webp$/);
       assert.ok(existsSync(`app/${imagePath}`), `Missing app/${imagePath}`);
+      assert.ok(statSync(`app/${imagePath}`).size > 0, `Empty app/${imagePath}`);
     }
   }
 
   assert.equal(images.size, 45);
+  for (const path of required) {
+    assert.ok(existsSync(path), `Missing ${path}`);
+    assert.ok(statSync(path).size > 0, `Empty ${path}`);
+  }
 });
