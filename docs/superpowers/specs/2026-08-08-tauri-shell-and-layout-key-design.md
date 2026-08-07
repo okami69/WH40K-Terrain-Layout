@@ -42,6 +42,25 @@ GitHub issue: [#2](https://github.com/okami69/WH40K-Terrain-Layout/issues/2)
 - Fit the full key page in the overlay without scrolling or a second zoom mode.
 - Close the overlay with its close control, the Escape key, or a click on the backdrop.
 
+## Mission summaries
+
+- Make each displayed mission name an information target without changing the printed-card appearance.
+- Show a compact one- or two-sentence summary on mouse hover or keyboard focus; click or tap toggles the same summary for touch use.
+- Summarize the practical objective of the mission rather than reproducing the complete card or every VP condition.
+- Keep all 25 summaries in the static matchup data and provide both Russian and English text.
+- Derive the summaries from the Chapter Approved mission cards available through GDM 2026, cross-checking official Warhammer Community previews and Event Companion FAQ entries where available.
+- State in the summary that the physical mission card or official app remains authoritative for exact scoring.
+
+## Language selection
+
+- Replace the current upper-right `Force disposition quick reference` text with a compact `RU / ENG` segmented language control.
+- Translate all live interface text, disposition names, mission names, mission summaries, errors, tooltips, and accessible labels.
+- Keep the official map images and page 8 key image unchanged in English.
+- On first launch, select Russian when the operating-system language begins with `ru`; otherwise select English.
+- Save the user's explicit choice locally and restore it on later launches.
+- Update the document language and all visible text immediately without reloading the app.
+- Store the two small translation dictionaries in the existing JavaScript code; add no localization dependency.
+
 ## Desktop architecture
 
 - Keep the current plain HTML, CSS, JavaScript, matchup data, and Node tests.
@@ -65,6 +84,7 @@ GitHub issue: [#2](https://github.com/okami69/WH40K-Terrain-Layout/issues/2)
 - Preserve native keyboard access, visible focus, minimum 44 px touch targets, and reduced-motion behavior.
 - Retain readable contrast and the current restrained official style.
 - Keep all existing error handling for missing matchup data or assets.
+- Ensure longer Russian labels fit the fixed reference-sheet composition without clipping.
 
 ## Verification
 
@@ -72,6 +92,7 @@ GitHub issue: [#2](https://github.com/okami69/WH40K-Terrain-Layout/issues/2)
 - Add checks for the new WebP paths and key asset.
 - Verify the normal view has no page scrollbars at the reference size and at a smaller laptop-sized viewport.
 - Verify map and key dialogs by mouse and keyboard.
+- Verify both languages, saved language restoration, and mission summaries by hover, focus, click, and tap.
 - Build and launch the Windows installer, then record its compressed and installed sizes.
 
 ## Non-goals
