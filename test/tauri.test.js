@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 
 test('configures a compact Tauri desktop shell', () => {
   const config = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8'));
@@ -22,6 +22,12 @@ test('configures a compact Tauri desktop shell', () => {
     maximized: false,
     fullscreen: false,
   });
+});
+
+test('provides the Windows resource icon required by Tauri', () => {
+  const icon = 'src-tauri/icons/icon.ico';
+  assert.ok(existsSync(icon), `Missing ${icon}`);
+  assert.ok(statSync(icon).size > 0, `Empty ${icon}`);
 });
 
 test('uses Tauri scripts and no Electron packaging dependencies', () => {

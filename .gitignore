@@ -4,4 +4,5 @@ dist/
 tmp/
 output/playwright/
 src-tauri/target/
+src-tauri/gen/
 *.pdf
