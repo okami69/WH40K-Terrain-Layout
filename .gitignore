@@ -3,4 +3,5 @@ node_modules/
 dist/
 tmp/
 output/playwright/
+src-tauri/target/
 *.pdf
