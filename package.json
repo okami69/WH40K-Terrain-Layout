@@ -2,6 +2,7 @@
   "name": "wh40k-terrain-layout",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Offline WH40K terrain layout selector",
   "main": "electron/main.cjs",
   "scripts": {
