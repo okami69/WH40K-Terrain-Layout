@@ -70,16 +70,14 @@ let language = initialLanguage();
 let pinnedSummary = null;
 
 for (const select of [left, right]) {
-  for (const disposition of dispositions) {
-    select.add(new Option('', disposition));
-  }
+  for (const disposition of dispositions) select.add(new Option('', disposition));
 }
 
 left.value = 'disruption';
 right.value = 'priority-assets';
 
 function initialLanguage() {
-  const saved = localStorage.getItem('language');
+  const saved = localStorage.getItem('wh40k-language');
   if (languages.includes(saved)) return saved;
   return navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en';
 }
@@ -121,8 +119,8 @@ function openSummary(trigger, pin = false) {
 
   const rect = trigger.getBoundingClientRect();
   popover.textContent = missions[mission].summary[language];
-  popover.style.left = `${Math.min(rect.left, window.innerWidth - 332)}px`;
-  popover.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 120)}px`;
+  popover.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - 332))}px`;
+  popover.style.top = `${Math.max(12, Math.min(rect.bottom + 8, window.innerHeight - 120))}px`;
   setPopoverVisible(true);
   for (const item of summaryTriggers) item.setAttribute('aria-expanded', String(item === trigger));
   pinnedSummary = pin ? trigger : pinnedSummary;
@@ -155,14 +153,9 @@ function render() {
     document.querySelector('#close').textContent = copy.close;
 
     for (const select of [left, right]) {
-      for (const option of select.options) {
-        option.textContent = labels[option.value][language];
-      }
+      for (const option of select.options) option.textContent = labels[option.value][language];
     }
-
-    for (const button of languageButtons) {
-      button.setAttribute('aria-pressed', String(button.dataset.lang === language));
-    }
+    for (const button of languageButtons) button.setAttribute('aria-pressed', String(button.dataset.lang === language));
 
     error.hidden = true;
     mapButton.hidden = false;
@@ -183,10 +176,7 @@ function render() {
     largeMap.src = image;
     largeMap.alt = `${alt}, ${copy.fullSize}`;
 
-    for (const button of layoutButtons) {
-      button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
-    }
-
+    for (const button of layoutButtons) button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
     if (pinnedSummary) openSummary(pinnedSummary, true);
   } catch (cause) {
     showError(cause instanceof Error ? cause.message : text[language].loadError);
@@ -212,7 +202,7 @@ for (const button of layoutButtons) {
 for (const button of languageButtons) {
   button.addEventListener('click', () => {
     language = button.dataset.lang;
-    localStorage.setItem('language', language);
+    localStorage.setItem('wh40k-language', language);
     render();
   });
 }
@@ -232,10 +222,7 @@ for (const trigger of summaryTriggers) {
   });
 }
 
-map.addEventListener('error', () => {
-  showError(text[language].missingImage(layout));
-});
-
+map.addEventListener('error', () => showError(text[language].missingImage(layout)));
 mapButton.addEventListener('click', () => viewer.showModal());
 document.querySelector('#close').addEventListener('click', () => viewer.close());
 keyButton.addEventListener('click', () => keyViewer.showModal());

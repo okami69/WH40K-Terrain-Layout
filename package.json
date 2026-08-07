@@ -1,6 +1,6 @@
 {
   "name": "wh40k-terrain-layout",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Offline WH40K terrain layout selector",
@@ -10,6 +10,6 @@
     "dist": "npm test && tauri build"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.11.4"
+    "@tauri-apps/cli": "2.11.4"
   }
 }

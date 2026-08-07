@@ -185,7 +185,7 @@ select:disabled {
   margin-top: 4px;
   padding: 0 28px 0 8px;
   border-color: transparent;
-  font-size: 1.35rem;
+  font-size: 1rem;
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
@@ -242,7 +242,7 @@ select:disabled {
 }
 
 .map-panel {
-  height: 794px;
+  height: 636px;
   border-top: 1px solid var(--line);
 }
 
@@ -255,7 +255,7 @@ select:disabled {
 .map-button {
   display: grid;
   width: 100%;
-  height: 752px;
+  height: 590px;
   min-height: 44px;
   padding: 0;
   border: 0;
@@ -268,10 +268,12 @@ select:disabled {
   background: transparent;
 }
 
+#map,
 .map-button img {
   display: block;
   width: 100%;
-  height: 100%;
+  height: 590px;
+  max-height: 100%;
   object-fit: contain;
 }
 
