@@ -6,6 +6,7 @@ test('provides the complete terrain selector UI', () => {
   assert.ok(existsSync('app/index.html'), 'Missing app/index.html');
 
   const html = readFileSync('app/index.html', 'utf8');
+  assert.match(html, /<link rel="icon" href="data:," \/>/);
   assert.match(html, /<select[^>]+id="left"/);
   assert.match(html, /<select[^>]+id="right"/);
   assert.match(html, /<label for="left">Left Force Disposition<\/label>/);
