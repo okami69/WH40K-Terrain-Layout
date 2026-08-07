@@ -255,7 +255,7 @@ select:disabled {
 .map-button {
   display: grid;
   width: 100%;
-  height: 590px;
+  height: 600px;
   min-height: 44px;
   padding: 0;
   border: 0;
@@ -272,7 +272,7 @@ select:disabled {
 .map-button img {
   display: block;
   width: 100%;
-  height: 590px;
+  height: 600px;
   max-height: 100%;
   object-fit: contain;
 }
