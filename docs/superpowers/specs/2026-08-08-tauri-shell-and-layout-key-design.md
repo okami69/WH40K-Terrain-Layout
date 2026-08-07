@@ -1,0 +1,70 @@
+# Tauri Shell and Layout Key - Design
+
+## Goal
+
+Replace Electron with a smaller Tauri 2 desktop shell, keep the existing selector behavior and visual style, show the complete app without scrolling, and add the official layout key from Event Companion v1.1 page 8.
+
+GitHub issue: [#2](https://github.com/okami69/WH40K-Terrain-Layout/issues/2)
+
+## Source of truth
+
+- Continue using only `eng_22_07_warhammer_40,000_event_companion_alyapl19us_b2drgwkji4.pdf`.
+- Layout maps remain sourced from pages 9-53.
+- The new key view is sourced from page 8, titled `LAYOUTS KEY`.
+- The older June PDF remains unused.
+
+## Window and composition
+
+- Treat the complete app as one fixed-proportion reference sheet measuring 768 x 1080 logical pixels.
+- Open the window centered at the largest size that fits the monitor's working area without maximizing it or covering the taskbar.
+- Keep the selector cards, layout selector, map, and margins in the same relative positions as the approved reference image.
+- Fit the complete 768 x 1080 sheet uniformly when the available screen is smaller. Do not scale or distort the map independently.
+- Do not show page-level horizontal or vertical scrollbars in the normal app view.
+- Keep the window resizable. Resizing fits the whole sheet proportionally and preserves its aspect ratio inside the available client area.
+- Clicking the map continues to open a larger viewer for inspecting fine measurements.
+
+## Layout key
+
+- Place a compact icon-only button in the upper-right corner of the sheet.
+- Draw the key icon as an inline SVG so no icon package or font is added.
+- Give the button an accessible name and a short tooltip even though it has no visible text.
+- Open the rendered page 8 key in an in-app overlay sized to the available viewport.
+- Fit the full key page in the overlay without scrolling or a second zoom mode.
+- Close the overlay with its close control, the Escape key, or a click on the backdrop.
+
+## Desktop architecture
+
+- Keep the current plain HTML, CSS, JavaScript, matchup data, and Node tests.
+- Replace the Electron main process and electron-builder packaging with a minimal Tauri 2 shell.
+- Add no Rust commands or Tauri plugins unless the static app demonstrably requires them.
+- Use the operating system WebView2 runtime rather than bundling Chromium.
+- Preserve fully offline operation after installation.
+- Keep the shared web UI portable to a future Tauri Android build; Android packaging is not part of this change.
+
+## Assets and size
+
+- Package all 45 maps and the page 8 key locally.
+- Convert packaged PNG assets to lossless WebP and update their paths.
+- Visually compare representative maps with dense labels and the key page before removing packaged PNG copies.
+- Do not package PDFs, extraction tools, tests, Electron, or development dependencies in the installer.
+- Report both installer size and installed application size after the final build; there is no artificial size target that can override legibility.
+
+## Accessibility and interaction
+
+- Preserve native keyboard access, visible focus, minimum 44 px touch targets, and reduced-motion behavior.
+- Retain readable contrast and the current restrained official style.
+- Keep all existing error handling for missing matchup data or assets.
+
+## Verification
+
+- Existing tests continue to verify all 15 canonical pairs, missions, and A/B/C assets.
+- Add checks for the new WebP paths and key asset.
+- Verify the normal view has no page scrollbars at the reference size and at a smaller laptop-sized viewport.
+- Verify map and key dialogs by mouse and keyboard.
+- Build and launch the Windows installer, then record its compressed and installed sizes.
+
+## Non-goals
+
+- No redesign, new visual theme, account system, server, updater, or additional rules reference.
+- No forced fullscreen or automatic maximization.
+- No Android package in this release.
