@@ -10,7 +10,12 @@ test('provides the complete terrain selector UI', () => {
   assert.match(html, /<select[^>]+id="right"/);
   assert.match(html, /id="left-mission"/);
   assert.match(html, /id="right-mission"/);
-  assert.equal([...html.matchAll(/<button[^>]+data-layout="[ABC]"/g)].length, 3);
+  const layoutButtons = [...html.matchAll(/<button[^>]+data-layout="[ABC]"[^>]*>/g)];
+  assert.equal(layoutButtons.length, 3);
+  assert.deepEqual(
+    layoutButtons.map(([button]) => button.match(/aria-pressed="(true|false)"/)?.[1]),
+    ['true', 'false', 'false'],
+  );
   assert.match(html, /<button[^>]+class="map-button"/);
   assert.match(html, /<img[^>]+id="map"/);
   assert.match(html, /role="alert"/);

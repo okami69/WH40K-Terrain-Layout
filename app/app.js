@@ -47,7 +47,7 @@ function render() {
     largeMap.alt = `${alt}, full size`;
 
     for (const button of layoutButtons) {
-      button.toggleAttribute('aria-pressed', button.dataset.layout === layout);
+      button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
     }
   } catch (cause) {
     showError(cause instanceof Error ? cause.message : 'Unable to load this terrain layout.');
