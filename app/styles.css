@@ -1,4 +1,5 @@
 :root {
+  --sheet-scale: 1;
   --background: oklch(0.975 0 0);
   --surface: oklch(1 0 0);
   --ink: oklch(0.22 0 0);
@@ -24,7 +25,11 @@ html {
 }
 
 body {
+  display: grid;
+  min-height: 100vh;
   margin: 0;
+  overflow: hidden;
+  place-items: center;
   color: var(--ink);
   background: var(--background);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -32,13 +37,8 @@ body {
 
 button,
 select {
-  font: inherit;
-}
-
-button,
-select,
-.map-button {
   min-height: 44px;
+  font: inherit;
 }
 
 button,
@@ -75,100 +75,159 @@ select:disabled {
   outline-offset: 3px;
 }
 
-main {
-  width: min(calc(100% - 32px), 900px);
-  margin: 0 auto;
-  padding: 20px 0 28px;
+.stage {
+  width: calc(768px * var(--sheet-scale));
+  height: calc(1080px * var(--sheet-scale));
+}
+
+.app-sheet {
+  width: 768px;
+  height: 1080px;
+  padding: 18px 32px 24px;
+  overflow: hidden;
+  transform: scale(var(--sheet-scale));
+  transform-origin: top left;
   text-align: center;
 }
 
 .masthead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   border-bottom: 3px solid var(--ink);
   text-align: left;
 }
 
 .masthead h1 {
   margin: 0 0 8px;
-  font-size: 1.5rem;
-  letter-spacing: -0.02em;
+  font-size: 1.55rem;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
-.masthead p {
-  margin: 0 0 8px;
-  color: var(--muted-ink);
-  font-size: 0.875rem;
+.masthead-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.language-toggle {
+  display: flex;
+}
+
+.language-toggle button {
+  min-width: 52px;
+  padding: 0 10px;
+  font-weight: 800;
+}
+
+.language-toggle button:first-child {
+  border-radius: 2px 0 0 2px;
+}
+
+.language-toggle button:last-child {
+  margin-left: -1px;
+  border-radius: 0 2px 2px 0;
+}
+
+.language-toggle button[aria-pressed="true"] {
+  color: var(--surface);
+  background: var(--primary);
+}
+
+.icon-button {
+  display: grid;
+  width: 44px;
+  padding: 0;
+  place-items: center;
 }
 
 .matchup {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
 }
 
 .selector-card {
   min-width: 0;
+  min-height: 204px;
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: var(--surface);
 }
 
-.selector-card label,
+.disposition-icon {
+  display: block;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 8px;
+  object-fit: contain;
+}
+
+.card-kicker,
 .mission-label {
   display: block;
   color: var(--muted-ink);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.selector-card select {
+.disposition-select {
   width: 100%;
-  margin-top: 6px;
-  padding: 0 30px 0 10px;
-  font-weight: 700;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0 28px 0 8px;
+  border-color: transparent;
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .selector-card hr {
-  margin: 12px 0;
+  margin: 10px 0;
   border: 0;
   border-top: 1px solid var(--line-soft);
 }
 
-.selector-card output {
+.mission-summary-trigger {
   display: grid;
-  min-height: 2.6em;
+  width: 100%;
+  min-height: 48px;
   margin-top: 4px;
+  padding: 4px 8px;
   place-items: center;
-  font-size: 0.95rem;
-  line-height: 1.3;
+  border-color: transparent;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.15;
   text-transform: uppercase;
 }
 
 .versus {
   color: var(--primary-dark);
-  font-size: 0.875rem;
+  font-size: 1.55rem;
 }
 
 .layouts {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin: 18px 0 12px;
+  margin: 14px 0 8px;
 }
 
 .layouts button {
-  min-width: 64px;
+  min-width: 68px;
   padding: 0 18px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .layouts button[aria-pressed="true"] {
@@ -183,18 +242,21 @@ main {
 }
 
 .map-panel {
+  height: 794px;
   border-top: 1px solid var(--line);
 }
 
 .map-panel h2 {
-  margin: 12px 0 8px;
+  margin: 8px 0 6px;
   font-size: 1.15rem;
   text-transform: uppercase;
 }
 
 .map-button {
-  display: block;
+  display: grid;
   width: 100%;
+  height: 752px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -208,9 +270,9 @@ main {
 
 .map-button img {
   display: block;
-  width: min(100%, 680px);
-  height: auto;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 #error {
@@ -220,6 +282,21 @@ main {
   color: var(--primary-dark);
   background: var(--error-bg);
   font-weight: 700;
+}
+
+.mission-popover {
+  position: fixed;
+  z-index: 20;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 6px 14px oklch(0 0 0 / 0.18);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  text-align: left;
 }
 
 dialog {
@@ -250,14 +327,17 @@ dialog h2 {
   text-transform: uppercase;
 }
 
-#close {
+#close,
+#layout-key-close {
   padding: 0 18px;
 }
 
-#large-map {
+#large-map,
+#layout-key-image {
   display: block;
   width: 100%;
-  height: auto;
+  max-height: calc(100vh - 98px);
+  object-fit: contain;
 }
 
 [hidden] {
@@ -274,57 +354,6 @@ dialog h2 {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-@media (max-width: 520px) {
-  main {
-    width: min(calc(100% - 12px), 900px);
-    padding-top: 8px;
-  }
-
-  .masthead {
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .masthead h1 {
-    font-size: 1.15rem;
-  }
-
-  .masthead p {
-    max-width: 15ch;
-    font-size: 0.72rem;
-    text-align: right;
-  }
-
-  .matchup {
-    grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
-    gap: 4px;
-  }
-
-  .selector-card {
-    padding: 8px 5px;
-  }
-
-  .selector-card label,
-  .mission-label {
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-  }
-
-  .selector-card select,
-  .selector-card output {
-    padding: 0 20px 0 4px;
-    font-size: 0.875rem;
-  }
-
-  .layouts {
-    margin-top: 12px;
-  }
-
-  .layouts button {
-    min-width: 56px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

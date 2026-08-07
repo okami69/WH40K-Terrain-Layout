@@ -8,47 +8,86 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main>
-    <header class="masthead">
-      <h1>Terrain Layout</h1>
-      <p>Force disposition quick reference</p>
+  <div class="stage">
+    <main id="sheet" class="app-sheet" width="768" height="1080" aria-label="Terrain Layout">
+      <header class="masthead">
+        <h1 id="app-title">Terrain Layout</h1>
+        <div class="masthead-tools">
+          <div id="language-toggle" class="language-toggle" role="group" aria-label="Language">
+            <button type="button" data-lang="ru">RU</button>
+            <button type="button" data-lang="en">ENG</button>
+          </div>
+          <button id="layout-key-button" class="icon-button" type="button" aria-label="Open layouts key" title="Open layouts key">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M8 9h8M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="matchup" aria-label="Force disposition matchup">
+        <article class="selector-card">
+          <img id="left-icon" class="disposition-icon" alt="">
+          <label class="card-kicker" for="left">Force Disposition</label>
+          <select id="left" class="disposition-select" aria-label="Left Force Disposition"></select>
+          <hr>
+          <span class="mission-label">Mission</span>
+          <button
+            id="left-mission"
+            class="mission-summary-trigger"
+            type="button"
+            aria-controls="mission-popover"
+            aria-expanded="false"
+            data-side="left"
+          ></button>
+        </article>
+
+        <b class="versus" aria-hidden="true">VS</b>
+
+        <article class="selector-card">
+          <img id="right-icon" class="disposition-icon" alt="">
+          <label class="card-kicker" for="right">Force Disposition</label>
+          <select id="right" class="disposition-select" aria-label="Right Force Disposition"></select>
+          <hr>
+          <span class="mission-label">Mission</span>
+          <button
+            id="right-mission"
+            class="mission-summary-trigger"
+            type="button"
+            aria-controls="mission-popover"
+            aria-expanded="false"
+            data-side="right"
+          ></button>
+        </article>
+      </section>
+
+      <div class="layouts" role="group" aria-label="Terrain layout">
+        <button type="button" data-layout="A" aria-pressed="true">A</button>
+        <button type="button" data-layout="B" aria-pressed="false">B</button>
+        <button type="button" data-layout="C" aria-pressed="false">C</button>
+      </div>
+
+      <section class="map-panel" aria-labelledby="layout-title">
+        <h2 id="layout-title">Layout A</h2>
+        <button class="map-button" type="button" aria-label="Open layout at full size">
+          <img id="map" alt="" aria-describedby="map-description">
+        </button>
+        <p id="map-description" class="visually-hidden">Official terrain placement diagram. Terrain footprints, objective positions and exact edge measurements are printed in the image.</p>
+        <p id="error" role="alert" hidden></p>
+      </section>
+    </main>
+  </div>
+
+  <div id="mission-popover" class="mission-popover" popover="manual" role="tooltip" hidden></div>
+
+  <dialog id="layout-key-viewer" aria-labelledby="layout-key-title">
+    <header>
+      <h2 id="layout-key-title">Layouts Key</h2>
+      <button id="layout-key-close" type="button">Close</button>
     </header>
-
-    <section class="matchup" aria-label="Force disposition matchup">
-      <article class="selector-card">
-        <label for="left">Left Force Disposition</label>
-        <select id="left"></select>
-        <hr>
-        <span class="mission-label">Mission</span>
-        <output id="left-mission" for="left right" aria-live="polite" aria-label="Left Mission"></output>
-      </article>
-
-      <b class="versus" aria-hidden="true">VS</b>
-
-      <article class="selector-card">
-        <label for="right">Right Force Disposition</label>
-        <select id="right"></select>
-        <hr>
-        <span class="mission-label">Mission</span>
-        <output id="right-mission" for="left right" aria-live="polite" aria-label="Right Mission"></output>
-      </article>
-    </section>
-
-    <div class="layouts" role="group" aria-label="Terrain layout">
-      <button type="button" data-layout="A" aria-pressed="true">A</button>
-      <button type="button" data-layout="B" aria-pressed="false">B</button>
-      <button type="button" data-layout="C" aria-pressed="false">C</button>
-    </div>
-
-    <section class="map-panel" aria-labelledby="layout-title">
-      <h2 id="layout-title">Layout A</h2>
-      <button class="map-button" type="button" aria-label="Open layout at full size">
-        <img id="map" alt="" aria-describedby="map-description">
-      </button>
-      <p id="map-description" class="visually-hidden">Official terrain placement diagram. Terrain footprints, objective positions and exact edge measurements are printed in the image.</p>
-      <p id="error" role="alert" hidden></p>
-    </section>
-  </main>
+    <img id="layout-key-image" src="assets/key/layouts-key.webp" alt="Official layouts key">
+  </dialog>
 
   <dialog id="viewer" aria-labelledby="viewer-title">
     <header>
