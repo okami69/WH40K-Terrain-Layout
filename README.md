@@ -23,7 +23,7 @@ The app works offline. Its bundled maps and selection logic run locally, and it 
 Prerequisites: Node.js with npm. Python is needed only to re-extract the bundled layout images from the source PDF.
 
 ```powershell
-npm.cmd ci
+npm.cmd install
 npm.cmd test
 npm.cmd start
 npm.cmd run dist
