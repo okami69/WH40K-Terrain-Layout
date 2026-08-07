@@ -32,9 +32,9 @@ The Tauri NSIS installer is written under:
 
 `src-tauri/target/release/bundle/nsis/`
 
-Current verification note: Node tests and Playwright UI checks pass. `cargo check` and `npm.cmd run dist` require MSVC `link.exe`; if it is missing, install the C++ workload from an elevated shell or Visual Studio Installer.
+Current verification note: `npm.cmd test`, `cargo check --manifest-path src-tauri/Cargo.toml`, `npm.cmd run dist`, and the final Playwright smoke pass completed on Windows with the MSVC toolchain. The Playwright smoke was run from a temporary external runner against the packaged `app/` files and checked the 768 x 1080 reference viewport, laptop-scale viewport, RU/ENG persistence, mission popovers, and key/map dialogs.
 
-v0.1.0 Electron baseline: 122.59 MiB installer and about 375 MiB unpacked. v0.2.0 installer and installed sizes must be recorded after the MSVC toolchain can build the NSIS package.
+v0.1.0 Electron baseline: 122.59 MiB installer and about 375 MiB unpacked. v0.2.0 Tauri result: 21.11 MiB NSIS installer and 23.23 MiB installed under `%LOCALAPPDATA%\Programs\WH40K Terrain Layout`.
 
 ## Re-extract assets
 
