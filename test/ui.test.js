@@ -12,6 +12,8 @@ test('provides the complete terrain selector UI', () => {
   assert.match(html, /<label for="right">Right Force Disposition<\/label>/);
   assert.match(html, /<output[^>]+id="left-mission"[^>]+for="left right"[^>]+aria-live="polite"/);
   assert.match(html, /<output[^>]+id="right-mission"[^>]+for="left right"[^>]+aria-live="polite"/);
+  assert.match(html, /<output[^>]+id="left-mission"[^>]+aria-label="Left Mission"/);
+  assert.match(html, /<output[^>]+id="right-mission"[^>]+aria-label="Right Mission"/);
   const layoutButtons = [...html.matchAll(/<button[^>]+data-layout="[ABC]"[^>]*>/g)];
   assert.equal(layoutButtons.length, 3);
   assert.deepEqual(
@@ -31,7 +33,10 @@ test('provides the complete terrain selector UI', () => {
   assert.ok(existsSync('app/app.js'), 'Missing app/app.js');
 
   const css = readFileSync('app/styles.css', 'utf8');
-  assert.match(css, /\.layouts button\[aria-pressed="true"\]\s*\{[^}]*outline:\s*3px/);
+  const selectedRule = css.match(/\.layouts button\[aria-pressed="true"\]\s*\{([^}]*)}/)?.[1];
+  assert.ok(selectedRule, 'Missing selected layout rule');
+  assert.doesNotMatch(selectedRule, /outline/);
+  assert.match(selectedRule, /box-shadow:\s*inset 0 -4px 0 currentColor/);
   assert.match(css, /@media \(max-width: 520px\)[\s\S]*?\.selector-card label[\s\S]*?font-size:\s*0\.75rem/);
   assert.match(css, /@media \(max-width: 520px\)[\s\S]*?\.selector-card select,[\s\S]*?\.selector-card output[\s\S]*?font-size:\s*0\.875rem/);
 });
