@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "WH40K Terrain Layout",
+  "version": "0.2.0",
+  "identifier": "com.okami69.wh40kterrainlayout",
+  "build": {
+    "frontendDist": "../app"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "WH40K Terrain Layout",
+        "width": 768,
+        "height": 1080,
+        "minWidth": 360,
+        "minHeight": 640,
+        "center": true,
+        "preventOverflow": true,
+        "resizable": true,
+        "maximized": false,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "both"
+      }
+    }
+  }
+}

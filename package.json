@@ -4,30 +4,12 @@
   "private": true,
   "type": "module",
   "description": "Offline WH40K terrain layout selector",
-  "main": "electron/main.cjs",
   "scripts": {
-    "start": "electron .",
+    "start": "tauri dev",
     "test": "node --test",
-    "dist": "npm test && electron-builder --win nsis"
+    "dist": "npm test && tauri build"
   },
   "devDependencies": {
-    "electron": "43.3.0",
-    "electron-builder": "26.15.3"
-  },
-  "build": {
-    "appId": "com.okami69.wh40kterrainlayout",
-    "productName": "WH40K Terrain Layout",
-    "files": [
-      "app/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "@tauri-apps/cli": "^2.11.4"
   }
 }

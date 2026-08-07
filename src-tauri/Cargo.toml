@@ -1,0 +1,18 @@
+[package]
+name = "wh40k-terrain-layout"
+version = "0.2.0"
+description = "Offline WH40K terrain layout selector"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+tauri = { version = "2.11.5", features = [] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
