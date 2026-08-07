@@ -25,11 +25,13 @@ GitHub issue: [#2](https://github.com/okami69/WH40K-Terrain-Layout/issues/2)
 
 ## Disposition selectors
 
-- Replace the visible `Left Force Disposition` and `Right Force Disposition` headings with the official icon for the currently selected disposition.
-- Show each icon prominently above its select control and update it immediately when the selection changes.
+- Reproduce both selector cards in the visual structure used by the Event Companion pages: official icon, `FORCE DISPOSITION`, large disposition name, horizontal divider, `MISSION`, and large mission name.
+- Use the large disposition name itself as the native selection control instead of showing a separate conventional select box.
+- Keep the control visually integrated with the printed card while retaining a clear dropdown indicator, keyboard operation, hover state, and visible focus.
+- Update the disposition name, official icon, and derived mission together immediately after a selection changes.
 - Extract one clean icon asset for each of the five dispositions from Event Companion v1.1; do not redraw or approximate the official symbols.
-- Keep the left and right text labels as visually hidden accessible labels for their select controls.
-- Preserve the disposition name inside each select, so the symbol is reinforcement rather than the only way to identify the selection.
+- Give the two controls distinct visually hidden accessible labels for the left and right force dispositions.
+- Keep the icon as reinforcement rather than the only way to identify the selected disposition.
 
 ## Layout key
 
