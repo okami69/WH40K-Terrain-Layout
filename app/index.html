@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WH40K Terrain Layout</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <h1>Terrain Layout</h1>
+      <p>Force disposition quick reference</p>
+    </header>
+
+    <section class="matchup" aria-label="Force disposition matchup">
+      <article class="selector-card">
+        <label for="left">Force Disposition</label>
+        <select id="left"></select>
+        <hr>
+        <span class="mission-label">Mission</span>
+        <strong id="left-mission"></strong>
+      </article>
+
+      <b class="versus" aria-hidden="true">VS</b>
+
+      <article class="selector-card">
+        <label for="right">Force Disposition</label>
+        <select id="right"></select>
+        <hr>
+        <span class="mission-label">Mission</span>
+        <strong id="right-mission"></strong>
+      </article>
+    </section>
+
+    <nav class="layouts" aria-label="Terrain layout">
+      <button type="button" data-layout="A" aria-pressed="true">A</button>
+      <button type="button" data-layout="B">B</button>
+      <button type="button" data-layout="C">C</button>
+    </nav>
+
+    <section class="map-panel" aria-labelledby="layout-title">
+      <h2 id="layout-title">Layout A</h2>
+      <button class="map-button" type="button" aria-label="Open layout at full size">
+        <img id="map" alt="">
+      </button>
+      <p id="error" role="alert" hidden></p>
+    </section>
+  </main>
+
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <header>
+      <h2 id="viewer-title">Layout A</h2>
+      <button id="close" type="button">Close</button>
+    </header>
+    <img id="large-map" alt="">
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
