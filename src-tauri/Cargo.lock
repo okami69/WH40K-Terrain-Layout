@@ -3840,7 +3840,7 @@ dependencies = [
 
 [[package]]
 name = "wh40k-terrain-layout"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "tauri",
  "tauri-build",

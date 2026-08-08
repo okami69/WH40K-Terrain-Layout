@@ -50,8 +50,10 @@ const rightIcon = document.querySelector('#right-icon');
 const leftMission = document.querySelector('#left-mission');
 const rightMission = document.querySelector('#right-mission');
 const title = document.querySelector('#layout-title');
-const appTitle = document.querySelector('#app-title');
+const terrainRulesButton = document.querySelector('#terrain-rules-button');
 const viewerTitle = document.querySelector('#viewer-title');
+const terrainRulesTitle = document.querySelector('#terrain-rules-title');
+const terrainRulesImage = document.querySelector('#terrain-rules-image');
 const keyTitle = document.querySelector('#layout-key-title');
 const mapButton = document.querySelector('.map-button');
 const map = document.querySelector('#map');
@@ -60,6 +62,7 @@ const keyButton = document.querySelector('#layout-key-button');
 const keyImage = document.querySelector('#layout-key-image');
 const error = document.querySelector('#error');
 const viewer = document.querySelector('#viewer');
+const terrainRulesViewer = document.querySelector('#terrain-rules-viewer');
 const keyViewer = document.querySelector('#layout-key-viewer');
 const popover = document.querySelector('#mission-popover');
 const layoutButtons = [...document.querySelectorAll('[data-layout]')];
@@ -119,8 +122,9 @@ function openSummary(trigger, pin = false) {
 
   const rect = trigger.getBoundingClientRect();
   popover.textContent = missions[mission].summary[language];
-  popover.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - 332))}px`;
-  popover.style.top = `${Math.max(12, Math.min(rect.bottom + 8, window.innerHeight - 120))}px`;
+  popover.style.width = `${rect.width}px`;
+  popover.style.left = `${rect.left}px`;
+  popover.style.top = `${rect.bottom + 8}px`;
   setPopoverVisible(true);
   for (const item of summaryTriggers) item.setAttribute('aria-expanded', String(item === trigger));
   pinnedSummary = pin ? trigger : pinnedSummary;
@@ -136,7 +140,8 @@ function render() {
     const alt = copy.mapAlt(leftLabel, rightLabel, layout);
 
     document.documentElement.lang = language;
-    appTitle.textContent = copy.title;
+    terrainRulesButton.textContent = copy.title;
+    terrainRulesButton.setAttribute('aria-label', copy.title);
     document.querySelector('#language-toggle').setAttribute('aria-label', copy.language);
     document.querySelector('.layouts').setAttribute('aria-label', copy.layoutGroup);
     document.querySelectorAll('.card-kicker').forEach(item => { item.textContent = copy.forceDisposition; });
@@ -147,6 +152,9 @@ function render() {
     keyButton.setAttribute('aria-label', copy.openKey);
     keyButton.title = copy.openKey;
     mapButton.setAttribute('aria-label', copy.openMap);
+    terrainRulesTitle.textContent = copy.title;
+    terrainRulesImage.alt = copy.mapDescription;
+    document.querySelector('#terrain-rules-close').textContent = copy.close;
     keyTitle.textContent = copy.key;
     keyImage.alt = copy.keyAlt;
     document.querySelector('#layout-key-close').textContent = copy.close;
@@ -225,6 +233,8 @@ for (const trigger of summaryTriggers) {
 map.addEventListener('error', () => showError(text[language].missingImage(layout)));
 mapButton.addEventListener('click', () => viewer.showModal());
 document.querySelector('#close').addEventListener('click', () => viewer.close());
+terrainRulesButton.addEventListener('click', () => terrainRulesViewer.showModal());
+document.querySelector('#terrain-rules-close').addEventListener('click', () => terrainRulesViewer.close());
 keyButton.addEventListener('click', () => keyViewer.showModal());
 document.querySelector('#layout-key-close').addEventListener('click', () => keyViewer.close());
 document.addEventListener('keydown', event => {
@@ -232,6 +242,7 @@ document.addEventListener('keydown', event => {
 });
 window.addEventListener('resize', fitSheet);
 setDialogBackdropClose(viewer);
+setDialogBackdropClose(terrainRulesViewer);
 setDialogBackdropClose(keyViewer);
 
 fitSheet();

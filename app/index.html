@@ -11,7 +11,9 @@
   <div class="stage">
     <main id="sheet" class="app-sheet" width="768" height="1080" aria-label="Terrain Layout">
       <header class="masthead">
-        <h1 id="app-title">Terrain Layout</h1>
+        <h1>
+          <button id="terrain-rules-button" class="title-button" type="button">Terrain Layout</button>
+        </h1>
         <div class="masthead-tools">
           <div id="language-toggle" class="language-toggle" role="group" aria-label="Language">
             <button type="button" data-lang="ru">RU</button>
@@ -80,6 +82,14 @@
   </div>
 
   <div id="mission-popover" class="mission-popover" popover="manual" role="tooltip" hidden></div>
+
+  <dialog id="terrain-rules-viewer" aria-labelledby="terrain-rules-title">
+    <header>
+      <h2 id="terrain-rules-title">Terrain Layouts</h2>
+      <button id="terrain-rules-close" type="button">Close</button>
+    </header>
+    <img id="terrain-rules-image" src="assets/key/terrain-rules.webp" alt="Official terrain layouts rules and recommended terrain area footprints">
+  </dialog>
 
   <dialog id="layout-key-viewer" aria-labelledby="layout-key-title">
     <header>
