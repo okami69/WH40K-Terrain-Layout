@@ -27,6 +27,9 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<script[^>]+type="module"[^>]+src="app\.js"/);
 
   const css = readFileSync('app/styles.css', 'utf8');
+  const dispositionRule = css.match(/\.disposition-select\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(dispositionRule, /\bpadding:\s*0 28px;/);
+  assert.match(dispositionRule, /\btext-align:\s*center;/);
   const popoverRule = css.match(/\.mission-popover\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(popoverRule, /\binset:\s*auto;/);
   assert.match(popoverRule, /\bmargin:\s*0;/);
