@@ -288,6 +288,7 @@ select:disabled {
 }
 
 .disposition-select option {
+  padding-inline-end: 30px;
   text-align: center;
 }
 
