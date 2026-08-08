@@ -9,6 +9,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.ok(existsSync('app/assets/key/terrain-rules.webp'), 'Missing app/assets/key/terrain-rules.webp');
 
   const html = readFileSync('app/index.html', 'utf8');
+  assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">/);
   assert.match(html, /<main[^>]+id="sheet"[^>]+class="app-sheet"/);
   assert.match(html, /width="768" height="1080"/);
   assert.match(html, /data-lang="ru"[^>]*>RU<\/button>/);
@@ -31,6 +32,11 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<script[^>]+type="module"[^>]+src="app\.js"/);
 
   const css = readFileSync('app/styles.css', 'utf8');
+  assert.match(css, /min-height:\s*100dvh/);
+  assert.match(css, /padding-top:\s*env\(safe-area-inset-top\)/);
+  assert.match(css, /padding-right:\s*env\(safe-area-inset-right\)/);
+  assert.match(css, /padding-bottom:\s*env\(safe-area-inset-bottom\)/);
+  assert.match(css, /padding-left:\s*env\(safe-area-inset-left\)/);
   assert.match(css, /\.title-button\s*\{[\s\S]*font-size:\s*1\.55rem/);
   assert.match(css, /#terrain-rules-viewer\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /#terrain-rules-image\s*\{[\s\S]*height:\s*auto/);
@@ -60,6 +66,9 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 
   const js = readFileSync('app/app.js', 'utf8');
+  assert.match(js, /document\.documentElement\.clientWidth/);
+  assert.match(js, /document\.documentElement\.clientHeight/);
+  assert.match(js, /window\.visualViewport\?\.addEventListener\('resize', fitSheet\)/);
   assert.match(js, /const terrainRulesButton = document\.querySelector\('#terrain-rules-button'\)/);
   assert.match(js, /const terrainRulesViewer = document\.querySelector\('#terrain-rules-viewer'\)/);
   assert.match(js, /terrainRulesImage\.alt = copy\.mapDescription/);

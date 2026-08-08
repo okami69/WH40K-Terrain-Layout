@@ -85,8 +85,17 @@ function initialLanguage() {
   return navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en';
 }
 
+function cssPixels(value) {
+  return Number.parseFloat(value) || 0;
+}
+
 function fitSheet() {
-  const scale = Math.min(window.innerWidth / 768, window.innerHeight / 1080);
+  const bodyStyle = getComputedStyle(document.body);
+  const horizontalInsets = cssPixels(bodyStyle.paddingLeft) + cssPixels(bodyStyle.paddingRight);
+  const verticalInsets = cssPixels(bodyStyle.paddingTop) + cssPixels(bodyStyle.paddingBottom);
+  const availableWidth = document.documentElement.clientWidth - horizontalInsets;
+  const availableHeight = document.documentElement.clientHeight - verticalInsets;
+  const scale = Math.min(availableWidth / 768, availableHeight / 1080);
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
 }
 
@@ -241,6 +250,7 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeSummary();
 });
 window.addEventListener('resize', fitSheet);
+window.visualViewport?.addEventListener('resize', fitSheet);
 setDialogBackdropClose(viewer);
 setDialogBackdropClose(terrainRulesViewer);
 setDialogBackdropClose(keyViewer);
