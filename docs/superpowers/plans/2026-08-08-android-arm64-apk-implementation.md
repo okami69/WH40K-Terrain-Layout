@@ -6,7 +6,7 @@
 
 **Architecture:** Reuse the existing static HTML/CSS/JavaScript frontend and Tauri 2 Rust shell. Commit the generated Tauri Android project, configure its activity and release signing, and build only `aarch64` with a split-per-ABI APK; keep the keystore and signing properties outside Git.
 
-**Tech Stack:** Tauri 2.11, Rust stable, Android Studio/JBR, Android SDK 36, Build Tools 36.0.0, NDK r29, Gradle/Kotlin, Node test runner, Playwright, ADB.
+**Tech Stack:** Tauri 2.11, Rust stable, Android Studio 2026.1 with its bundled JBR 25 for the IDE, Microsoft OpenJDK 21 for Gradle/Tauri, Android SDK 36, Build Tools 36.0.0, NDK r29, Gradle/Kotlin, Node test runner, Playwright, ADB.
 
 ---
 
@@ -273,7 +273,7 @@ git commit -m "fix: fit Android portrait safe areas refs #7"
 ### Task 3: Install and verify the Android build toolchain
 
 **Files:**
-- No repository files.
+- Modify: `docs/superpowers/plans/2026-08-08-android-arm64-apk-implementation.md`
 
 - [ ] **Step 1: Verify the expected tools are initially unavailable**
 
@@ -294,9 +294,10 @@ Run:
 
 ```powershell
 winget install --exact --id Google.AndroidStudio --accept-package-agreements --accept-source-agreements
+winget install --exact --id Microsoft.OpenJDK.21 --accept-package-agreements --accept-source-agreements
 ```
 
-Expected: Android Studio installs successfully under `C:\Program Files\Android\Android Studio`.
+Expected: Android Studio installs successfully under `C:\Program Files\Android\Android Studio`, and Microsoft OpenJDK 21 installs under `C:\Program Files\Microsoft`.
 
 - [ ] **Step 3: Install the exact stable SDK components**
 
@@ -315,7 +316,7 @@ Expected: all licenses are accepted and the four packages install without errors
 Run:
 
 ```powershell
-$javaHome = 'C:\Program Files\Android\Android Studio\jbr'
+$javaHome = 'C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot'
 $androidHome = "$env:LOCALAPPDATA\Android\Sdk"
 $ndkHome = "$androidHome\ndk\29.0.14206865"
 [Environment]::SetEnvironmentVariable('JAVA_HOME', $javaHome, 'User')
@@ -327,7 +328,7 @@ $env:NDK_HOME = $ndkHome
 $env:Path = "C:\Users\okami\.cargo\bin;$javaHome\bin;$androidHome\platform-tools;$env:Path"
 ```
 
-Expected: the variables point to existing directories.
+Expected: the variables point to existing directories and `& "$env:JAVA_HOME\bin\java.exe" -version` reports Microsoft OpenJDK 21. Android Studio 2026.1 continues to use its bundled JBR 25 internally; do not persist that JBR as the Gradle/Tauri `JAVA_HOME` because generated Gradle 8.14.3 cannot run on Java 25.
 
 - [ ] **Step 5: Install only the Rust Android ARM64 target and verify Tauri**
 

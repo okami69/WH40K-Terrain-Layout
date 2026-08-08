@@ -1,4 +1,3 @@
-import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
@@ -28,15 +27,23 @@ android {
     signingConfigs {
         create("release") {
             val keystorePropertiesFile = rootProject.file("keystore.properties")
-            val keystoreProperties = Properties()
-            if (keystorePropertiesFile.exists()) {
-                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+            require(keystorePropertiesFile.isFile) {
+                "src-tauri/gen/android/keystore.properties is required for Android release signing"
             }
+            val keystoreProperties = Properties().apply {
+                keystorePropertiesFile.inputStream().use { load(it) }
+            }
+            fun requiredProperty(name: String) = requireNotNull(
+                keystoreProperties.getProperty(name)?.takeIf { it.isNotBlank() },
+            ) {
+                "Missing required Android release signing property '$name' in src-tauri/gen/android/keystore.properties"
+            }
+            val password = requiredProperty("password")
 
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["password"] as String
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["password"] as String
+            keyAlias = requiredProperty("keyAlias")
+            keyPassword = password
+            storeFile = file(requiredProperty("storeFile"))
+            storePassword = password
         }
     }
     buildTypes {
