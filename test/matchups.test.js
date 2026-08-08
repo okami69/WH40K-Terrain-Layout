@@ -19,6 +19,38 @@ const expectedDispositions = [
   'priority-assets',
 ];
 
+const expectedLayoutIdsByDeployment = {
+  'crucible-of-battle': [
+    'disruption--disruption-a', 'priority-assets--priority-assets-b', 'purge-the-foe--reconnaissance-c',
+    'reconnaissance--priority-assets-a', 'reconnaissance--reconnaissance-b', 'take-and-hold--disruption-b',
+    'take-and-hold--priority-assets-a',
+  ],
+  'dawn-of-war': [
+    'disruption--reconnaissance-b', 'purge-the-foe--priority-assets-a', 'purge-the-foe--reconnaissance-b',
+    'take-and-hold--priority-assets-c', 'take-and-hold--reconnaissance-b', 'take-and-hold--take-and-hold-b',
+  ],
+  'hammer-and-anvil': [
+    'purge-the-foe--priority-assets-c', 'purge-the-foe--reconnaissance-a', 'take-and-hold--disruption-c',
+    'take-and-hold--priority-assets-b', 'take-and-hold--purge-the-foe-c',
+  ],
+  'search-and-destroy': [
+    'disruption--priority-assets-c', 'disruption--reconnaissance-c', 'purge-the-foe--disruption-a',
+    'purge-the-foe--priority-assets-b', 'purge-the-foe--purge-the-foe-a', 'take-and-hold--purge-the-foe-b',
+    'take-and-hold--reconnaissance-c', 'take-and-hold--take-and-hold-c',
+  ],
+  'sweeping-engagement': [
+    'disruption--disruption-c', 'disruption--priority-assets-a', 'priority-assets--priority-assets-a',
+    'purge-the-foe--disruption-c', 'purge-the-foe--purge-the-foe-c', 'reconnaissance--priority-assets-c',
+    'reconnaissance--reconnaissance-a', 'take-and-hold--disruption-a', 'take-and-hold--purge-the-foe-a',
+  ],
+  'tipping-point': [
+    'disruption--disruption-b', 'disruption--priority-assets-b', 'disruption--reconnaissance-a',
+    'priority-assets--priority-assets-c', 'purge-the-foe--disruption-b', 'purge-the-foe--purge-the-foe-b',
+    'reconnaissance--priority-assets-b', 'reconnaissance--reconnaissance-c', 'take-and-hold--reconnaissance-a',
+    'take-and-hold--take-and-hold-a',
+  ],
+};
+
 test('contains every canonical disposition matchup', () => {
   assert.deepEqual(dispositions, expectedDispositions);
   assert.deepEqual(
@@ -75,6 +107,12 @@ test('catalogs all 45 layouts by deployment', () => {
       'tipping-point': 10,
     },
   );
+  for (const [deployment, expectedIds] of Object.entries(expectedLayoutIdsByDeployment)) {
+    assert.deepEqual(
+      layoutCatalog.filter(item => item.deployment === deployment).map(item => item.id).sort(),
+      expectedIds,
+    );
+  }
 
   for (const item of layoutCatalog) {
     assert.ok(matchups.some(matchup => matchup.slug === item.slug), `${item.id} has unknown matchup`);
