@@ -291,13 +291,6 @@ select:disabled {
   text-align: center;
 }
 
-.layout-source {
-  margin: -2px 0 6px;
-  color: var(--muted-ink);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
 .map-button {
   display: grid;
   width: 100%;
@@ -546,10 +539,6 @@ dialog h2 {
 
   .map-panel h2 {
     margin: 4px 0;
-  }
-
-  .layout-source {
-    margin: -2px 0 0;
   }
 
   .map-panel,

@@ -79,7 +79,6 @@ const keyButton = document.querySelector('#layout-key-button');
 const keyImage = document.querySelector('#layout-key-image');
 const error = document.querySelector('#error');
 const freeLayoutButton = document.querySelector('#free-layout-button');
-const layoutSource = document.querySelector('#layout-source');
 const viewer = document.querySelector('#viewer');
 const terrainRulesViewer = document.querySelector('#terrain-rules-viewer');
 const keyViewer = document.querySelector('#layout-key-viewer');
@@ -272,8 +271,6 @@ function render() {
     rightMission.dataset.mission = matchup.rightMission;
     rightMission.setAttribute('aria-label', `${copy.mission}: ${missions[matchup.rightMission].name[language]}`);
     title.textContent = item ? copy.freeLayout : copy.layout(layout);
-    layoutSource.textContent = item ? sourceText(item) : '';
-    layoutSource.hidden = !item;
     viewerTitle.textContent = item ? `${copy.freeLayout}: ${sourceText(item)}` : copy.layout(layout);
     map.src = image;
     map.alt = alt;

@@ -30,13 +30,14 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<img[^>]+id="terrain-rules-image"[^>]+src="assets\/key\/terrain-rules\.webp"/);
   assert.match(html, /<dialog[^>]+id="layout-key-viewer"/);
   assert.match(html, /<dialog[^>]+id="viewer"/);
-  assert.match(html, /<p[^>]+id="layout-source"[^>]+hidden/);
+  assert.doesNotMatch(html, /id="layout-source"/);
   assert.match(html, /<dialog[^>]+id="layout-gallery"[^>]+aria-labelledby="layout-gallery-title"/);
   assert.match(html, /<button[^>]+id="layout-gallery-close"/);
   assert.match(html, /<div[^>]+id="layout-gallery-scroll"[^>]+class="layout-gallery-scroll"/);
   assert.match(html, /<script[^>]+type="module"[^>]+src="app\.js"/);
 
   const css = readFileSync('app/styles.css', 'utf8');
+  assert.doesNotMatch(css, /\.layout-source\s*\{/);
   assert.match(css, /min-height:\s*100dvh/);
   assert.match(css, /padding-top:\s*env\(safe-area-inset-top\)/);
   assert.match(css, /padding-right:\s*env\(safe-area-inset-right\)/);
@@ -99,9 +100,10 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(portraitRule, /\.masthead-tools\s*\{[\s\S]*?margin-bottom:\s*4px;/);
   assert.match(portraitRule, /\.layouts\s*\{[\s\S]*?margin:\s*8px 0 4px;/);
   assert.match(portraitRule, /\.map-panel h2\s*\{[\s\S]*?margin:\s*4px 0;/);
-  assert.match(portraitRule, /\.layout-source\s*\{[\s\S]*?margin:\s*-2px 0 0;/);
 
   const js = readFileSync('app/app.js', 'utf8');
+  assert.doesNotMatch(js, /querySelector\('#layout-source'\)/);
+  assert.doesNotMatch(js, /layoutSource\.(?:textContent|hidden)/);
   assert.match(js, /document\.documentElement\.clientWidth/);
   assert.match(js, /document\.documentElement\.clientHeight/);
   assert.match(js, /window\.visualViewport\?\.addEventListener\('resize', fitSheet\)/);
@@ -209,10 +211,10 @@ function createAppHarness() {
     'sheet',
     'left-icon', 'right-icon', 'left-mission', 'right-mission', 'layout-title', 'terrain-rules-button', 'viewer-title',
     'terrain-rules-title', 'terrain-rules-image', 'layout-key-title', 'map', 'large-map', 'layout-key-button', 'layout-key-image',
-    'error', 'free-layout-button', 'layout-source', 'viewer', 'terrain-rules-viewer', 'layout-key-viewer', 'layout-gallery',
+    'error', 'free-layout-button', 'viewer', 'terrain-rules-viewer', 'layout-key-viewer', 'layout-gallery',
     'layout-gallery-title', 'layout-gallery-scroll', 'mission-popover', 'terrain-rules-close', 'layout-key-close', 'close',
     'layout-gallery-close', 'map-description',
-  ]) add(id, { hidden: id === 'error' || id === 'layout-source' || id === 'mission-popover' });
+  ]) add(id, { hidden: id === 'error' || id === 'mission-popover' });
 
   const mapButton = new FakeElement({ className: 'map-button' });
   const languageToggle = new FakeElement({ className: 'language-toggle' });
@@ -271,6 +273,7 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
     const freeButton = elements.get('free-layout-button');
     const map = elements.get('map');
     const title = elements.get('layout-title');
+    const viewerTitle = elements.get('viewer-title');
     const error = elements.get('error');
     const left = elements.get('left');
     const right = elements.get('right');
@@ -289,6 +292,8 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
     freeCard.dispatch('click');
     assert.equal(gallery.open, false);
     assert.equal(title.textContent, 'Free layout');
+    assert.match(viewerTitle.textContent, /^Free layout: .+ · Layout [ABC]$/);
+    assert.match(map.alt, /.+ \/ .+ · Layout [ABC]/);
     assert.deepEqual([left.value, right.value, leftMission.dataset.mission, rightMission.dataset.mission], initialInputs);
 
     left.value = 'purge-the-foe';
