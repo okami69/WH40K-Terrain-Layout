@@ -30,6 +30,12 @@ test('provides the Windows resource icon required by Tauri', () => {
   assert.ok(statSync(icon).size > 0, `Empty ${icon}`);
 });
 
+test('provides the PNG icon required by Tauri mobile builds', () => {
+  const icon = 'src-tauri/icons/icon.png';
+  assert.ok(existsSync(icon), `Missing ${icon}`);
+  assert.ok(statSync(icon).size > 0, `Empty ${icon}`);
+});
+
 test('uses Tauri scripts and no Electron packaging dependencies', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
