@@ -1,8 +1,12 @@
 [package]
 name = "wh40k-terrain-layout"
-version = "0.2.2"
+version = "0.3.0"
 description = "Offline WH40K terrain layout selector"
 edition = "2021"
+
+[lib]
+name = "wh40k_terrain_layout_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.6.3", features = [] }

@@ -36,6 +36,8 @@ test('uses Tauri scripts and no Electron packaging dependencies', () => {
   assert.equal(packageJson.scripts.start, 'tauri dev');
   assert.equal(packageJson.scripts.test, 'node --test');
   assert.equal(packageJson.scripts.dist, 'npm test && tauri build');
+  assert.equal(packageJson.scripts['android:init'], 'tauri android init --ci --skip-targets-install');
+  assert.equal(packageJson.scripts['android:build'], 'tauri android build --apk --target aarch64 --split-per-abi');
   assert.equal(packageJson.main, undefined);
   assert.equal(packageJson.build, undefined);
   assert.equal(packageJson.devDependencies.electron, undefined);
@@ -43,13 +45,32 @@ test('uses Tauri scripts and no Electron packaging dependencies', () => {
   assert.equal(packageJson.devDependencies['@tauri-apps/cli'], '2.11.4');
 });
 
-test('keeps package and Tauri versions at v0.2.2', () => {
+test('keeps package and Tauri versions at v0.3.0', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
   const packageLock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
   const tauriConfig = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8'));
 
-  assert.equal(packageJson.version, '0.2.2');
-  assert.equal(packageLock.version, '0.2.2');
-  assert.equal(packageLock.packages[''].version, '0.2.2');
-  assert.equal(tauriConfig.version, '0.2.2');
+  assert.equal(packageJson.version, '0.3.0');
+  assert.equal(packageLock.version, '0.3.0');
+  assert.equal(packageLock.packages[''].version, '0.3.0');
+  assert.equal(tauriConfig.version, '0.3.0');
+});
+
+test('tracks the Android scaffold without committing local signing secrets', () => {
+  const ignoreLines = readFileSync('.gitignore', 'utf8').split(/\r?\n/);
+
+  assert.ok(!ignoreLines.includes('src-tauri/gen/'));
+  assert.ok(ignoreLines.includes('src-tauri/gen/android/keystore.properties'));
+  assert.ok(ignoreLines.includes('*.jks'));
+});
+
+test('defines the Tauri mobile library entry point', () => {
+  const cargoToml = readFileSync('src-tauri/Cargo.toml', 'utf8');
+  const libRs = readFileSync('src-tauri/src/lib.rs', 'utf8');
+  const mainRs = readFileSync('src-tauri/src/main.rs', 'utf8');
+
+  assert.match(cargoToml, /\[lib\]\r?\nname = "wh40k_terrain_layout_lib"\r?\ncrate-type = \["staticlib", "cdylib", "rlib"\]/);
+  assert.match(libRs, /#\[cfg_attr\(mobile, tauri::mobile_entry_point\)\]/);
+  assert.match(libRs, /pub fn run\(\)/);
+  assert.match(mainRs, /wh40k_terrain_layout_lib::run\(\);/);
 });

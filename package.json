@@ -1,13 +1,15 @@
 {
   "name": "wh40k-terrain-layout",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Offline WH40K terrain layout selector",
   "scripts": {
     "start": "tauri dev",
     "test": "node --test",
-    "dist": "npm test && tauri build"
+    "dist": "npm test && tauri build",
+    "android:init": "tauri android init --ci --skip-targets-install",
+    "android:build": "tauri android build --apk --target aarch64 --split-per-abi"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.11.4"
