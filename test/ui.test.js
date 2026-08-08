@@ -22,6 +22,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<button[^>]+id="right-mission"[^>]+class="mission-summary-trigger"/);
   assert.match(html, /id="mission-popover"/);
   assert.match(html, /<div class="layouts" role="group" aria-label="Terrain layout">/);
+  assert.match(html, /<button[^>]+id="free-layout-button"[^>]+aria-pressed="false"[^>]*>\+<\/button>/);
   assert.match(html, /<button[^>]+id="terrain-rules-button"[^>]+class="title-button"/);
   assert.match(html, /<button[^>]+id="layout-key-button"[^>]+aria-label=/);
   assert.match(html, /<svg[^>]+aria-hidden="true"/);
@@ -29,6 +30,10 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<img[^>]+id="terrain-rules-image"[^>]+src="assets\/key\/terrain-rules\.webp"/);
   assert.match(html, /<dialog[^>]+id="layout-key-viewer"/);
   assert.match(html, /<dialog[^>]+id="viewer"/);
+  assert.match(html, /<p[^>]+id="layout-source"[^>]+hidden/);
+  assert.match(html, /<dialog[^>]+id="layout-gallery"[^>]+aria-labelledby="layout-gallery-title"/);
+  assert.match(html, /<button[^>]+id="layout-gallery-close"/);
+  assert.match(html, /<div[^>]+id="layout-gallery-scroll"[^>]+class="layout-gallery-scroll"/);
   assert.match(html, /<script[^>]+type="module"[^>]+src="app\.js"/);
 
   const css = readFileSync('app/styles.css', 'utf8');
@@ -75,6 +80,11 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /:focus-visible\s*\{[\s\S]*outline:\s*3px solid/);
   assert.match(css, /min-height:\s*44px/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  const galleryScrollRule = css.match(/\.layout-gallery-scroll\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(galleryScrollRule, /\boverflow-y:\s*auto;/);
+  const galleryGridRule = css.match(/\.layout-gallery-grid\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(galleryGridRule, /\bgrid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
+  assert.match(css, /@media \(max-width: 600px\)\s*\{[\s\S]*?\.layout-gallery-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr;/);
 
   const js = readFileSync('app/app.js', 'utf8');
   assert.match(js, /document\.documentElement\.clientWidth/);
@@ -88,6 +98,9 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /popover\.style\.width\s*=\s*`\$\{rect\.width\}px`/);
   assert.match(js, /popover\.style\.left\s*=\s*`\$\{rect\.left\}px`/);
   assert.match(js, /popover\.style\.top\s*=\s*`\$\{rect\.bottom \+ 8\}px`/);
+  assert.match(js, /layoutCatalog/);
+  assert.match(js, /image\.loading\s*=\s*'lazy'/);
+  assert.match(js, /image\.decoding\s*=\s*'async'/);
 });
 
 test('publishes six current application screenshots in the README', () => {

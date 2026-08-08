@@ -68,10 +68,12 @@
         <button type="button" data-layout="A" aria-pressed="true">A</button>
         <button type="button" data-layout="B" aria-pressed="false">B</button>
         <button type="button" data-layout="C" aria-pressed="false">C</button>
+        <button id="free-layout-button" type="button" aria-pressed="false" aria-label="Choose any layout">+</button>
       </div>
 
       <section class="map-panel" aria-labelledby="layout-title">
         <h2 id="layout-title">Layout A</h2>
+        <p id="layout-source" class="layout-source" hidden></p>
         <button class="map-button" type="button" aria-label="Open layout at full size">
           <img id="map" alt="" aria-describedby="map-description">
         </button>
@@ -105,6 +107,14 @@
       <button id="close" type="button">Close</button>
     </header>
     <img id="large-map" alt="" aria-describedby="map-description">
+  </dialog>
+
+  <dialog id="layout-gallery" class="layout-gallery" aria-labelledby="layout-gallery-title">
+    <header>
+      <h2 id="layout-gallery-title">All layouts</h2>
+      <button id="layout-gallery-close" type="button">Close</button>
+    </header>
+    <div id="layout-gallery-scroll" class="layout-gallery-scroll"></div>
   </dialog>
 
   <script type="module" src="app.js"></script>

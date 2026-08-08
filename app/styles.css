@@ -284,6 +284,13 @@ select:disabled {
   text-transform: uppercase;
 }
 
+.layout-source {
+  margin: -2px 0 6px;
+  color: var(--muted-ink);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
 .map-button {
   display: grid;
   width: 100%;
@@ -410,6 +417,66 @@ dialog h2 {
   object-fit: contain;
 }
 
+.layout-gallery {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.layout-gallery:not([open]) {
+  display: none;
+}
+
+.layout-gallery-scroll {
+  min-height: 0;
+  padding-right: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.layout-gallery-scroll section + section {
+  margin-top: 18px;
+}
+
+.layout-gallery-scroll h3 {
+  margin: 0 0 8px;
+  text-align: left;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.layout-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.layout-gallery-card {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.layout-gallery-card[aria-pressed="true"] {
+  border: 3px solid var(--primary);
+}
+
+.layout-gallery-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.gallery-error {
+  padding: 8px;
+  color: var(--primary-dark);
+  background: var(--error-bg);
+}
+
 [hidden] {
   display: none !important;
 }
@@ -432,5 +499,11 @@ dialog h2 {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .layout-gallery-grid {
+    grid-template-columns: 1fr;
   }
 }
