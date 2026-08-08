@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { matchups, resolveMatchup } from '../app/matchups.js';
+import { layoutCatalog, matchups, resolveMatchup } from '../app/matchups.js';
 
 test('all matchup layouts have unique image assets', () => {
   const images = new Set();
@@ -29,6 +29,13 @@ test('all matchup layouts have unique image assets', () => {
   for (const path of required) {
     assert.ok(existsSync(path), `Missing ${path}`);
     assert.ok(statSync(path).size > 0, `Empty ${path}`);
+  }
+});
+
+test('every gallery catalog entry has a bundled non-empty image', () => {
+  for (const item of layoutCatalog) {
+    assert.ok(existsSync(`app/${item.image}`), `Missing app/${item.image}`);
+    assert.ok(statSync(`app/${item.image}`).size > 0, `Empty app/${item.image}`);
   }
 });
 

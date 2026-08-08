@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dispositions,
+  deployments,
   labels,
+  layoutCatalog,
   languages,
   matchups,
   missions,
@@ -45,6 +47,42 @@ test('contains every canonical disposition matchup', () => {
       { left: 'priority-assets', right: 'priority-assets', leftMission: 'sabotage', rightMission: 'sabotage', slug: 'priority-assets--priority-assets' },
     ],
   );
+});
+
+test('catalogs all 45 layouts by deployment', () => {
+  assert.deepEqual(deployments, [
+    'crucible-of-battle',
+    'dawn-of-war',
+    'hammer-and-anvil',
+    'search-and-destroy',
+    'sweeping-engagement',
+    'tipping-point',
+  ]);
+  assert.equal(layoutCatalog.length, 45);
+  assert.equal(new Set(layoutCatalog.map(item => item.id)).size, 45);
+  assert.equal(new Set(layoutCatalog.map(item => item.image)).size, 45);
+  assert.deepEqual(
+    Object.fromEntries(deployments.map(deployment => [
+      deployment,
+      layoutCatalog.filter(item => item.deployment === deployment).length,
+    ])),
+    {
+      'crucible-of-battle': 7,
+      'dawn-of-war': 6,
+      'hammer-and-anvil': 5,
+      'search-and-destroy': 8,
+      'sweeping-engagement': 9,
+      'tipping-point': 10,
+    },
+  );
+
+  for (const item of layoutCatalog) {
+    assert.ok(matchups.some(matchup => matchup.slug === item.slug), `${item.id} has unknown matchup`);
+    assert.ok(['A', 'B', 'C'].includes(item.layout), `${item.id} has unknown layout`);
+    assert.ok(deployments.includes(item.deployment), `${item.id} has unknown deployment`);
+    assert.equal(item.id, `${item.slug}-${item.layout.toLowerCase()}`);
+    assert.equal(item.image, `assets/layouts/${item.id}.webp`);
+  }
 });
 
 test('provides localized disposition labels and icons', () => {
