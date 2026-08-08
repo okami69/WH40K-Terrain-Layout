@@ -524,6 +524,34 @@ dialog h2 {
     place-items: start center;
   }
 
+  .app-sheet {
+    padding: 8px 32px;
+  }
+
+  .masthead {
+    margin-bottom: 8px;
+  }
+
+  .masthead h1 {
+    margin-bottom: 4px;
+  }
+
+  .masthead-tools {
+    margin-bottom: 4px;
+  }
+
+  .layouts {
+    margin: 8px 0 4px;
+  }
+
+  .map-panel h2 {
+    margin: 4px 0;
+  }
+
+  .layout-source {
+    margin: -2px 0 0;
+  }
+
   .map-panel,
   .map-button {
     height: auto;

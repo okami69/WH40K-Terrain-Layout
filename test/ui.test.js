@@ -93,6 +93,13 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(portraitRule, /:root\s*\{[\s\S]*?--sheet-height:\s*1280px;/);
   assert.match(portraitRule, /body\s*\{[\s\S]*?place-items:\s*start center;/);
   assert.match(portraitRule, /#map\s*\{[\s\S]*?height:\s*auto;/);
+  assert.match(portraitRule, /\.app-sheet\s*\{[\s\S]*?padding:\s*8px 32px;/);
+  assert.match(portraitRule, /\.masthead\s*\{[\s\S]*?margin-bottom:\s*8px;/);
+  assert.match(portraitRule, /\.masthead h1\s*\{[\s\S]*?margin-bottom:\s*4px;/);
+  assert.match(portraitRule, /\.masthead-tools\s*\{[\s\S]*?margin-bottom:\s*4px;/);
+  assert.match(portraitRule, /\.layouts\s*\{[\s\S]*?margin:\s*8px 0 4px;/);
+  assert.match(portraitRule, /\.map-panel h2\s*\{[\s\S]*?margin:\s*4px 0;/);
+  assert.match(portraitRule, /\.layout-source\s*\{[\s\S]*?margin:\s*-2px 0 0;/);
 
   const js = readFileSync('app/app.js', 'utf8');
   assert.match(js, /document\.documentElement\.clientWidth/);
@@ -123,7 +130,11 @@ class FakeElement {
     this.listeners = new Map();
     this.attributes = new Map();
     this.options = [];
-    this.style = { setProperty() {} };
+    this.styleValues = new Map();
+    this.style = {
+      setProperty: (name, value) => this.styleValues.set(name, String(value)),
+      getPropertyValue: name => this.styleValues.get(name) ?? '',
+    };
   }
 
   add(option) {
@@ -195,6 +206,7 @@ function createAppHarness() {
   const layouts = new FakeElement({ className: 'layouts' });
 
   for (const id of [
+    'sheet',
     'left-icon', 'right-icon', 'left-mission', 'right-mission', 'layout-title', 'terrain-rules-button', 'viewer-title',
     'terrain-rules-title', 'terrain-rules-image', 'layout-key-title', 'map', 'large-map', 'layout-key-button', 'layout-key-image',
     'error', 'free-layout-button', 'layout-source', 'viewer', 'terrain-rules-viewer', 'layout-key-viewer', 'layout-gallery',
@@ -204,6 +216,8 @@ function createAppHarness() {
 
   const mapButton = new FakeElement({ className: 'map-button' });
   const languageToggle = new FakeElement({ className: 'language-toggle' });
+  const window = new FakeElement();
+  window.visualViewport = new FakeElement();
   const document = {
     body: new FakeElement(),
     documentElement: new FakeElement(),
@@ -226,23 +240,32 @@ function createAppHarness() {
   };
   document.documentElement.clientWidth = 768;
   document.documentElement.clientHeight = 1080;
-  return { document, elements, layoutButtons };
+  return { document, elements, layoutButtons, window };
 }
 
 test('runs the free-layout gallery interactions without duplicate cards', async () => {
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
-  const { document, elements, layoutButtons } = createAppHarness();
+  const { document, elements, layoutButtons, window } = createAppHarness();
+  const sheet = elements.get('sheet');
+  sheet.computedWidth = '768px';
+  sheet.computedHeight = '1080px';
   Object.defineProperties(globalThis, {
     document: { configurable: true, value: document },
-    window: { configurable: true, value: { addEventListener() {}, visualViewport: { addEventListener() {} } } },
+    window: { configurable: true, value: window },
     navigator: { configurable: true, value: { language: 'en-US' } },
     localStorage: { configurable: true, value: { getItem() { return null; }, setItem() {} } },
-    getComputedStyle: { configurable: true, value: () => ({ paddingLeft: '0', paddingRight: '0', paddingTop: '0', paddingBottom: '0' }) },
+    getComputedStyle: { configurable: true, value: element => element === sheet
+      ? { width: sheet.computedWidth, height: sheet.computedHeight }
+      : { paddingLeft: '0', paddingRight: '0', paddingTop: '0', paddingBottom: '0' } },
     Option: { configurable: true, value: function Option(text, value) { this.textContent = text; this.value = value; } },
   });
 
   try {
     await import(`../app/app.js?gallery-test=${Date.now()}`);
+    assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '1');
+    sheet.computedHeight = '1280px';
+    window.dispatch('resize');
+    assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '0.84375');
     const gallery = elements.get('layout-gallery');
     const galleryScroll = elements.get('layout-gallery-scroll');
     const freeButton = elements.get('free-layout-button');
