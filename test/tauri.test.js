@@ -43,13 +43,13 @@ test('uses Tauri scripts and no Electron packaging dependencies', () => {
   assert.equal(packageJson.devDependencies['@tauri-apps/cli'], '2.11.4');
 });
 
-test('keeps package and Tauri versions at v0.2.0', () => {
+test('keeps package and Tauri versions at v0.2.1', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
   const packageLock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
   const tauriConfig = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8'));
 
-  assert.equal(packageJson.version, '0.2.0');
-  assert.equal(packageLock.version, '0.2.0');
-  assert.equal(packageLock.packages[''].version, '0.2.0');
-  assert.equal(tauriConfig.version, '0.2.0');
+  assert.equal(packageJson.version, '0.2.1');
+  assert.equal(packageLock.version, '0.2.1');
+  assert.equal(packageLock.packages[''].version, '0.2.1');
+  assert.equal(tauriConfig.version, '0.2.1');
 });
