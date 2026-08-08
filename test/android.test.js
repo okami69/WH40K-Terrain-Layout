@@ -10,9 +10,15 @@ test('locks the Android activity to portrait', () => {
   assert.match(manifest, /android:screenOrientation="portrait"/);
 });
 
-test('does not expose the phone app as an Android TV launcher', () => {
+test('does not advertise Android TV support', () => {
   const manifest = readFileSync(manifestPath, 'utf8');
-  assert.doesNotMatch(manifest, /LEANBACK/);
+  assert.doesNotMatch(manifest, /android\.software\.leanback/i);
+});
+
+test('uses the phone launcher without an Android TV launcher', () => {
+  const manifest = readFileSync(manifestPath, 'utf8');
+  assert.doesNotMatch(manifest, /android\.intent\.category\.LEANBACK_LAUNCHER/i);
+  assert.match(manifest, /android\.intent\.category\.LAUNCHER/);
 });
 
 test('signs Android release builds from an ignored properties file', () => {
