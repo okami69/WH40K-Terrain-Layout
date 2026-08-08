@@ -6,6 +6,7 @@
   "description": "Offline WH40K terrain layout selector",
   "scripts": {
     "start": "tauri dev",
+    "tauri": "tauri",
     "test": "node --test",
     "dist": "npm test && tauri build",
     "android:init": "tauri android init --ci --skip-targets-install",

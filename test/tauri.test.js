@@ -40,6 +40,7 @@ test('uses Tauri scripts and no Electron packaging dependencies', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
   assert.equal(packageJson.scripts.start, 'tauri dev');
+  assert.equal(packageJson.scripts.tauri, 'tauri');
   assert.equal(packageJson.scripts.test, 'node --test');
   assert.equal(packageJson.scripts.dist, 'npm test && tauri build');
   assert.equal(packageJson.scripts['android:init'], 'tauri android init --ci --skip-targets-install');
