@@ -115,11 +115,12 @@ function cssPixels(value) {
 
 function fitSheet() {
   const bodyStyle = getComputedStyle(document.body);
+  const sheetStyle = getComputedStyle(document.querySelector('#sheet'));
   const horizontalInsets = cssPixels(bodyStyle.paddingLeft) + cssPixels(bodyStyle.paddingRight);
   const verticalInsets = cssPixels(bodyStyle.paddingTop) + cssPixels(bodyStyle.paddingBottom);
   const availableWidth = document.documentElement.clientWidth - horizontalInsets;
   const availableHeight = document.documentElement.clientHeight - verticalInsets;
-  const scale = Math.min(availableWidth / 768, availableHeight / 1080);
+  const scale = Math.min(availableWidth / cssPixels(sheetStyle.width), availableHeight / cssPixels(sheetStyle.height));
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
 }
 

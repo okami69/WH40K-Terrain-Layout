@@ -51,7 +51,9 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(dispositionRule, /\bappearance:\s*none;/);
   assert.match(dispositionRule, /\bpadding:\s*0 34px;/);
   assert.match(dispositionRule, /\btext-align:\s*center;/);
+  assert.match(dispositionRule, /\btext-align-last:\s*center;/);
   assert.match(dispositionRule, /\bbackground-position:\s*calc\(100% - 18px\) 50%, calc\(100% - 12px\) 50%;/);
+  assert.match(css, /\.disposition-select option\s*\{[\s\S]*?text-align:\s*center;/);
   const popoverRule = css.match(/\.mission-popover\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(popoverRule, /\binset:\s*auto;/);
   assert.match(popoverRule, /\bmargin:\s*0;/);
@@ -71,10 +73,12 @@ test('provides the compact bilingual terrain sheet UI', () => {
   const layoutKeyImageRule = css.match(/#layout-key-image\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(layoutKeyImageRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 106px\);/);
   assert.match(css, /body\s*\{[\s\S]*overflow:\s*hidden/);
-  assert.match(css, /\.stage\s*\{[\s\S]*width:\s*calc\(768px \* var\(--sheet-scale\)\)/);
-  assert.match(css, /\.stage\s*\{[\s\S]*height:\s*calc\(1080px \* var\(--sheet-scale\)\)/);
-  assert.match(css, /\.app-sheet\s*\{[\s\S]*width:\s*768px/);
-  assert.match(css, /\.app-sheet\s*\{[\s\S]*height:\s*1080px/);
+  assert.match(css, /:root\s*\{[\s\S]*?--sheet-width:\s*768px;/);
+  assert.match(css, /:root\s*\{[\s\S]*?--sheet-height:\s*1080px;/);
+  assert.match(css, /\.stage\s*\{[\s\S]*width:\s*calc\(var\(--sheet-width\) \* var\(--sheet-scale\)\)/);
+  assert.match(css, /\.stage\s*\{[\s\S]*height:\s*calc\(var\(--sheet-height\) \* var\(--sheet-scale\)\)/);
+  assert.match(css, /\.app-sheet\s*\{[\s\S]*width:\s*var\(--sheet-width\)/);
+  assert.match(css, /\.app-sheet\s*\{[\s\S]*height:\s*var\(--sheet-height\)/);
   assert.match(css, /\.app-sheet\s*\{[\s\S]*transform:\s*scale\(var\(--sheet-scale\)\)/);
   assert.match(css, /object-fit:\s*contain/);
   assert.match(css, /:focus-visible\s*\{[\s\S]*outline:\s*3px solid/);
@@ -85,11 +89,17 @@ test('provides the compact bilingual terrain sheet UI', () => {
   const galleryGridRule = css.match(/\.layout-gallery-grid\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(galleryGridRule, /\bgrid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
   assert.match(css, /@media \(max-width: 600px\)\s*\{[\s\S]*?\.layout-gallery-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr;/);
+  const portraitRule = css.match(/@media \(orientation: portrait\) and \(max-width: 600px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
+  assert.match(portraitRule, /:root\s*\{[\s\S]*?--sheet-height:\s*1280px;/);
+  assert.match(portraitRule, /body\s*\{[\s\S]*?place-items:\s*start center;/);
+  assert.match(portraitRule, /#map\s*\{[\s\S]*?height:\s*auto;/);
 
   const js = readFileSync('app/app.js', 'utf8');
   assert.match(js, /document\.documentElement\.clientWidth/);
   assert.match(js, /document\.documentElement\.clientHeight/);
   assert.match(js, /window\.visualViewport\?\.addEventListener\('resize', fitSheet\)/);
+  assert.match(js, /sheetStyle\.width/);
+  assert.match(js, /sheetStyle\.height/);
   assert.match(js, /const terrainRulesButton = document\.querySelector\('#terrain-rules-button'\)/);
   assert.match(js, /const terrainRulesViewer = document\.querySelector\('#terrain-rules-viewer'\)/);
   assert.match(js, /terrainRulesImage\.alt = copy\.mapDescription/);
