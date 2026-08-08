@@ -326,7 +326,7 @@ for (const trigger of summaryTriggers) {
   });
 }
 
-map.addEventListener('error', () => showError(text[language].missingImage(layout)));
+map.addEventListener('error', () => showError(text[language].missingImage(mapMode === 'free' ? freeMap?.layout ?? layout : layout)));
 mapButton.addEventListener('click', () => viewer.showModal());
 document.querySelector('#close').addEventListener('click', () => viewer.close());
 freeLayoutButton.addEventListener('click', openGallery);

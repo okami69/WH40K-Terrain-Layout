@@ -103,6 +103,192 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /image\.decoding\s*=\s*'async'/);
 });
 
+class FakeElement {
+  constructor({ id = '', className = '', dataset = {}, hidden = false } = {}) {
+    this.id = id;
+    this.className = className;
+    this.dataset = dataset;
+    this.hidden = hidden;
+    this.children = [];
+    this.listeners = new Map();
+    this.attributes = new Map();
+    this.options = [];
+    this.style = { setProperty() {} };
+  }
+
+  add(option) {
+    this.options.push(option);
+  }
+
+  addEventListener(type, listener) {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+  }
+
+  append(...children) {
+    this.children.push(...children);
+  }
+
+  close() {
+    this.open = false;
+  }
+
+  dispatch(type) {
+    for (const listener of this.listeners.get(type) ?? []) listener({ target: this, key: type === 'keydown' ? 'Escape' : undefined });
+  }
+
+  getAttribute(name) {
+    return this.attributes.get(name) ?? null;
+  }
+
+  matches(selector) {
+    return selector === ':popover-open' && Boolean(this.open);
+  }
+
+  querySelector(selector) {
+    return descendants(this).find(item => selector === '[aria-pressed="true"]' && item.getAttribute('aria-pressed') === 'true') ?? null;
+  }
+
+  replaceChildren(...children) {
+    this.children = children;
+  }
+
+  scrollIntoView() {
+    this.scrolledIntoView = true;
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, String(value));
+  }
+
+  showModal() {
+    this.open = true;
+  }
+}
+
+function descendants(element) {
+  return element.children.flatMap(child => [child, ...descendants(child)]);
+}
+
+function createAppHarness() {
+  const elements = new Map();
+  const add = (id, options) => {
+    const element = new FakeElement({ id, ...options });
+    elements.set(id, element);
+    return element;
+  };
+  const left = add('left');
+  const right = add('right');
+  const layoutButtons = ['A', 'B', 'C'].map(layout => new FakeElement({ dataset: { layout } }));
+  const languageButtons = ['ru', 'en'].map(lang => new FakeElement({ dataset: { lang } }));
+  const cardKickers = [new FakeElement(), new FakeElement()];
+  const missionLabels = [new FakeElement(), new FakeElement()];
+  const layouts = new FakeElement({ className: 'layouts' });
+
+  for (const id of [
+    'left-icon', 'right-icon', 'left-mission', 'right-mission', 'layout-title', 'terrain-rules-button', 'viewer-title',
+    'terrain-rules-title', 'terrain-rules-image', 'layout-key-title', 'map', 'large-map', 'layout-key-button', 'layout-key-image',
+    'error', 'free-layout-button', 'layout-source', 'viewer', 'terrain-rules-viewer', 'layout-key-viewer', 'layout-gallery',
+    'layout-gallery-title', 'layout-gallery-scroll', 'mission-popover', 'terrain-rules-close', 'layout-key-close', 'close',
+    'layout-gallery-close', 'map-description',
+  ]) add(id, { hidden: id === 'error' || id === 'layout-source' || id === 'mission-popover' });
+
+  const mapButton = new FakeElement({ className: 'map-button' });
+  const languageToggle = new FakeElement({ className: 'language-toggle' });
+  const document = {
+    body: new FakeElement(),
+    documentElement: new FakeElement(),
+    addEventListener() {},
+    createElement() { return new FakeElement(); },
+    querySelector(selector) {
+      if (selector === '#language-toggle') return languageToggle;
+      if (selector.startsWith('#')) return elements.get(selector.slice(1)) ?? null;
+      if (selector === '.map-button') return mapButton;
+      if (selector === '.layouts') return layouts;
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === '[data-layout]') return layoutButtons;
+      if (selector === '[data-lang]') return languageButtons;
+      if (selector === '.card-kicker') return cardKickers;
+      if (selector === '.mission-label') return missionLabels;
+      return [];
+    },
+  };
+  document.documentElement.clientWidth = 768;
+  document.documentElement.clientHeight = 1080;
+  return { document, elements, layoutButtons };
+}
+
+test('runs the free-layout gallery interactions without duplicate cards', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const { document, elements, layoutButtons } = createAppHarness();
+  Object.defineProperties(globalThis, {
+    document: { configurable: true, value: document },
+    window: { configurable: true, value: { addEventListener() {}, visualViewport: { addEventListener() {} } } },
+    navigator: { configurable: true, value: { language: 'en-US' } },
+    localStorage: { configurable: true, value: { getItem() { return null; }, setItem() {} } },
+    getComputedStyle: { configurable: true, value: () => ({ paddingLeft: '0', paddingRight: '0', paddingTop: '0', paddingBottom: '0' }) },
+    Option: { configurable: true, value: function Option(text, value) { this.textContent = text; this.value = value; } },
+  });
+
+  try {
+    await import(`../app/app.js?gallery-test=${Date.now()}`);
+    const gallery = elements.get('layout-gallery');
+    const galleryScroll = elements.get('layout-gallery-scroll');
+    const freeButton = elements.get('free-layout-button');
+    const map = elements.get('map');
+    const title = elements.get('layout-title');
+    const error = elements.get('error');
+    const left = elements.get('left');
+    const right = elements.get('right');
+    const leftMission = elements.get('left-mission');
+    const rightMission = elements.get('right-mission');
+    const cards = () => descendants(galleryScroll).filter(item => item.className === 'layout-gallery-card');
+
+    const initialInputs = [left.value, right.value, leftMission.dataset.mission, rightMission.dataset.mission];
+    freeButton.dispatch('click');
+    assert.equal(gallery.open, true);
+    assert.equal(galleryScroll.children.length, 6);
+    assert.equal(cards().length, 45);
+
+    const freeCard = cards().find(card => card.dataset.layoutId.endsWith('-b'));
+    const freeImage = freeCard.children[0];
+    freeCard.dispatch('click');
+    assert.equal(gallery.open, false);
+    assert.equal(title.textContent, 'Free layout');
+    assert.deepEqual([left.value, right.value, leftMission.dataset.mission, rightMission.dataset.mission], initialInputs);
+
+    left.value = 'purge-the-foe';
+    left.dispatch('change');
+    assert.equal(title.textContent, 'Free layout');
+    assert.equal(map.src, freeImage.src);
+    map.dispatch('error');
+    assert.match(error.textContent, /Layout B image is missing/);
+
+    layoutButtons[0].dispatch('click');
+    assert.equal(title.textContent, 'Layout A');
+    assert.equal(freeButton.getAttribute('aria-pressed'), 'false');
+    assert.equal(layoutButtons[0].getAttribute('aria-pressed'), 'true');
+
+    freeButton.dispatch('click');
+    assert.equal(cards().length, 45);
+    gallery.close();
+    freeButton.dispatch('click');
+    assert.equal(cards().length, 45);
+    const brokenCard = cards()[0];
+    brokenCard.children[0].dispatch('error');
+    assert.equal(brokenCard.children[0].hidden, true);
+    assert.equal(brokenCard.children[2].hidden, false);
+    assert.equal(brokenCard.disabled, true);
+    assert.equal(cards()[1].disabled, undefined);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
 test('publishes six current application screenshots in the README', () => {
   const screenshots = [
     'disruption-vs-reconnaissance-layout-a.png',
