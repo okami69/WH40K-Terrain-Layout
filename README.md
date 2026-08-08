@@ -12,8 +12,10 @@ Everything needed at the table is bundled with the application, so it works with
 - Shows the mission assigned to each player with a short RU/ENG objective summary.
 - Includes the official Terrain Layouts rules, recommended terrain footprints, and Layouts Key from Event Companion v1.1.
 - Opens each terrain map in a full-size viewer.
+- Opens a large-preview gallery to use any of the 45 bundled terrain maps without changing the selected missions.
 - Remembers the selected language and follows the OS language on first launch.
 - Runs offline in a compact Windows desktop window or a portrait-only Android phone view.
+- Uses a denser portrait-phone layout so the main map fills more of the available screen.
 
 ## Screenshots
 
@@ -35,8 +37,9 @@ The Windows x64 NSIS installer remains available from the [v0.2.2 release](https
 
 1. Select each player's Force Disposition from the two top cards.
 2. Choose layout A, B, or C.
-3. Hover, focus, click, or tap a mission name for a concise RU/ENG objective summary.
-4. Use the key icon for the official layouts key, or click the map for the enlarged map viewer.
+3. Use `+` to open the scrollable all-layout gallery; choosing a free map does not change either Force Disposition or mission.
+4. Hover, focus, click, or tap a mission name for a concise RU/ENG objective summary.
+5. Use the key icon for the official layouts key, or click the map for the enlarged map viewer.
 
 The UI switches between RU and ENG. First launch follows the OS language when it starts with `ru`; explicit RU/ENG clicks are saved locally. Official map, key, and rules images remain English because they are packaged from Event Companion v1.1.
 
