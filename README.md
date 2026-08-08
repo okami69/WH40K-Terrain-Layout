@@ -1,8 +1,8 @@
 # WH40K Terrain Layout
 
-Offline Windows desktop companion for finding the official Warhammer 40,000 terrain map for a match. Choose both players' Force Dispositions and layout A, B, or C; the app shows the corresponding terrain placement diagram, assigned missions, and concise mission summaries.
+Offline Windows and Android companion for finding the official Warhammer 40,000 terrain map for a match. Choose both players' Force Dispositions and layout A, B, or C; the app shows the corresponding terrain placement diagram, assigned missions, and concise mission summaries.
 
-**Latest version:** [v0.2.2](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.2.2)
+**Latest version:** [v0.3.0](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.3.0)
 
 Everything needed at the table is bundled with the application, so it works without an internet connection after installation. The interface supports Russian and English, includes the official Layouts Key and Terrain Layouts rules, and can enlarge any map for closer inspection.
 
@@ -13,7 +13,7 @@ Everything needed at the table is bundled with the application, so it works with
 - Includes the official Terrain Layouts rules, recommended terrain footprints, and Layouts Key from Event Companion v1.1.
 - Opens each terrain map in a full-size viewer.
 - Remembers the selected language and follows the OS language on first launch.
-- Runs offline in a compact Windows desktop window.
+- Runs offline in a compact Windows desktop window or a portrait-only Android phone view.
 
 ## Screenshots
 
@@ -27,7 +27,9 @@ Everything needed at the table is bundled with the application, so it works with
 
 ## Download
 
-Download the current Windows x64 NSIS installer from the [v0.2.2 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.2.2). The application uses the Windows WebView2 Runtime; the installer downloads it only if it is not already present.
+Download the signed **Android ARM64** APK from the [v0.3.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.3.0). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. It was physically verified on a OnePlus 15R and checked at 320 x 568, 360 x 800, 412 x 915, and 480 x 1040 portrait viewports.
+
+The Windows x64 NSIS installer remains available from the [v0.2.2 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.2.2). It uses the Windows WebView2 Runtime and downloads it only if it is not already present.
 
 ## Use
 
@@ -40,7 +42,7 @@ The UI switches between RU and ENG. First launch follows the OS language when it
 
 ## How it is built
 
-The desktop application is a minimal [Tauri 2](https://tauri.app/) shell around a dependency-free frontend written in plain HTML, CSS, and JavaScript. All maps, disposition icons, rules, translations, and matchup data are packaged locally as static assets; no server or account is required at runtime.
+The Windows and Android applications use a minimal [Tauri 2](https://tauri.app/) shell around a shared dependency-free frontend written in plain HTML, CSS, and JavaScript. All maps, disposition icons, rules, translations, and matchup data are packaged locally as static assets; no server or account is required at runtime.
 
 ## Develop and build
 
@@ -50,6 +52,7 @@ Prerequisites:
 - Rust stable MSVC toolchain
 - Microsoft Visual Studio 2022 Build Tools with `Microsoft.VisualStudio.Workload.VCTools`
 - WebView2 Runtime
+- Microsoft OpenJDK 21, Android SDK 36, Build Tools 36.0.0, NDK r29, and the Rust `aarch64-linux-android` target for Android builds
 - Python only when re-extracting PDF assets
 
 ```powershell
@@ -57,13 +60,17 @@ npm.cmd install
 npm.cmd test
 npm.cmd start
 npm.cmd run dist
+npm.cmd run android:init
+npm.cmd run android:build
 ```
 
 The Tauri NSIS installer is written under:
 
 `src-tauri/target/release/bundle/nsis/`
 
-Current v0.2.2 verification covers the Node test suite, Tauri production build, NSIS installer smoke check, and Playwright checks at the 768 x 1080 reference viewport and a laptop-scale viewport.
+The signed Android APK is written under `src-tauri/gen/android/app/build/outputs/apk/arm64/release/`. Release signing requires the ignored `src-tauri/gen/android/keystore.properties` file and the external private keystore it references. Never commit either file. Keep a secure backup of the same keystore and password: both are required to publish installable upgrades. On Windows, Android builds also require Developer Mode or an elevated shell because Tauri creates JNI symbolic links.
+
+Current v0.3.0 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, representative portrait Playwright checks, and a physical OnePlus 15R smoke test.
 
 ## Re-extract assets
 
@@ -83,9 +90,9 @@ The extractor writes 45 lossless WebP maps, five disposition icons, `app/assets/
 ## Project structure
 
 - `app/` - shared offline web UI and packaged WebP assets
-- `src-tauri/` - minimal Tauri 2 desktop shell
+- `src-tauri/` - shared Tauri 2 Windows and Android shell
 - `test/` - Node static/behavior tests
 - `tools/` - optional PDF extraction script
 - `docs/superpowers/` - approved design and implementation records
 
-See the [v0.2 design specification](docs/superpowers/specs/2026-08-08-tauri-shell-and-layout-key-design.md), [v0.2 implementation plan](docs/superpowers/plans/2026-08-08-tauri-shell-and-layout-key-implementation.md), and [GitHub issue #1](https://github.com/okami69/WH40K-Terrain-Layout/issues/1).
+See the [Android v0.3 design specification](docs/superpowers/specs/2026-08-08-android-arm64-apk-design.md), [Android v0.3 implementation plan](docs/superpowers/plans/2026-08-08-android-arm64-apk-implementation.md), and [GitHub issue #7](https://github.com/okami69/WH40K-Terrain-Layout/issues/7).

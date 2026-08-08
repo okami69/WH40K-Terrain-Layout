@@ -27,6 +27,11 @@ html {
 body {
   display: grid;
   min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
   margin: 0;
   overflow: hidden;
   place-items: center;
@@ -331,8 +336,11 @@ select:disabled {
 }
 
 dialog {
-  width: min(calc(100% - 24px), 1000px);
+  inset: calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 12px) calc(env(safe-area-inset-left) + 12px);
+  width: min(calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right) - 24px), 1000px);
   max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
+  margin: auto;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -368,6 +376,7 @@ dialog h2 {
   display: block;
   width: 100%;
   max-height: calc(100vh - 98px);
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 98px);
   object-fit: contain;
 }
 
@@ -377,6 +386,7 @@ dialog h2 {
   max-width: 100%;
   height: auto;
   max-height: calc(100vh - 106px);
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 106px);
   margin: 0 auto;
   object-fit: contain;
 }
@@ -395,6 +405,7 @@ dialog h2 {
   max-width: 100%;
   height: auto;
   max-height: calc(100vh - 106px);
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 106px);
   margin: 0 auto;
   object-fit: contain;
 }
