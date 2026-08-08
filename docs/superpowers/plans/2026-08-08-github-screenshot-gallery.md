@@ -38,4 +38,4 @@
 - [x] Add a `Screenshots` section near the top with a two-column HTML table and concise captions.
 - [x] Run `npm.cmd test` and confirm all tests pass.
 - [x] Check Markdown image paths and image dimensions.
-- [ ] Commit, push `main`, update and close GitHub issue #4.
+- [x] Commit, push `main`, update and close GitHub issue #4.
