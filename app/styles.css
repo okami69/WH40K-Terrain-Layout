@@ -95,11 +95,6 @@ select:disabled {
   text-align: center;
 }
 
-.app-sheet :is(button, select) {
-  min-width: calc(44px / var(--sheet-scale));
-  min-height: calc(44px / var(--sheet-scale));
-}
-
 .masthead {
   display: flex;
   align-items: center;

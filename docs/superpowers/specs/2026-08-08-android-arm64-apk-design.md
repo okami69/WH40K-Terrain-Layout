@@ -37,7 +37,7 @@ GitHub issue: [#7](https://github.com/okami69/WH40K-Terrain-Layout/issues/7)
 - Recalculate the sheet scale when the available portrait viewport changes, including after system-bar or window-size changes.
 - Keep the complete main sheet visible without page-level scrolling at supported phone viewports.
 - Keep dialogs inside the current dynamic portrait viewport, with their close controls reachable.
-- Preserve native selects, minimum 44 px touch targets, visible focus, and tap operation for mission summaries, maps, rules, and Layouts Key.
+- Preserve native selects, pinch zoom, visible focus, and tap operation for mission summaries, maps, rules, and Layouts Key; controls may scale with the complete reference sheet on narrow phones.
 - OnePlus 15R is the primary physical target, using its 2800 x 1272 display and 19.8:9 aspect ratio. Verification must also cover representative narrow, standard, and large-phone portrait viewports so the implementation is not device-specific.
 
 ## Application behavior and data flow
@@ -77,3 +77,4 @@ GitHub issue: [#7](https://github.com/okami69/WH40K-Terrain-Layout/issues/7)
 - No support for x86, x86_64, ARMv7, or other legacy/non-phone Android architectures in this release.
 - No landscape layout or automatic orientation changes.
 - No redesign, mobile-specific feature set, server, or separate Android frontend.
+- No separate reflowed mobile control layout or guaranteed 44 px post-scale target for every control in this compact-sheet release.

@@ -37,9 +37,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /padding-right:\s*env\(safe-area-inset-right\)/);
   assert.match(css, /padding-bottom:\s*env\(safe-area-inset-bottom\)/);
   assert.match(css, /padding-left:\s*env\(safe-area-inset-left\)/);
-  const sheetControlRule = css.match(/\.app-sheet :is\(button, select\)\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-  assert.match(sheetControlRule, /\bmin-height:\s*calc\(44px \/ var\(--sheet-scale\)\);/);
-  assert.match(sheetControlRule, /\bmin-width:\s*calc\(44px \/ var\(--sheet-scale\)\);/);
+  assert.doesNotMatch(css, /\.app-sheet :is\(button, select\)\s*\{[\s\S]*?44px \/ var\(--sheet-scale\)/);
   assert.match(css, /\.title-button\s*\{[\s\S]*font-size:\s*1\.55rem/);
   assert.match(css, /#terrain-rules-viewer\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /#terrain-rules-image\s*\{[\s\S]*height:\s*auto/);

@@ -15,7 +15,7 @@
 - Modify `.gitignore`: track the Android scaffold while excluding generated build state and signing secrets.
 - Modify `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, and `src-tauri/tauri.conf.json`: set v0.3.0 and add exact Android commands.
 - Create `src-tauri/src/lib.rs` and modify `src-tauri/src/main.rs`: expose the Tauri mobile library entry point while preserving the Windows executable entry point.
-- Modify `app/index.html`, `app/styles.css`, and `app/app.js`: account for portrait safe areas and dynamic Android viewport changes.
+- Modify `app/index.html`, `app/styles.css`, and `app/app.js`: fit the complete compact sheet within portrait safe areas, let its controls scale with it on narrow phones, and keep dialogs within the dynamic Android viewport.
 - Modify `test/tauri.test.js` and `test/ui.test.js`: lock the release/build and responsive contracts with small static tests.
 - Create `test/android.test.js`: verify the generated manifest, ARM64 build contract, release signing configuration, and secret exclusions.
 - Create and commit `src-tauri/gen/android/**`: Tauri-generated Android project plus portrait/signing configuration.
@@ -177,6 +177,8 @@ git commit -m "build: define Android ARM64 release refs #7"
 ```
 
 ### Task 2: Make the shared sheet safe on portrait Android viewports
+
+**User decision:** Preserve the complete 768 x 1080 sheet at narrow portrait widths. Controls may scale with the sheet; this release does not add a reflowed mobile control layout or guarantee a 44 px post-scale target for every control because inverse-scaling controls would shift and clip the fixed sheet content.
 
 **Files:**
 - Modify: `test/ui.test.js`
@@ -563,9 +565,9 @@ expect(metrics.sheet.right).toBeLessThanOrEqual(metrics.viewportWidth);
 expect(metrics.sheet.bottom).toBeLessThanOrEqual(metrics.viewportHeight);
 ```
 
-Also select both dispositions, choose layouts A/B/C, switch RU/ENG, open and close the map/rules/key dialogs, tap both mission summaries, reload, and confirm the chosen language persists. Capture one screenshot at 412 x 915 for the issue.
+Also confirm that controls remain visible and non-overlapping, then select both dispositions, choose layouts A/B/C, switch RU/ENG, open and close the map/rules/key dialogs, tap both mission summaries, reload, and confirm the chosen language persists. Do not assert a 44 px post-scale minimum control size. Capture one screenshot at 412 x 915 for the issue.
 
-Expected: no page scrolling, clipping, unreachable close button, distorted image, or failed touch interaction.
+Expected: no page scrolling, clipping, overlapping controls, unreachable close button, distorted image, or failed touch interaction.
 
 - [ ] **Step 4: Treat any responsive failure as a gated defect**
 
