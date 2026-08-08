@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { matchups, resolveMatchup } from '../app/matchups.js';
 
 test('all matchup layouts have unique image assets', () => {
@@ -30,4 +30,10 @@ test('all matchup layouts have unique image assets', () => {
     assert.ok(existsSync(path), `Missing ${path}`);
     assert.ok(statSync(path).size > 0, `Empty ${path}`);
   }
+});
+
+test('layout key extraction crops to the official content panel', () => {
+  const extractor = readFileSync('tools/extract_layouts.py', 'utf8');
+  assert.match(extractor, /KEY_CROP_POINTS = \(94, 42, 502, 778\)/);
+  assert.match(extractor, /key\.crop\(key_crop\)\.save\(/);
 });

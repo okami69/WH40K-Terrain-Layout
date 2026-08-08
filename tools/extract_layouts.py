@@ -14,6 +14,7 @@ DISPOSITION_OUTPUT = ROOT / "app" / "assets" / "dispositions"
 SCALE = 2
 CROP_POINTS = (82, 245, 513, 765)
 KEY_PAGE = 8
+KEY_CROP_POINTS = (94, 42, 502, 778)
 ICON_CROPS = {
     "take-and-hold": (160, 76, 208, 124),
     "purge-the-foe": (384, 76, 432, 124),
@@ -55,6 +56,7 @@ def main():
     KEY_OUTPUT.mkdir(parents=True, exist_ok=True)
     DISPOSITION_OUTPUT.mkdir(parents=True, exist_ok=True)
     crop = tuple(point * SCALE for point in CROP_POINTS)
+    key_crop = tuple(point * SCALE for point in KEY_CROP_POINTS)
 
     with pdfium.PdfDocument(SOURCE) as document:
         for first_page, slug in GROUPS:
@@ -63,7 +65,7 @@ def main():
                 image.crop(crop).save(OUTPUT / f"{slug}-{layout}.webp", "WEBP", lossless=True, method=6)
 
         key = document[KEY_PAGE - 1].render(scale=SCALE).to_pil().convert("RGB")
-        key.save(KEY_OUTPUT / "layouts-key.webp", "WEBP", lossless=True, method=6)
+        key.crop(key_crop).save(KEY_OUTPUT / "layouts-key.webp", "WEBP", lossless=True, method=6)
 
         for slug, page_no in ICON_PAGES.items():
             page = document[page_no - 1].render(scale=SCALE).to_pil().convert("RGBA")
