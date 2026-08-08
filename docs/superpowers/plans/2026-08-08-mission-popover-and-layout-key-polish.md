@@ -1,8 +1,8 @@
-# Mission Popover And Layout Key Polish Implementation Plan
+# Mission Popover, Disposition Alignment, And Layout Key Polish Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Anchor mission summaries below their own mission names and package only the content panel from the official page 8 layouts key.
+**Goal:** Anchor mission summaries below their own mission names, center the selected disposition names, and package only the content panel from the official page 8 layouts key.
 
 **Architecture:** Keep the existing shared fixed popover and reset the native top-layer inset and margin that currently override its JavaScript coordinates. Add one crop constant to the existing PDF extraction script and regenerate the lossless WebP; no DOM, localization, or dependency changes are needed.
 
@@ -137,7 +137,56 @@ git add test/assets.test.js tools/extract_layouts.py app/assets/key/layouts-key.
 git commit -m "fix: crop layouts key to content panel refs #3"
 ```
 
-### Task 3: Verify The Complete Desktop UI
+### Task 3: Center The Selected Disposition Names
+
+**Files:**
+- Modify: `test/ui.test.js`
+- Modify: `app/styles.css`
+
+- [ ] **Step 1: Write the failing regression test**
+
+Isolate the `.disposition-select` declaration and require centered text with symmetric horizontal padding:
+
+```js
+const dispositionRule = css.match(/\.disposition-select\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+assert.match(dispositionRule, /\bpadding:\s*0 28px;/);
+assert.match(dispositionRule, /\btext-align:\s*center;/);
+```
+
+- [ ] **Step 2: Run the focused test and verify RED**
+
+Run: `node --test test/ui.test.js`
+
+Expected: FAIL because the existing padding is `0 28px 0 8px`.
+
+- [ ] **Step 3: Make the padding symmetric**
+
+Replace only the existing padding declaration in `.disposition-select`:
+
+```css
+padding: 0 28px;
+```
+
+Keep the native select, right-side arrow, dimensions, typography, and `text-align: center` unchanged.
+
+- [ ] **Step 4: Run the focused and full suites**
+
+Run: `node --test test/ui.test.js`
+
+Expected: PASS.
+
+Run: `npm.cmd test`
+
+Expected: all tests pass.
+
+- [ ] **Step 5: Commit the alignment fix**
+
+```powershell
+git add test/ui.test.js app/styles.css
+git commit -m "fix: center disposition names refs #3"
+```
+
+### Task 4: Verify The Complete Desktop UI
 
 **Files:**
 - Temporary verification script: `D:\Temp\okami\wh40k-playwright-smoke.cjs`
@@ -165,7 +214,7 @@ if (Math.abs(geometry.gap - 8) > 1) throw new Error(`${selector}: popover gap ${
 if (geometry.left < 0 || geometry.right > page.viewportSize().width) throw new Error(`${selector}: popover outside viewport`);
 ```
 
-Record the map rectangle before and after opening each summary and require it to be unchanged. Open `#layout-key-viewer`, require the key natural dimensions to equal `816 × 1472`, and save `output/playwright/layouts-key.png`.
+Record the map rectangle before and after opening each summary and require it to be unchanged. For both disposition selects, require computed `text-align: center` and equal left/right padding, then confirm the centered labels in the reference and laptop screenshots. Open `#layout-key-viewer`, require the key natural dimensions to equal `816 × 1472`, and save `output/playwright/layouts-key.png`.
 
 - [ ] **Step 3: Run all Node tests**
 
