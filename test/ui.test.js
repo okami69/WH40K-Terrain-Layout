@@ -70,9 +70,11 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /popover\.style\.top\s*=\s*`\$\{rect\.bottom \+ 8\}px`/);
 });
 
-test('publishes four application screenshots in the README', () => {
+test('publishes six current application screenshots in the README', () => {
   const screenshots = [
     'disruption-vs-reconnaissance-layout-a.png',
+    'terrain-layouts-rules.png',
+    'layouts-key.png',
     'take-and-hold-vs-purge-the-foe-layout-b.png',
     'priority-assets-vs-disruption-layout-c.png',
     'reconnaissance-vs-priority-assets-layout-a.png',
