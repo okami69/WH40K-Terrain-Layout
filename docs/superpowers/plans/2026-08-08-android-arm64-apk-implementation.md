@@ -288,7 +288,7 @@ Test-Path "$env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latest\bin\sdkmanager.bat
 
 Expected before setup: `winget` exists; Android Studio/SDK checks are false; only `x86_64-pc-windows-msvc` is listed.
 
-- [ ] **Step 2: Install Android Studio after obtaining command approval**
+- [ ] **Step 2: Install Android Studio and Microsoft OpenJDK 21 after obtaining command approval**
 
 Run:
 
@@ -316,7 +316,14 @@ Expected: all licenses are accepted and the four packages install without errors
 Run:
 
 ```powershell
-$javaHome = 'C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot'
+$javaHomes = @(
+    Get-ChildItem -LiteralPath 'C:\Program Files\Microsoft' -Directory -Filter 'jdk-21*' -ErrorAction Stop |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'bin\java.exe') }
+)
+if ($javaHomes.Count -ne 1) {
+    throw "Expected exactly one Microsoft OpenJDK 21 installation under C:\Program Files\Microsoft; found $($javaHomes.Count)."
+}
+$javaHome = $javaHomes[0].FullName
 $androidHome = "$env:LOCALAPPDATA\Android\Sdk"
 $ndkHome = "$androidHome\ndk\29.0.14206865"
 [Environment]::SetEnvironmentVariable('JAVA_HOME', $javaHome, 'User')
@@ -328,7 +335,18 @@ $env:NDK_HOME = $ndkHome
 $env:Path = "C:\Users\okami\.cargo\bin;$javaHome\bin;$androidHome\platform-tools;$env:Path"
 ```
 
-Expected: the variables point to existing directories and `& "$env:JAVA_HOME\bin\java.exe" -version` reports Microsoft OpenJDK 21. Android Studio 2026.1 continues to use its bundled JBR 25 internally; do not persist that JBR as the Gradle/Tauri `JAVA_HOME` because generated Gradle 8.14.3 cannot run on Java 25.
+Expected: the variables point to existing directories and `& "$env:JAVA_HOME\bin\java.exe" -version` reports Microsoft OpenJDK 21. Verified on 2026-08-08 with Microsoft OpenJDK `21.0.12+8-LTS` at `C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot`. Android Studio 2026.1 continues to use its bundled JBR 25 internally; do not persist that JBR as the Gradle/Tauri `JAVA_HOME` because generated Gradle 8.14.3 cannot run on Java 25.
+
+Existing build processes do not inherit later User-scope changes. Before running Gradle or Tauri from an already-open process, explicitly refresh the current session:
+
+```powershell
+foreach ($name in 'JAVA_HOME', 'ANDROID_HOME', 'NDK_HOME') {
+    [Environment]::SetEnvironmentVariable($name, [Environment]::GetEnvironmentVariable($name, 'User'), 'Process')
+}
+$env:Path = "$env:JAVA_HOME\bin;C:\Users\okami\.cargo\bin;$env:Path"
+```
+
+The SDK tools do not need to be added permanently to `Path`; invoke them through `ANDROID_HOME` or prepend them only in the current session when needed.
 
 - [ ] **Step 5: Install only the Rust Android ARM64 target and verify Tauri**
 
@@ -355,7 +373,7 @@ Run: `npm.cmd run android:init`
 
 Expected: `src-tauri/gen/android/app/src/main/AndroidManifest.xml` and `src-tauri/gen/android/app/build.gradle.kts` exist; no ARMv7, i686, or x86_64 Rust target is installed.
 
-- [ ] **Step 2: Write failing tests for portrait lock and release signing**
+- [ ] **Step 2: Write failing tests for portrait lock, phone launcher, and release signing**
 
 Create `test/android.test.js`:
 
@@ -372,13 +390,38 @@ test('locks the Android activity to portrait', () => {
   assert.match(manifest, /android:screenOrientation="portrait"/);
 });
 
+test('does not advertise Android TV support', () => {
+  const manifest = readFileSync(manifestPath, 'utf8');
+  assert.doesNotMatch(manifest, /android\.software\.leanback/i);
+});
+
+test('uses the phone launcher without an Android TV launcher', () => {
+  const manifest = readFileSync(manifestPath, 'utf8');
+  assert.doesNotMatch(manifest, /android\.intent\.category\.LEANBACK_LAUNCHER/i);
+  assert.match(manifest, /android\.intent\.category\.LAUNCHER/);
+});
+
 test('signs Android release builds from an ignored properties file', () => {
   const gradle = readFileSync(gradlePath, 'utf8');
   assert.match(gradle, /rootProject\.file\("keystore\.properties"\)/);
   assert.match(gradle, /create\("release"\)/);
   assert.match(gradle, /signingConfig = signingConfigs\.getByName\("release"\)/);
-  assert.match(gradle, /keystoreProperties\["password"\]/);
+  assert.match(gradle, /requiredProperty\("password"\)/);
   assert.doesNotMatch(gradle, /storePassword\s*=\s*"[^"$]+"/);
+});
+
+test('validates Android release signing configuration with actionable errors', () => {
+  const gradle = readFileSync(gradlePath, 'utf8');
+  assert.match(gradle, /require\(keystorePropertiesFile\.isFile\)/);
+  assert.match(
+    gradle,
+    /src-tauri\/gen\/android\/keystore\.properties is required for Android release signing/,
+  );
+  assert.match(gradle, /keystorePropertiesFile\.inputStream\(\)\.use/);
+  assert.match(gradle, /Missing required Android release signing property '\$name'/);
+  assert.match(gradle, /requiredProperty\("keyAlias"\)/);
+  assert.match(gradle, /requiredProperty\("password"\)/);
+  assert.match(gradle, /requiredProperty\("storeFile"\)/);
 });
 ```
 
@@ -386,9 +429,9 @@ test('signs Android release builds from an ignored properties file', () => {
 
 Run: `node --test test/android.test.js`
 
-Expected: FAIL because portrait orientation and release signing have not been configured.
+Expected: FAIL because portrait orientation, phone-only launcher exposure, and hardened release signing have not been configured.
 
-- [ ] **Step 4: Lock the generated activity to portrait**
+- [ ] **Step 4: Lock the generated activity to portrait and remove Android TV exposure**
 
 In the main `<activity>` in `src-tauri/gen/android/app/src/main/AndroidManifest.xml`, add:
 
@@ -398,12 +441,13 @@ android:screenOrientation="portrait"
 
 Do not add sensor-landscape, unspecified, or user-controlled orientation modes.
 
+Remove the generated `android.software.leanback` `<uses-feature>` and `android.intent.category.LEANBACK_LAUNCHER` category. Keep `android.intent.category.LAUNCHER` on the main activity.
+
 - [ ] **Step 5: Configure Gradle release signing without embedding credentials**
 
-At the top of `src-tauri/gen/android/app/build.gradle.kts`, add missing imports:
+At the top of `src-tauri/gen/android/app/build.gradle.kts`, retain the generated `Properties` import:
 
 ```kotlin
-import java.io.FileInputStream
 import java.util.Properties
 ```
 
@@ -413,12 +457,23 @@ Inside `android {}`, immediately before `buildTypes`, add:
 signingConfigs {
     create("release") {
         val keystorePropertiesFile = rootProject.file("keystore.properties")
-        val keystoreProperties = Properties()
-        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-        keyAlias = keystoreProperties["keyAlias"] as String
-        keyPassword = keystoreProperties["password"] as String
-        storeFile = file(keystoreProperties["storeFile"] as String)
-        storePassword = keystoreProperties["password"] as String
+        require(keystorePropertiesFile.isFile) {
+            "src-tauri/gen/android/keystore.properties is required for Android release signing"
+        }
+        val keystoreProperties = Properties().apply {
+            keystorePropertiesFile.inputStream().use { load(it) }
+        }
+        fun requiredProperty(name: String) = requireNotNull(
+            keystoreProperties.getProperty(name)?.takeIf { it.isNotBlank() },
+        ) {
+            "Missing required Android release signing property '$name' in src-tauri/gen/android/keystore.properties"
+        }
+        val password = requiredProperty("password")
+
+        keyAlias = requiredProperty("keyAlias")
+        keyPassword = password
+        storeFile = file(requiredProperty("storeFile"))
+        storePassword = password
     }
 }
 ```
