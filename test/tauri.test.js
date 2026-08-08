@@ -81,3 +81,13 @@ test('defines the Tauri mobile library entry point', () => {
   assert.match(libRs, /pub fn run\(\)/);
   assert.match(mainRs, /wh40k_terrain_layout_lib::run\(\);/);
 });
+
+test('documents the signed ARM64 Android release', () => {
+  const readme = readFileSync('README.md', 'utf8');
+
+  assert.match(readme, /v0\.3\.0/);
+  assert.match(readme, /Android ARM64/);
+  assert.match(readme, /OnePlus 15R/);
+  assert.match(readme, /npm\.cmd run android:build/);
+  assert.match(readme, /keystore/i);
+});
