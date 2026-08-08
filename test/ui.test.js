@@ -44,3 +44,18 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /min-height:\s*44px/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
+
+test('publishes four application screenshots in the README', () => {
+  const screenshots = [
+    'disruption-vs-reconnaissance-layout-a.png',
+    'take-and-hold-vs-purge-the-foe-layout-b.png',
+    'priority-assets-vs-disruption-layout-c.png',
+    'reconnaissance-vs-priority-assets-layout-a.png',
+  ];
+  const readme = readFileSync('README.md', 'utf8');
+
+  for (const screenshot of screenshots) {
+    assert.ok(existsSync(`docs/screenshots/${screenshot}`), `Missing ${screenshot}`);
+    assert.match(readme, new RegExp(`docs/screenshots/${screenshot.replaceAll('.', '\\.')}`));
+  }
+});

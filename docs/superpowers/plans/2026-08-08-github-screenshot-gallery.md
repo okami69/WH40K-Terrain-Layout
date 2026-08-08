@@ -15,28 +15,27 @@
 **Files:**
 - Modify: `test/ui.test.js`
 
-- [ ] Add a test that requires four named PNG files and matching README references.
-- [ ] Run `node --test test/ui.test.js` and confirm it fails because the screenshots are absent.
+- [x] Add a test that requires four named PNG files and matching README references.
+- [x] Run `node --test test/ui.test.js` and confirm it fails because the screenshots are absent.
 
 ### Task 2: Capture representative states
 
 **Files:**
 - Create: `docs/screenshots/disruption-vs-reconnaissance-layout-a.png`
-- Create: `docs/screenshots/feint-vs-counterattack-layout-b.png`
-- Create: `docs/screenshots/rapid-escalation-vs-encirclement-layout-c.png`
-- Create: `docs/screenshots/hammer-and-anvil-vs-probe-layout-a.png`
+- Create: `docs/screenshots/take-and-hold-vs-purge-the-foe-layout-b.png`
+- Create: `docs/screenshots/priority-assets-vs-disruption-layout-c.png`
+- Create: `docs/screenshots/reconnaissance-vs-priority-assets-layout-a.png`
 
-- [ ] Serve `app/` locally and capture four 768 x 1080 English states with Playwright.
-- [ ] Open the left mission summary in the first state and the right mission summary in the third state.
-- [ ] Visually inspect every PNG at original resolution.
+- [x] Serve `app/` locally and capture four 768 x 1080 English states with Playwright.
+- [x] Open the left mission summary in the first state and the right mission summary in the third state.
+- [x] Visually inspect every PNG at original resolution.
 
 ### Task 3: Publish the gallery
 
 **Files:**
 - Modify: `README.md`
 
-- [ ] Add a `Screenshots` section near the top with a two-column HTML table and concise captions.
-- [ ] Run `npm.cmd test` and confirm all tests pass.
-- [ ] Check Markdown image paths and image dimensions.
+- [x] Add a `Screenshots` section near the top with a two-column HTML table and concise captions.
+- [x] Run `npm.cmd test` and confirm all tests pass.
+- [x] Check Markdown image paths and image dimensions.
 - [ ] Commit, push `main`, update and close GitHub issue #4.
-

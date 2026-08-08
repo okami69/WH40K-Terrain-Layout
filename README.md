@@ -2,6 +2,14 @@
 
 Offline Windows table companion for choosing the official Warhammer 40,000 terrain map from two Force Dispositions. v0.2 uses a compact Tauri shell around the same plain HTML/CSS/JavaScript app.
 
+## Screenshots
+
+| Disruption vs Reconnaissance, Layout A with mission summary | Take and Hold vs Purge the Foe, Layout B |
+| --- | --- |
+| ![Disruption versus Reconnaissance on Layout A with the left mission summary open](docs/screenshots/disruption-vs-reconnaissance-layout-a.png) | ![Take and Hold versus Purge the Foe on Layout B](docs/screenshots/take-and-hold-vs-purge-the-foe-layout-b.png) |
+| Priority Assets vs Disruption, Layout C with mission summary | Reconnaissance vs Priority Assets, Layout A |
+| ![Priority Assets versus Disruption on Layout C with the right mission summary open](docs/screenshots/priority-assets-vs-disruption-layout-c.png) | ![Reconnaissance versus Priority Assets on Layout A](docs/screenshots/reconnaissance-vs-priority-assets-layout-a.png) |
+
 ## Use
 
 1. Select each player's Force Disposition from the two top cards.
@@ -34,7 +42,7 @@ The Tauri NSIS installer is written under:
 
 Current verification note: `npm.cmd test`, `cargo check --manifest-path src-tauri/Cargo.toml`, `npm.cmd run dist`, and the final Playwright smoke pass completed on Windows with the MSVC toolchain. The Playwright smoke was run from a temporary external runner against the packaged `app/` files and checked the 768 x 1080 reference viewport, laptop-scale viewport, RU/ENG persistence, mission popovers, and key/map dialogs.
 
-The v0.2.0 NSIS installer is 21.11 MiB and installs 23.23 MiB under `%LOCALAPPDATA%\Programs\WH40K Terrain Layout`.
+The v0.2.1 NSIS installer is 20.77 MiB and installs 22.81 MiB under `%LOCALAPPDATA%\Programs\WH40K Terrain Layout`.
 
 ## Re-extract assets
 
