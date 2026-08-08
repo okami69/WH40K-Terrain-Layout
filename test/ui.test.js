@@ -37,6 +37,9 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /padding-right:\s*env\(safe-area-inset-right\)/);
   assert.match(css, /padding-bottom:\s*env\(safe-area-inset-bottom\)/);
   assert.match(css, /padding-left:\s*env\(safe-area-inset-left\)/);
+  const sheetControlRule = css.match(/\.app-sheet :is\(button, select\)\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(sheetControlRule, /\bmin-height:\s*calc\(44px \/ var\(--sheet-scale\)\);/);
+  assert.match(sheetControlRule, /\bmin-width:\s*calc\(44px \/ var\(--sheet-scale\)\);/);
   assert.match(css, /\.title-button\s*\{[\s\S]*font-size:\s*1\.55rem/);
   assert.match(css, /#terrain-rules-viewer\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /#terrain-rules-image\s*\{[\s\S]*height:\s*auto/);
@@ -54,6 +57,16 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /#layout-key-viewer\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /#layout-key-image\s*\{[\s\S]*height:\s*auto/);
   assert.match(css, /#layout-key-image\s*\{[\s\S]*max-height:\s*calc\(100vh - 106px\)/);
+  const dialogRule = css.match(/dialog\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(dialogRule, /\binset:\s*calc\(env\(safe-area-inset-top\) \+ 12px\) calc\(env\(safe-area-inset-right\) \+ 12px\) calc\(env\(safe-area-inset-bottom\) \+ 12px\) calc\(env\(safe-area-inset-left\) \+ 12px\);/);
+  assert.match(dialogRule, /\bwidth:\s*min\(calc\(100% - env\(safe-area-inset-left\) - env\(safe-area-inset-right\) - 24px\), 1000px\);/);
+  assert.match(dialogRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 24px\);/);
+  const largeMapRule = css.match(/#large-map\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(largeMapRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 98px\);/);
+  const terrainRulesImageRule = css.match(/#terrain-rules-image\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(terrainRulesImageRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 106px\);/);
+  const layoutKeyImageRule = css.match(/#layout-key-image\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(layoutKeyImageRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 106px\);/);
   assert.match(css, /body\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /\.stage\s*\{[\s\S]*width:\s*calc\(768px \* var\(--sheet-scale\)\)/);
   assert.match(css, /\.stage\s*\{[\s\S]*height:\s*calc\(1080px \* var\(--sheet-scale\)\)/);
