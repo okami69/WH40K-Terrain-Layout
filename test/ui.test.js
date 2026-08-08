@@ -289,6 +289,10 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
 
     const freeCard = cards().find(card => card.dataset.layoutId.endsWith('-b'));
     const freeImage = freeCard.children[0];
+    const freeLabel = freeCard.children[1];
+    assert.match(freeImage.alt, /.+ \/ .+ · Layout [ABC]/);
+    assert.match(freeLabel.textContent, /.+ \/ .+ · Layout [ABC]/);
+    assert.equal(freeLabel.textContent, freeImage.alt);
     freeCard.dispatch('click');
     assert.equal(gallery.open, false);
     assert.equal(title.textContent, 'Free layout');
