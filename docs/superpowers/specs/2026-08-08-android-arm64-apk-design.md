@@ -18,6 +18,7 @@ GitHub issue: [#7](https://github.com/okami69/WH40K-Terrain-Layout/issues/7)
 - Initialize Android support inside the existing Tauri 2 project rather than adding Capacitor or a second mobile application.
 - Keep the application identifier `com.okami69.wh40kterrainlayout` and the current product name.
 - Build one release APK for `arm64-v8a` / `aarch64-linux-android` only.
+- Lock the Android activity to portrait orientation. The application must not rotate into landscape when the device turns.
 - Sign the release APK with a dedicated long-lived keystore so later builds can update an installed copy.
 - Keep the keystore, passwords, generated signing properties, and other credentials outside Git.
 - Produce an APK for direct installation. Google Play publishing, Android App Bundles, and multi-ABI universal packages are out of scope.
@@ -33,11 +34,11 @@ GitHub issue: [#7](https://github.com/okami69/WH40K-Terrain-Layout/issues/7)
 
 - Preserve the existing 768 x 1080 reference sheet and fit it uniformly inside the available Android WebView area without distorting the map.
 - Account for Android status/navigation bars, display cutouts, and safe-area insets so controls are not obscured.
-- Recalculate the sheet scale when the viewport size or orientation changes.
+- Recalculate the sheet scale when the available portrait viewport changes, including after system-bar or window-size changes.
 - Keep the complete main sheet visible without page-level scrolling at supported phone viewports.
-- Keep dialogs inside the current dynamic viewport, with their close controls reachable in portrait and landscape orientations.
+- Keep dialogs inside the current dynamic portrait viewport, with their close controls reachable.
 - Preserve native selects, minimum 44 px touch targets, visible focus, and tap operation for mission summaries, maps, rules, and Layouts Key.
-- OnePlus 15R is the primary physical target, using its 2800 x 1272 display and 19.8:9 aspect ratio. Verification must also cover representative narrow, standard, large-phone, and landscape viewports so the implementation is not device-specific.
+- OnePlus 15R is the primary physical target, using its 2800 x 1272 display and 19.8:9 aspect ratio. Verification must also cover representative narrow, standard, and large-phone portrait viewports so the implementation is not device-specific.
 
 ## Application behavior and data flow
 
@@ -57,9 +58,9 @@ GitHub issue: [#7](https://github.com/okami69/WH40K-Terrain-Layout/issues/7)
 
 - Run the existing Node test suite before and after Android integration.
 - Add the smallest static checks needed for Android configuration, ARM64-only targeting, and secret exclusions.
-- Run Playwright checks against representative Android viewport dimensions in portrait and landscape, including safe-area behavior, scaling, dialogs, language switching, and touch interactions.
+- Run Playwright checks against representative Android portrait viewport dimensions, including safe-area behavior, scaling, dialogs, language switching, and touch interactions.
 - Build the signed release APK and verify its signature, architecture, package identifier, exact size, and SHA-256 checksum.
-- Install and smoke-test the APK on the physical OnePlus 15R: first launch, both disposition selectors, all layout buttons, map viewer, rules, Layouts Key, both languages, mission summaries, preference restoration, orientation changes, and offline relaunch.
+- Install and smoke-test the APK on the physical OnePlus 15R: first launch, both disposition selectors, all layout buttons, map viewer, rules, Layouts Key, both languages, mission summaries, preference restoration, portrait lock, and offline relaunch.
 - Where an emulator or additional physical device is available, repeat a focused smoke test on a second current ARM64 Android profile.
 
 ## Deliverables
@@ -74,4 +75,5 @@ GitHub issue: [#7](https://github.com/okami69/WH40K-Terrain-Layout/issues/7)
 - No image optimization or content changes.
 - No Google Play release, Android App Bundle, updater, or store metadata.
 - No support for x86, x86_64, ARMv7, or other legacy/non-phone Android architectures in this release.
+- No landscape layout or automatic orientation changes.
 - No redesign, mobile-specific feature set, server, or separate Android frontend.
