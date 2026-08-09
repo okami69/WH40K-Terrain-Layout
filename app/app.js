@@ -86,6 +86,77 @@ const text = {
   },
 };
 
+const terrainRulesCopy = {
+  en: {
+    intro: [
+      "The following layouts are presented for Warhammer Event organisers and players to use in all of their games of Warhammer 40,000 using the most recent Chapter Approved Mission Deck. These are the layouts that are used at Games Workshop events and are designed for the best experience by the Warhammer Studio team, to reflect battlefields that create risk-and-reward decisions with each player's objectives in mind.",
+      'Each combination of Primary Missions has three recommended layouts, labelled A, B and C. As directed by the Warhammer Event organiser, the players either use the layout specified or randomly determine which of these layouts to use.',
+    ],
+    footprintsHeading: 'Recommended Terrain Area Footprints',
+    footprintsIntro: [
+      'We have listed the terrain area footprints these recommended layouts use. You can find a PDF with these footprints ready for you to print on ',
+      { emphasis: 'warhammer-community.com' },
+      '.',
+    ],
+    sizeHeading: 'Terrain area footprint size',
+    quantityHeading: 'Quantity',
+    polygon: 'Polygon',
+    featuresHeading: 'Terrain Features',
+    features: [
+      [
+        'Each layout is shown with the terrain features from the ',
+        { emphasis: 'Battlefields: Armageddon' },
+        " box using the 'Warhammer recommended' build configuration from the construction booklet. We've denoted each terrain feature from that set as either a dense or light terrain feature in these layouts. The configurations of the terrain features and terrain areas are designed to create the best experience with the ",
+        { emphasis: 'Hidden' },
+        " rule and movement rules for various units, and to create plenty of interesting decisions during a battle. We've also purposely left space between a terrain feature and the edge of the terrain area to allow a line of models to be on the terrain area from the 'outside'.",
+      ],
+      [
+        'If you do not have the ',
+        { emphasis: 'Battlefields: Armageddon' },
+        ' terrain, it is possible to recreate these layouts with your own terrain that is close to the same size of the various terrain features by denoting for all players if they are dense or light terrain features.',
+      ],
+    ],
+  },
+  ru: {
+    intro: [
+      'Следующие схемы предназначены для организаторов мероприятий Warhammer и игроков и могут использоваться во всех играх Warhammer 40,000 с самой актуальной колодой миссий Chapter Approved. Эти схемы используются на мероприятиях Games Workshop и разработаны командой Warhammer Studio для наиболее интересной игры на полях боя, где игрокам приходится сопоставлять риск и награду с учётом своих целей.',
+      'Для каждой комбинации основных миссий предусмотрены три рекомендуемые схемы: A, B и C. По указанию организатора мероприятия Warhammer игроки используют назначенную схему или определяют одну из этих схем случайным образом.',
+    ],
+    footprintsHeading: 'Рекомендуемые размеры зон террейна',
+    footprintsIntro: [
+      'Ниже перечислены размеры зон террейна, используемых в рекомендуемых схемах. На сайте ',
+      { emphasis: 'warhammer-community.com' },
+      ' можно найти готовый к печати PDF с этими контурами.',
+    ],
+    sizeHeading: 'Размер зоны террейна',
+    quantityHeading: 'Количество',
+    polygon: 'Многоугольник',
+    featuresHeading: 'Элементы террейна',
+    features: [
+      [
+        'Каждая схема показана с элементами террейна из набора ',
+        { emphasis: 'Battlefields: Armageddon' },
+        ' в рекомендованной Warhammer конфигурации сборки из инструкции. Каждый элемент этого набора обозначен на схемах как плотный или лёгкий элемент террейна. Конфигурации элементов и зон террейна рассчитаны на наиболее интересную игру с учётом правила ',
+        { emphasis: 'Hidden' },
+        ' и правил перемещения различных подразделений и создают множество значимых решений во время боя. Между элементом террейна и краем зоны террейна намеренно оставлено место, чтобы ряд моделей мог размещаться в зоне террейна со стороны внешнего края.',
+      ],
+      [
+        'Если у вас нет террейна ',
+        { emphasis: 'Battlefields: Armageddon' },
+        ', эти схемы можно воспроизвести с собственным террейном близкого размера. Перед игрой сообщите всем игрокам, какие элементы считаются плотными, а какие лёгкими.',
+      ],
+    ],
+  },
+};
+
+const terrainFootprints = [
+  ['6" x 4"', 4],
+  ['10" x 2.5"', 2],
+  ['6" x 2"', 4],
+  ['7" x 11.5"', 4],
+  ['8" x 11.5"', 2, 'polygon'],
+];
+
 const deploymentNames = {
   'crucible-of-battle': { ru: 'Горнило битвы', en: 'Crucible of Battle' },
   'dawn-of-war': { ru: 'Рассвет войны', en: 'Dawn of War' },
@@ -108,7 +179,7 @@ const title = document.querySelector('#layout-title');
 const terrainRulesButton = document.querySelector('#terrain-rules-button');
 const viewerTitle = document.querySelector('#viewer-title');
 const terrainRulesTitle = document.querySelector('#terrain-rules-title');
-const terrainRulesImage = document.querySelector('#terrain-rules-image');
+const terrainRulesContent = document.querySelector('#terrain-rules-content');
 const keyTitle = document.querySelector('#layout-key-title');
 const mapButton = document.querySelector('.map-button');
 const map = document.querySelector('#map');
@@ -131,6 +202,11 @@ const twistDialogTitle = document.querySelector('#twist-dialog-title');
 const twistDialogBody = document.querySelector('#twist-dialog-body');
 const twistDialogFooter = document.querySelector('#twist-dialog-footer');
 const twistDialogClose = document.querySelector('#twist-dialog-close');
+const terrainRulesClose = document.querySelector('#terrain-rules-close');
+const layoutKeyClose = document.querySelector('#layout-key-close');
+const viewerClose = document.querySelector('#close');
+const layoutGalleryClose = document.querySelector('#layout-gallery-close');
+const dialogCloseButtons = [twistDialogClose, terrainRulesClose, layoutKeyClose, viewerClose, layoutGalleryClose];
 const layoutButtons = [...document.querySelectorAll('[data-layout]')];
 const languageButtons = [...document.querySelectorAll('[data-lang]')];
 const summaryTriggers = [leftMission, rightMission];
@@ -148,6 +224,7 @@ let activeSummaryTrigger = null;
 let selectedTwist = null;
 let twistPanelView = 'chooser';
 let expandedTwist = null;
+const paperGeometry = Object.freeze({ width: 3570, height: 5052, cropLeft: 1354, cropTop: 2174 });
 
 for (const select of [left, right]) {
   for (const disposition of dispositions) select.add(new Option('', disposition));
@@ -211,6 +288,21 @@ function fitSheet() {
   document.documentElement.style.setProperty('--sheet-height', `${sheetHeight}px`);
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
   document.documentElement.style.setProperty('--disposition-menu-font-size', `${scale}rem`);
+}
+
+function syncMapPaper() {
+  if (!map.naturalWidth || !map.naturalHeight || !map.clientWidth || !map.clientHeight) return;
+  const logicalScale = Math.min(map.clientWidth / map.naturalWidth, map.clientHeight / map.naturalHeight);
+  const logicalLeft = (mapButton.clientWidth - map.naturalWidth * logicalScale) / 2;
+  const logicalTop = (mapButton.clientHeight - map.naturalHeight * logicalScale) / 2;
+  mapButton.style.setProperty('--map-paper-size', `${paperGeometry.width * logicalScale}px ${paperGeometry.height * logicalScale}px`);
+  mapButton.style.setProperty('--map-paper-position', `${logicalLeft - paperGeometry.cropLeft * logicalScale}px ${logicalTop - paperGeometry.cropTop * logicalScale}px`);
+  const rect = map.getBoundingClientRect();
+  const viewportScale = Math.min(rect.width / map.naturalWidth, rect.height / map.naturalHeight);
+  const viewportLeft = rect.left + (rect.width - map.naturalWidth * viewportScale) / 2;
+  const viewportTop = rect.top + (rect.height - map.naturalHeight * viewportScale) / 2;
+  document.documentElement.style.setProperty('--paper-size', `${paperGeometry.width * viewportScale}px ${paperGeometry.height * viewportScale}px`);
+  document.documentElement.style.setProperty('--paper-position', `${viewportLeft - paperGeometry.cropLeft * viewportScale}px ${viewportTop - paperGeometry.cropTop * viewportScale}px`);
 }
 
 function showError(message) {
@@ -289,6 +381,16 @@ function createReferenceElement(tag, className, content) {
   element.className = className;
   element.textContent = content;
   return element;
+}
+
+function createTerrainParagraph(segments) {
+  const paragraph = createReferenceElement('p', 'terrain-rules-paragraph', '');
+  for (const segment of segments) {
+    paragraph.append(typeof segment === 'string'
+      ? document.createTextNode(segment)
+      : createReferenceElement('em', '', segment.emphasis));
+  }
+  return paragraph;
 }
 
 function createTwistButton(label, action) {
@@ -412,14 +514,43 @@ function renderTwistDetail(focusDetail = false) {
     expandedTwist = null;
     renderTwistPanel({ focusTwist: selectedTwist.id });
   });
-  const close = createTwistButton(copy.close, 'close');
-  close.addEventListener('click', () => twistDialog.close());
-  twistDialogFooter.replaceChildren(change, close);
+  twistDialogFooter.replaceChildren(change);
+}
+
+function renderTerrainRules() {
+  const scrollTop = terrainRulesContent.scrollTop;
+  const copy = terrainRulesCopy[language];
+  const intro = copy.intro.map(paragraph => createReferenceElement('p', 'terrain-rules-paragraph', paragraph));
+  const footprintsHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.footprintsHeading);
+  const footprintsIntro = createTerrainParagraph(copy.footprintsIntro);
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  const tbody = document.createElement('tbody');
+  table.className = 'terrain-footprints';
+  for (const heading of [copy.sizeHeading, copy.quantityHeading]) {
+    const cell = createReferenceElement('th', '', heading);
+    cell.setAttribute('scope', 'col');
+    headerRow.append(cell);
+  }
+  thead.append(headerRow);
+  for (const [size, quantity, shape] of terrainFootprints) {
+    const row = document.createElement('tr');
+    row.append(
+      createReferenceElement('td', '', shape === 'polygon' ? `${size} ${copy.polygon}` : size),
+      createReferenceElement('td', '', quantity),
+    );
+    tbody.append(row);
+  }
+  table.append(thead, tbody);
+  const featuresHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.featuresHeading);
+  const features = copy.features.map(createTerrainParagraph);
+  terrainRulesContent.replaceChildren(...intro, footprintsHeading, footprintsIntro, table, featuresHeading, ...features);
+  terrainRulesContent.scrollTop = scrollTop;
 }
 
 function renderTwistPanel(focus = {}) {
   twistDialogTitle.textContent = text[language].twistTitle;
-  twistDialogClose.textContent = text[language].close;
   if (twistPanelView === 'detail' && selectedTwist) renderTwistDetail(focus.focusDetail);
   else renderTwistChooser(focus);
 }
@@ -603,14 +734,14 @@ function render() {
     freeLayoutButton.setAttribute('aria-label', copy.chooseFreeLayout);
     freeLayoutButton.setAttribute('aria-pressed', String(Boolean(item)));
     terrainRulesTitle.textContent = copy.title;
-    terrainRulesImage.alt = copy.mapDescription;
-    document.querySelector('#terrain-rules-close').textContent = copy.close;
+    renderTerrainRules();
     keyTitle.textContent = copy.key;
     keyImage.alt = copy.keyAlt;
-    document.querySelector('#layout-key-close').textContent = copy.close;
-    document.querySelector('#close').textContent = copy.close;
     layoutGalleryTitle.textContent = copy.galleryTitle;
-    document.querySelector('#layout-gallery-close').textContent = copy.close;
+    for (const button of dialogCloseButtons) {
+      button.setAttribute('aria-label', copy.close);
+      button.setAttribute('title', copy.close);
+    }
     renderTwistButton();
     if (twistDialog.open) renderTwistPanel();
 
@@ -706,18 +837,19 @@ popover.addEventListener('focusout', event => {
 });
 
 map.addEventListener('error', () => showError(text[language].missingImage(mapMode === 'free' ? freeMap?.layout ?? layout : layout)));
+map.addEventListener('load', syncMapPaper);
 twistButton.addEventListener('click', openTwistDialog);
 twistDialogClose.addEventListener('click', () => twistDialog.close());
 twistDialog.addEventListener('close', () => twistButton.focus());
 twistDialog.addEventListener('cancel', () => twistButton.focus());
 mapButton.addEventListener('click', () => viewer.showModal());
-document.querySelector('#close').addEventListener('click', () => viewer.close());
+viewerClose.addEventListener('click', () => viewer.close());
 freeLayoutButton.addEventListener('click', openGallery);
-document.querySelector('#layout-gallery-close').addEventListener('click', () => layoutGallery.close());
+layoutGalleryClose.addEventListener('click', () => layoutGallery.close());
 terrainRulesButton.addEventListener('click', () => terrainRulesViewer.showModal());
-document.querySelector('#terrain-rules-close').addEventListener('click', () => terrainRulesViewer.close());
+terrainRulesClose.addEventListener('click', () => terrainRulesViewer.close());
 keyButton.addEventListener('click', () => keyViewer.showModal());
-document.querySelector('#layout-key-close').addEventListener('click', () => keyViewer.close());
+layoutKeyClose.addEventListener('click', () => keyViewer.close());
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     closeDispositionMenu(true);
@@ -735,6 +867,7 @@ document.addEventListener('pointerdown', event => {
 });
 function handleViewportResize() {
   fitSheet();
+  syncMapPaper();
   positionSummary();
 }
 
@@ -749,3 +882,4 @@ setDialogBackdropClose(twistDialog);
 
 fitSheet();
 render();
+syncMapPaper();

@@ -2,11 +2,18 @@
 
 Offline Windows and Android companion for finding the official Warhammer 40,000 terrain map for a match. Choose both players' Force Dispositions and layout A, B, or C; the app shows the corresponding terrain placement diagram, assigned missions, and detailed scoring references.
 
-**Current source version:** v0.5.0
+**Current source version:** v0.5.1
 
-**Latest published release:** [v0.5.0](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0)
+**Latest published release:** [v0.5.1](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.1)
 
 Everything needed at the table is bundled with the application, so it works without an internet connection after installation. The interface supports Russian and English, includes the official Layouts Key and Terrain Layouts rules, and can enlarge any map for closer inspection.
+
+## What's new in v0.5.1
+
+- Uses the authentic Event Companion v1.1 paper as one continuous rear background, aligned with every terrain-map crop.
+- Adds a single accessible close control to every dialog while keeping dialog and control surfaces solid white.
+- Replaces the Terrain Layout screenshot with readable bilingual semantic rules and the official five-row footprint table.
+- Keeps the selected Twist detail focused on its only next action: **Change**.
 
 ## What's new in v0.5.0
 
@@ -29,37 +36,38 @@ Everything needed at the table is bundled with the application, so it works with
 
 ## Screenshots
 
-All screenshots below use the English interface and were captured from the verified v0.5.0 source.
+All screenshots below use the English interface and were captured from the verified v0.5.1 source at the application's default desktop window size, 768 × 1080. The application was not stretched to fill the screen.
 
 ### Desktop
 
 | Main screen | Force Disposition menu |
 | --- | --- |
-| ![English desktop main screen](docs/screenshots/v05-desktop-main.png) | ![English desktop Force Disposition menu with all five centered choices](docs/screenshots/v05-desktop-disposition-menu.png) |
+| ![English desktop main screen](docs/screenshots/v051-desktop-main.png) | ![English desktop Force Disposition menu with all five centered choices](docs/screenshots/v051-desktop-disposition-menu.png) |
 | Mission details | Twist chooser |
-| ![English desktop Locate and Deny mission details](docs/screenshots/v05-desktop-mission-details.png) | ![English desktop chooser with all six optional Twists](docs/screenshots/v05-desktop-twist-chooser.png) |
+| ![English desktop Locate and Deny mission details](docs/screenshots/v051-desktop-mission-details.png) | ![English desktop chooser with all six optional Twists](docs/screenshots/v051-desktop-twist-chooser.png) |
 | Selected Twist | Layouts Key |
-| ![English desktop Martial Pride Twist details](docs/screenshots/v05-desktop-twist-detail.png) | ![English desktop official Layouts Key](docs/screenshots/v05-desktop-layouts-key.png) |
+| ![English desktop Martial Pride Twist details](docs/screenshots/v051-desktop-twist-detail.png) | ![English desktop official Layouts Key](docs/screenshots/v051-desktop-layouts-key.png) |
 | Terrain Layout rules | All-layout gallery |
-| ![English desktop official Terrain Layout rules](docs/screenshots/v05-desktop-terrain-rules.png) | ![English desktop all-layout gallery](docs/screenshots/v05-desktop-gallery.png) |
+| ![English desktop official Terrain Layout rules](docs/screenshots/v051-desktop-terrain-rules.png) | ![English desktop all-layout gallery](docs/screenshots/v051-desktop-gallery.png) |
 | Enlarged map | |
-| ![English desktop enlarged terrain map](docs/screenshots/v05-desktop-map-viewer.png) | |
-
-### Mobile
-
-| Main screen | Force Disposition menu |
-| --- | --- |
-| ![English mobile main screen](docs/screenshots/v05-mobile-main.png) | ![English mobile Force Disposition menu with all five centered choices](docs/screenshots/v05-mobile-disposition-menu.png) |
-| Mission details | Twist chooser |
-| ![English mobile Locate and Deny mission details](docs/screenshots/v05-mobile-mission-details.png) | ![English mobile chooser with all six optional Twists](docs/screenshots/v05-mobile-twist-chooser.png) |
-| Selected Twist | |
-| ![English mobile Martial Pride Twist details](docs/screenshots/v05-mobile-twist-detail.png) | |
+| ![English desktop enlarged terrain map](docs/screenshots/v051-desktop-map-viewer.png) | |
 
 ## Download
 
-Download the signed **Android ARM64** APK from the [v0.5.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. It was physically verified on a OnePlus 15R by the project owner and checked at 320 x 568, 360 x 800, 412 x 915, 480 x 1040, 560 x 1280, and 768 x 1080 portrait viewports.
+Download the signed **Android ARM64** APK from the [v0.5.1 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.1). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. The release candidate was physically approved on a OnePlus 15R by the project owner and checked at 320 x 568, 360 x 800, 412 x 915, 480 x 1040, 560 x 1280, and 768 x 1080 portrait viewports.
 
-The Windows x64 NSIS installer is available from the [v0.5.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0). It uses the Windows WebView2 Runtime and downloads it only if it is not already present.
+The Windows x64 NSIS installer and standalone application are available from the [v0.5.1 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.1). The installer uses the Windows WebView2 Runtime and downloads it only if it is not already present.
+
+## v0.5.1 verification
+
+The following v0.5.1 release artifacts were built and independently checked locally before publication.
+
+- Windows application: `WH40K-Terrain-Layout-v0.5.1-windows-x64.exe` — 27,450,368 bytes; SHA-256 `7fd1ed12d1d3cf5520715e36a8d66aedd999d55f6864fef4251c6edd5e1525e7`.
+- Windows NSIS installer: `WH40K-Terrain-Layout-v0.5.1-windows-x64-setup.exe` — 25,394,082 bytes; SHA-256 `639c70d0da68266f0f88fc524c943e1a20ab453010134d5822273f668fb5efba`. The Windows binaries are x64 and are not Authenticode-signed.
+- Signed Android ARM64 release APK: `WH40K-Terrain-Layout-v0.5.1-android-arm64.apk` — 35,410,326 bytes; SHA-256 `ab1e030b3a4b3e07c4e1410094550a1bda1c0ae01312b775073b4dbef8d85c03`.
+- APK verification: application ID `com.okami69.wh40kterrainlayout`, version name `0.5.1`, version code `5001`, only `arm64-v8a`, APK Signature Scheme v2 verified, and signer certificate SHA-256 `f26b5207728358d27b718e47c1e09e02c3c80c181b71fb73ca1f34607807ca54` matching prior releases.
+
+Automated acceptance passed 63 Node tests and Playwright checks at 320×568, 360×800, 412×915, 480×1040, 560×1280, 768×1080, and 1366×728. The nine README screenshots were separately generated and visually checked at the default 768×1080 desktop window size. The release candidate also passed the project owner's physical Android smoke test.
 
 ## v0.5.0 verification
 
@@ -81,7 +89,7 @@ Automated acceptance passed 60 Node tests and Chromium checks at 320×568, 360×
 5. Hover, focus, click, or tap a mission name for its detailed RU/ENG scoring and VP reference.
 6. Use the key icon for the official layouts key, or click the map for the enlarged map viewer.
 
-The UI switches between RU and ENG. First launch follows the OS language when it starts with `ru`; explicit RU/ENG clicks are saved locally. Official map, key, and rules images remain English because they are packaged from Event Companion v1.1.
+The UI switches between RU and ENG. First launch follows the OS language when it starts with `ru`; explicit RU/ENG clicks are saved locally. Official map and key images remain English because they are packaged from Event Companion v1.1; Terrain Layout rules are bundled as bilingual semantic text.
 
 ## How it is built
 
@@ -113,7 +121,7 @@ The Tauri NSIS installer is written under:
 
 The signed Android APK is written under `src-tauri/gen/android/app/build/outputs/apk/arm64/release/`. Release signing requires the ignored `src-tauri/gen/android/keystore.properties` file and the external private keystore it references. Never commit either file. Keep a secure backup of the same keystore and password: both are required to publish installable upgrades. On Windows, Android builds also require Developer Mode or an elevated shell because Tauri creates JNI symbolic links.
 
-Published v0.5.0 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, responsive Playwright checks, the packaged Windows launch, and a physical Android smoke test.
+Published v0.5.1 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, responsive Playwright checks, the README desktop gallery, the packaged Windows application, and a physical Android smoke test.
 
 ## Re-extract assets
 
@@ -128,7 +136,7 @@ Then run:
 & 'C:\Users\okami\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' tools/extract_layouts.py
 ```
 
-The extractor writes 45 lossless WebP maps, five disposition icons, `app/assets/key/layouts-key.webp`, and `app/assets/key/terrain-rules.webp`. The older June Event Companion is not used.
+The extractor writes 45 lossless WebP maps, five disposition icons, `app/assets/key/layouts-key.webp`, and `app/assets/backgrounds/event-companion-paper.webp`. The older June Event Companion is not used.
 
 ## Project structure
 

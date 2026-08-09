@@ -2,7 +2,8 @@
   --sheet-scale: 1;
   --sheet-width: 768px;
   --sheet-height: 1080px;
-  --background: oklch(0.975 0 0);
+  --background: oklch(0.994 0 0);
+  --paper-image: url("assets/backgrounds/event-companion-paper.webp");
   --surface: oklch(1 0 0);
   --ink: oklch(0.22 0 0);
   --muted-ink: oklch(0.43 0 0);
@@ -23,7 +24,11 @@
 
 html {
   min-width: 320px;
-  background: var(--background);
+  background-color: var(--background);
+  background-image: var(--paper-image);
+  background-position: var(--paper-position, center);
+  background-repeat: no-repeat;
+  background-size: var(--paper-size, cover);
 }
 
 body {
@@ -38,7 +43,7 @@ body {
   overflow: hidden;
   place-items: center;
   color: var(--ink);
-  background: var(--background);
+  background: transparent;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -63,11 +68,11 @@ button {
 
 button:hover {
   border-color: var(--primary);
-  background: var(--error-bg);
+  background-color: var(--error-bg);
 }
 
 button:active {
-  background: var(--disabled);
+  background-color: var(--disabled);
 }
 
 button:disabled,
@@ -305,13 +310,17 @@ select:disabled {
   min-height: 44px;
   padding: 0;
   border: 0;
-  background: transparent;
+  background-color: var(--background);
+  background-image: var(--paper-image);
+  background-position: var(--map-paper-position, center);
+  background-repeat: no-repeat;
+  background-size: var(--map-paper-size, cover);
   cursor: zoom-in;
 }
 
 .map-button:hover,
 .map-button:active {
-  background: transparent;
+  background-color: transparent;
 }
 
 #map,
@@ -569,10 +578,16 @@ dialog h2 {
   margin-top: 12px;
 }
 
-#close,
-#terrain-rules-close,
-#layout-key-close {
-  padding: 0 18px;
+.dialog-close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  flex: 0 0 44px;
+  place-items: center;
+  font-size: 1.6rem;
+  line-height: 1;
 }
 
 #large-map {
@@ -583,19 +598,71 @@ dialog h2 {
   object-fit: contain;
 }
 
-#terrain-rules-image {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  max-height: calc(100vh - 106px);
-  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 106px);
-  margin: 0 auto;
-  object-fit: contain;
+#terrain-rules-viewer {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--surface);
 }
 
-#terrain-rules-viewer {
-  overflow: hidden;
+#terrain-rules-viewer:not([open]) {
+  display: none;
+}
+
+.terrain-rules-language-toggle {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  background: var(--surface);
+}
+
+.terrain-rules-language-toggle button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  background: var(--surface);
+  font-size: 0.75rem;
+}
+
+.terrain-rules-content {
+  min-height: 0;
+  padding: 4px 8px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  line-height: 1.45;
+}
+
+.terrain-rules-heading {
+  margin: 18px 0 6px;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.terrain-rules-paragraph {
+  margin: 0 0 12px;
+}
+
+.terrain-footprints {
+  width: 100%;
+  margin: 12px 0 18px;
+  border-collapse: collapse;
+}
+
+.terrain-footprints th,
+.terrain-footprints td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: center;
+}
+
+.terrain-footprints th {
+  color: var(--surface);
+  background: oklch(0.27 0.035 150);
+  text-transform: uppercase;
+}
+
+.terrain-footprints tbody tr:nth-child(even) {
+  background: var(--disabled);
 }
 
 #layout-key-viewer {
