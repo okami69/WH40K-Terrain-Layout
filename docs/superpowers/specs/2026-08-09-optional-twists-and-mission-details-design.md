@@ -83,10 +83,12 @@ Each record contains a stable ID, official English name, natural Russian name, c
 
 ## Central Twist Control
 
-Replace the single `VS` item with a narrow center rail spanning the selector-card height:
+Preserve the existing `VS` element, grid placement, and exact centered coordinates. Do not wrap it in a new vertical rail, move it upward, or let the Twist control participate in its layout.
 
-- `VS` remains aligned between the disposition portions of the cards;
-- a 44 by 44 logical-pixel Twist button sits between the mission portions;
+- make the matchup container the positioning context while leaving the existing `VS` grid item unchanged;
+- place a 44 by 44 logical-pixel Twist button independently at the horizontal center of the gap between the cards;
+- align the button to the bottom of the selector cards, at the marked position between the two mission portions;
+- the button may occupy the existing inter-card gap but must not widen the center grid column, shrink either card, or alter either card's geometry;
 - the button uses the official current Twist symbol reference: two opposing bent arrows;
 - its default accessible name states that Twists are optional and none is selected;
 - an active Twist changes the button's selected treatment and accessible name without trying to fit the Twist title into the narrow rail.
@@ -163,12 +165,14 @@ Automated data checks must verify:
 - repeated central-button activation does not clear the selected Twist;
 - named and random selection switch the same open panel to detail view;
 - `Change Twist` returns to the chooser and only `No Twist` clears the state;
+- adding or changing the Twist button leaves the `VS` bounding rectangle and both selector-card rectangles unchanged;
 - disposition menus contain five geometrically centered option buttons and preserve all 25 ordered matchup results;
 - portrait logical height grows only when width scaling leaves unused height.
 
 Playwright checks must cover 320 by 568, 360 by 800, 412 by 915, 480 by 1040, the physical Android viewport, 768 by 1080, and a representative laptop viewport. Verify:
 
 - both disposition menus are optically centered and keyboard usable;
+- the `VS` bounding rectangle matches the v0.4.0 reference at every viewport while the Twist button remains centered at the bottom of the inter-card gap;
 - left and right mission popovers use mirrored outer-edge anchors, remain in the viewport, scroll internally, and do not move the map;
 - Twist chooser, accordion details, named selection, random result, reopening details, change flow, explicit `No Twist`, Escape, backdrop, and close button;
 - the Twist panel never closes and reopens during chooser/detail transitions;
