@@ -1,5 +1,7 @@
 :root {
   --sheet-scale: 1;
+  --sheet-width: 768px;
+  --sheet-height: 1080px;
   --background: oklch(0.975 0 0);
   --surface: oklch(1 0 0);
   --ink: oklch(0.22 0 0);
@@ -81,13 +83,13 @@ select:disabled {
 }
 
 .stage {
-  width: calc(768px * var(--sheet-scale));
-  height: calc(1080px * var(--sheet-scale));
+  width: calc(var(--sheet-width) * var(--sheet-scale));
+  height: calc(var(--sheet-height) * var(--sheet-scale));
 }
 
 .app-sheet {
-  width: 768px;
-  height: 1080px;
+  width: var(--sheet-width);
+  height: var(--sheet-height);
   padding: 18px 32px 24px;
   overflow: hidden;
   transform: scale(var(--sheet-scale));
@@ -213,6 +215,7 @@ select:disabled {
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
+  text-align-last: center;
   text-transform: uppercase;
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
@@ -282,6 +285,11 @@ select:disabled {
   margin: 8px 0 6px;
   font-size: 1.15rem;
   text-transform: uppercase;
+}
+
+.disposition-select option {
+  padding-inline-end: 30px;
+  text-align: center;
 }
 
 .map-button {
@@ -410,6 +418,66 @@ dialog h2 {
   object-fit: contain;
 }
 
+.layout-gallery {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.layout-gallery:not([open]) {
+  display: none;
+}
+
+.layout-gallery-scroll {
+  min-height: 0;
+  padding-right: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.layout-gallery-scroll section + section {
+  margin-top: 18px;
+}
+
+.layout-gallery-scroll h3 {
+  margin: 0 0 8px;
+  text-align: left;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.layout-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.layout-gallery-card {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.layout-gallery-card[aria-pressed="true"] {
+  border: 3px solid var(--primary);
+}
+
+.layout-gallery-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.gallery-error {
+  padding: 8px;
+  color: var(--primary-dark);
+  background: var(--error-bg);
+}
+
 [hidden] {
   display: none !important;
 }
@@ -432,5 +500,62 @@ dialog h2 {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .layout-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+  :root {
+    --sheet-height: 1280px;
+  }
+
+  body {
+    place-items: start center;
+  }
+
+  .app-sheet {
+    padding: 8px 32px;
+  }
+
+  .masthead {
+    margin-bottom: 8px;
+  }
+
+  .masthead h1 {
+    margin-bottom: 4px;
+  }
+
+  .masthead-tools {
+    margin-bottom: 4px;
+  }
+
+  .layouts {
+    margin: 8px 0 4px;
+  }
+
+  .map-panel h2 {
+    margin: 4px 0;
+  }
+
+  .map-panel,
+  .map-button {
+    height: auto;
+  }
+
+  #map {
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+
+  .map-button img {
+    width: 100%;
+    height: auto;
+    max-height: none;
   }
 }

@@ -39,11 +39,9 @@ The last free selection only needs to live for the current application session. 
 
 Retain the existing A, B, and C buttons and add one equally sized plus button to the same group. The four controls retain 44 px minimum touch targets, keyboard operation, visible focus, and `aria-pressed` state.
 
-In official pair mode, the existing localized `Layout A`, `Layout B`, or `Layout C` title remains. In free-layout mode, the map panel shows a localized `Free layout` title and a short source label such as:
+In official pair mode, the existing localized `Layout A`, `Layout B`, or `Layout C` title remains. In free-layout mode, the map panel shows only the localized `Free layout` title. It does not show a second visible source line, because that variable-height row would shift the map downward when free mode is selected.
 
-`Purge the Foe / Disruption - Layout A`
-
-The source label identifies the bundled image. It does not constrain the Force Dispositions or missions selected above it. The full-size map viewer uses the same free-layout title and source label.
+The bundled image source remains visible on its gallery card and remains available in the map image alternative text and full-size map viewer title. Removing the redundant main-sheet source row does not change Force Dispositions, missions, or the selected map.
 
 ## Gallery
 
@@ -72,7 +70,7 @@ Use native image lazy loading and asynchronous decoding for gallery previews. Do
 
 ## Layout Catalog
 
-Extend the existing matchup data into a flat catalog entry for each asset. Each entry exposes the canonical disposition pair, layout letter, image path, and deployment name. The gallery and free-layout title consume this catalog; official pair resolution continues to use the existing matchup resolver.
+Extend the existing matchup data into a flat catalog entry for each asset. Each entry exposes the canonical disposition pair, layout letter, image path, and deployment name. Gallery cards and accessible free-layout metadata consume this catalog; official pair resolution continues to use the existing matchup resolver.
 
 The deployment grouping for the bundled maps is:
 
@@ -160,14 +158,16 @@ The sheet-fitting calculation must use the active logical sheet dimensions inste
 
 Keep both native Force Disposition selects and their existing dimensions, typography, custom right-side arrow, keyboard behavior, and 44 px minimum target. Center both the selected value in the closed control and every label in the expanded options menu.
 
-The current selector rule centers the closed `select`, but the option rows have no explicit alignment rule. The existing regression check also covers only the selector declaration, so the expanded native menu can render its labels with platform-dependent alignment. Implementation must add the smallest explicit option-row alignment supported by the Windows WebView and Android WebView without replacing the native select or adding a custom dropdown component.
+The Windows native popup reserves a system gutter on the left of its option content. Plain `text-align: center` therefore centers text inside an asymmetric content region and leaves the label visually shifted to the right. Retain explicit centered alignment and add the smallest option-only inline-end compensation supported by the Windows WebView so the visible text center aligns with the popup center. Keep this adjustment out of the closed select so its already-centered value and custom arrow do not move.
+
+Android may replace the HTML popup with a system-owned selection surface that ignores option CSS. Record that platform behavior if observed; do not replace the native select or add a custom dropdown.
 
 ## Data Flow
 
 1. Startup resolves the current disposition pair and official layout A as today.
 2. A/B/C updates the official layout letter, switches to official pair mode, and renders through `resolveMatchup`.
 3. Plus opens the gallery without changing the current screen state.
-4. Selecting a catalog entry stores that entry as the current free map, switches to free-layout mode, renders its image and source metadata, and closes the dialog.
+4. Selecting a catalog entry stores that entry as the current free map, switches to free-layout mode, renders its image with accessible source metadata, and closes the dialog. The main sheet shows only the localized `Free layout` title.
 5. Disposition changes always re-render missions. They resolve a new image only in official pair mode.
 6. The map viewer always opens the image currently visible on the main sheet.
 
@@ -192,8 +192,10 @@ Automated checks must verify:
 - A/B/C exits free mode and resolves the current pair normally;
 - plus reopens the gallery with the current free item selected;
 - gallery previews use native lazy loading;
+- free mode has no visible source row below its title, and selecting it does not shift the map downward;
 - the main sheet remains non-scrolling and the gallery inner region is the only scroll container;
-- closed Force Disposition values and expanded option labels have explicit centered alignment.
+- closed Force Disposition values have explicit centered alignment;
+- Windows expanded option labels are visually centered after accounting for the native left gutter, while any Android system-popup limitation is recorded rather than hidden by a custom control.
 
 Final Playwright checks must cover:
 

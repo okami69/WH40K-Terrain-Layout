@@ -107,6 +107,70 @@ export const matchups = [
   slug: `${left}--${right}`,
 }));
 
+export const deployments = [
+  'crucible-of-battle',
+  'dawn-of-war',
+  'hammer-and-anvil',
+  'search-and-destroy',
+  'sweeping-engagement',
+  'tipping-point',
+];
+
+const deploymentByLayout = Object.fromEntries([
+  ['disruption--disruption-a', 'crucible-of-battle'],
+  ['priority-assets--priority-assets-b', 'crucible-of-battle'],
+  ['purge-the-foe--reconnaissance-c', 'crucible-of-battle'],
+  ['reconnaissance--priority-assets-a', 'crucible-of-battle'],
+  ['reconnaissance--reconnaissance-b', 'crucible-of-battle'],
+  ['take-and-hold--disruption-b', 'crucible-of-battle'],
+  ['take-and-hold--priority-assets-a', 'crucible-of-battle'],
+  ['disruption--reconnaissance-b', 'dawn-of-war'],
+  ['purge-the-foe--priority-assets-a', 'dawn-of-war'],
+  ['purge-the-foe--reconnaissance-b', 'dawn-of-war'],
+  ['take-and-hold--priority-assets-c', 'dawn-of-war'],
+  ['take-and-hold--reconnaissance-b', 'dawn-of-war'],
+  ['take-and-hold--take-and-hold-b', 'dawn-of-war'],
+  ['purge-the-foe--priority-assets-c', 'hammer-and-anvil'],
+  ['purge-the-foe--reconnaissance-a', 'hammer-and-anvil'],
+  ['take-and-hold--disruption-c', 'hammer-and-anvil'],
+  ['take-and-hold--priority-assets-b', 'hammer-and-anvil'],
+  ['take-and-hold--purge-the-foe-c', 'hammer-and-anvil'],
+  ['disruption--priority-assets-c', 'search-and-destroy'],
+  ['disruption--reconnaissance-c', 'search-and-destroy'],
+  ['purge-the-foe--disruption-a', 'search-and-destroy'],
+  ['purge-the-foe--priority-assets-b', 'search-and-destroy'],
+  ['purge-the-foe--purge-the-foe-a', 'search-and-destroy'],
+  ['take-and-hold--purge-the-foe-b', 'search-and-destroy'],
+  ['take-and-hold--reconnaissance-c', 'search-and-destroy'],
+  ['take-and-hold--take-and-hold-c', 'search-and-destroy'],
+  ['disruption--disruption-c', 'sweeping-engagement'],
+  ['disruption--priority-assets-a', 'sweeping-engagement'],
+  ['priority-assets--priority-assets-a', 'sweeping-engagement'],
+  ['purge-the-foe--disruption-c', 'sweeping-engagement'],
+  ['purge-the-foe--purge-the-foe-c', 'sweeping-engagement'],
+  ['reconnaissance--priority-assets-c', 'sweeping-engagement'],
+  ['reconnaissance--reconnaissance-a', 'sweeping-engagement'],
+  ['take-and-hold--disruption-a', 'sweeping-engagement'],
+  ['take-and-hold--purge-the-foe-a', 'sweeping-engagement'],
+  ['disruption--disruption-b', 'tipping-point'],
+  ['disruption--priority-assets-b', 'tipping-point'],
+  ['disruption--reconnaissance-a', 'tipping-point'],
+  ['priority-assets--priority-assets-c', 'tipping-point'],
+  ['purge-the-foe--disruption-b', 'tipping-point'],
+  ['purge-the-foe--purge-the-foe-b', 'tipping-point'],
+  ['reconnaissance--priority-assets-b', 'tipping-point'],
+  ['reconnaissance--reconnaissance-c', 'tipping-point'],
+  ['take-and-hold--reconnaissance-a', 'tipping-point'],
+  ['take-and-hold--take-and-hold-a', 'tipping-point'],
+]);
+
+export const layoutCatalog = matchups.flatMap(({ slug, left, right }) => ['A', 'B', 'C'].map(layout => {
+  const id = `${slug}-${layout.toLowerCase()}`;
+  const deployment = deploymentByLayout[id];
+  if (!deployment) throw new Error(`Missing deployment metadata: ${id}`);
+  return { id, slug, left, right, layout, deployment, image: `assets/layouts/${id}.webp` };
+}));
+
 export function resolveMatchup(left, right) {
   const match = matchups.find(item => item.left === left && item.right === right);
   const reverse = matchups.find(item => item.left === right && item.right === left);

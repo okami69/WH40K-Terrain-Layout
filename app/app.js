@@ -1,4 +1,4 @@
-import { dispositions, labels, languages, missions, resolveMatchup } from './matchups.js';
+import { deployments, dispositions, labels, languages, layoutCatalog, missions, resolveMatchup } from './matchups.js';
 
 const text = {
   ru: {
@@ -20,6 +20,10 @@ const text = {
     keyAlt: 'Официальный ключ схем расстановки',
     loadError: 'Не удалось загрузить эту расстановку.',
     missingImage: layout => `Изображение расстановки ${layout} отсутствует. Выберите другую пару или расстановку.`,
+    freeLayout: 'Свободная расстановка',
+    chooseFreeLayout: 'Выбрать любую расстановку',
+    galleryTitle: 'Все расстановки',
+    layoutSource: (left, right, value) => `${left} / ${right} · Расстановка ${value}`,
   },
   en: {
     title: 'Terrain Layout',
@@ -40,7 +44,20 @@ const text = {
     keyAlt: 'Official layouts key',
     loadError: 'Unable to load this terrain layout.',
     missingImage: layout => `Layout ${layout} image is missing. Choose another matchup or layout.`,
+    freeLayout: 'Free layout',
+    chooseFreeLayout: 'Choose any layout',
+    galleryTitle: 'All layouts',
+    layoutSource: (left, right, value) => `${left} / ${right} · Layout ${value}`,
   },
+};
+
+const deploymentNames = {
+  'crucible-of-battle': { ru: 'Горнило битвы', en: 'Crucible of Battle' },
+  'dawn-of-war': { ru: 'Рассвет войны', en: 'Dawn of War' },
+  'hammer-and-anvil': { ru: 'Молот и наковальня', en: 'Hammer and Anvil' },
+  'search-and-destroy': { ru: 'Найти и уничтожить', en: 'Search and Destroy' },
+  'sweeping-engagement': { ru: 'Охватывающее сражение', en: 'Sweeping Engagement' },
+  'tipping-point': { ru: 'Переломный момент', en: 'Tipping Point' },
 };
 
 const left = document.querySelector('#left');
@@ -61,9 +78,13 @@ const largeMap = document.querySelector('#large-map');
 const keyButton = document.querySelector('#layout-key-button');
 const keyImage = document.querySelector('#layout-key-image');
 const error = document.querySelector('#error');
+const freeLayoutButton = document.querySelector('#free-layout-button');
 const viewer = document.querySelector('#viewer');
 const terrainRulesViewer = document.querySelector('#terrain-rules-viewer');
 const keyViewer = document.querySelector('#layout-key-viewer');
+const layoutGallery = document.querySelector('#layout-gallery');
+const layoutGalleryTitle = document.querySelector('#layout-gallery-title');
+const layoutGalleryScroll = document.querySelector('#layout-gallery-scroll');
 const popover = document.querySelector('#mission-popover');
 const layoutButtons = [...document.querySelectorAll('[data-layout]')];
 const languageButtons = [...document.querySelectorAll('[data-lang]')];
@@ -71,6 +92,8 @@ const summaryTriggers = [leftMission, rightMission];
 let layout = 'A';
 let language = initialLanguage();
 let pinnedSummary = null;
+let mapMode = 'official';
+let freeMap = null;
 
 for (const select of [left, right]) {
   for (const disposition of dispositions) select.add(new Option('', disposition));
@@ -91,11 +114,12 @@ function cssPixels(value) {
 
 function fitSheet() {
   const bodyStyle = getComputedStyle(document.body);
+  const sheetStyle = getComputedStyle(document.querySelector('#sheet'));
   const horizontalInsets = cssPixels(bodyStyle.paddingLeft) + cssPixels(bodyStyle.paddingRight);
   const verticalInsets = cssPixels(bodyStyle.paddingTop) + cssPixels(bodyStyle.paddingBottom);
   const availableWidth = document.documentElement.clientWidth - horizontalInsets;
   const availableHeight = document.documentElement.clientHeight - verticalInsets;
-  const scale = Math.min(availableWidth / 768, availableHeight / 1080);
+  const scale = Math.min(availableWidth / cssPixels(sheetStyle.width), availableHeight / cssPixels(sheetStyle.height));
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
 }
 
@@ -139,14 +163,70 @@ function openSummary(trigger, pin = false) {
   pinnedSummary = pin ? trigger : pinnedSummary;
 }
 
+function sourceText(item) {
+  return text[language].layoutSource(labels[item.left][language], labels[item.right][language], item.layout);
+}
+
+function renderGallery() {
+  layoutGalleryScroll.replaceChildren(...deployments.map(deployment => {
+    const section = document.createElement('section');
+    const heading = document.createElement('h3');
+    const grid = document.createElement('div');
+    heading.textContent = deploymentNames[deployment][language];
+    grid.className = 'layout-gallery-grid';
+
+    for (const item of layoutCatalog.filter(entry => entry.deployment === deployment)) {
+      const button = document.createElement('button');
+      const image = document.createElement('img');
+      const label = document.createElement('span');
+      const failure = document.createElement('span');
+      button.className = 'layout-gallery-card';
+      button.type = 'button';
+      button.dataset.layoutId = item.id;
+      button.setAttribute('aria-pressed', String(freeMap?.id === item.id));
+      image.src = item.image;
+      image.alt = sourceText(item);
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      label.textContent = sourceText(item);
+      failure.className = 'gallery-error';
+      failure.textContent = text[language].missingImage(item.layout);
+      failure.hidden = true;
+      image.addEventListener('error', () => {
+        image.hidden = true;
+        failure.hidden = false;
+        button.disabled = true;
+      });
+      button.addEventListener('click', () => {
+        freeMap = item;
+        mapMode = 'free';
+        layoutGallery.close();
+        render();
+      });
+      button.append(image, label, failure);
+      grid.append(button);
+    }
+
+    section.append(heading, grid);
+    return section;
+  }));
+}
+
+function openGallery() {
+  renderGallery();
+  layoutGallery.showModal();
+  layoutGalleryScroll.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest' });
+}
+
 function render() {
   try {
     const copy = text[language];
     const matchup = resolveMatchup(left.value, right.value);
-    const image = matchup.image(layout);
+    const item = mapMode === 'free' ? freeMap : null;
+    const image = item?.image ?? matchup.image(layout);
     const leftLabel = labels[left.value][language];
     const rightLabel = labels[right.value][language];
-    const alt = copy.mapAlt(leftLabel, rightLabel, layout);
+    const alt = item ? sourceText(item) : copy.mapAlt(leftLabel, rightLabel, layout);
 
     document.documentElement.lang = language;
     terrainRulesButton.textContent = copy.title;
@@ -161,6 +241,8 @@ function render() {
     keyButton.setAttribute('aria-label', copy.openKey);
     keyButton.title = copy.openKey;
     mapButton.setAttribute('aria-label', copy.openMap);
+    freeLayoutButton.setAttribute('aria-label', copy.chooseFreeLayout);
+    freeLayoutButton.setAttribute('aria-pressed', String(Boolean(item)));
     terrainRulesTitle.textContent = copy.title;
     terrainRulesImage.alt = copy.mapDescription;
     document.querySelector('#terrain-rules-close').textContent = copy.close;
@@ -168,6 +250,8 @@ function render() {
     keyImage.alt = copy.keyAlt;
     document.querySelector('#layout-key-close').textContent = copy.close;
     document.querySelector('#close').textContent = copy.close;
+    layoutGalleryTitle.textContent = copy.galleryTitle;
+    document.querySelector('#layout-gallery-close').textContent = copy.close;
 
     for (const select of [left, right]) {
       for (const option of select.options) option.textContent = labels[option.value][language];
@@ -186,14 +270,14 @@ function render() {
     rightMission.textContent = missions[matchup.rightMission].name[language];
     rightMission.dataset.mission = matchup.rightMission;
     rightMission.setAttribute('aria-label', `${copy.mission}: ${missions[matchup.rightMission].name[language]}`);
-    title.textContent = copy.layout(layout);
-    viewerTitle.textContent = copy.layout(layout);
+    title.textContent = item ? copy.freeLayout : copy.layout(layout);
+    viewerTitle.textContent = item ? `${copy.freeLayout}: ${sourceText(item)}` : copy.layout(layout);
     map.src = image;
     map.alt = alt;
     largeMap.src = image;
     largeMap.alt = `${alt}, ${copy.fullSize}`;
 
-    for (const button of layoutButtons) button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
+    for (const button of layoutButtons) button.setAttribute('aria-pressed', String(!item && button.dataset.layout === layout));
     if (pinnedSummary) openSummary(pinnedSummary, true);
   } catch (cause) {
     showError(cause instanceof Error ? cause.message : text[language].loadError);
@@ -211,6 +295,7 @@ right.addEventListener('change', () => {
 
 for (const button of layoutButtons) {
   button.addEventListener('click', () => {
+    mapMode = 'official';
     layout = button.dataset.layout;
     render();
   });
@@ -239,9 +324,11 @@ for (const trigger of summaryTriggers) {
   });
 }
 
-map.addEventListener('error', () => showError(text[language].missingImage(layout)));
+map.addEventListener('error', () => showError(text[language].missingImage(mapMode === 'free' ? freeMap?.layout ?? layout : layout)));
 mapButton.addEventListener('click', () => viewer.showModal());
 document.querySelector('#close').addEventListener('click', () => viewer.close());
+freeLayoutButton.addEventListener('click', openGallery);
+document.querySelector('#layout-gallery-close').addEventListener('click', () => layoutGallery.close());
 terrainRulesButton.addEventListener('click', () => terrainRulesViewer.showModal());
 document.querySelector('#terrain-rules-close').addEventListener('click', () => terrainRulesViewer.close());
 keyButton.addEventListener('click', () => keyViewer.showModal());
@@ -254,6 +341,7 @@ window.visualViewport?.addEventListener('resize', fitSheet);
 setDialogBackdropClose(viewer);
 setDialogBackdropClose(terrainRulesViewer);
 setDialogBackdropClose(keyViewer);
+setDialogBackdropClose(layoutGallery);
 
 fitSheet();
 render();
