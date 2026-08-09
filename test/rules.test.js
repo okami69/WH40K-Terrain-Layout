@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   missionReferences,
   twists,
@@ -28,6 +29,13 @@ const markerMissionIds = [
   'consecrate', 'death-trap', 'smoke-and-mirrors', 'locate-and-deny',
   'triangulation', 'surveil-the-foe', 'gather-intel', 'vital-link', 'extract-relic',
 ];
+
+const stableSerialize = value => Array.isArray(value)
+  ? `[${value.map(stableSerialize).join(',')}]`
+  : value && typeof value === 'object'
+    ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableSerialize(value[key])}`).join(',')}}`
+    : JSON.stringify(value);
+const sha256 = value => createHash('sha256').update(stableSerialize(value)).digest('hex');
 
 const twistNames = [
   ['Воинская гордость', 'Martial Pride'],
@@ -87,6 +95,11 @@ test('provides complete bilingual structured references for all primary missions
   assert.doesNotThrow(validateRules);
 });
 
+test('locks every audited mission and Twist fact to canonical source-oracle hashes', () => {
+  assert.equal(sha256(missionReferences), 'aedc628626be67403c7b501777a41fd469af5596fc0e7a57b0de474ec17b9426');
+  assert.equal(sha256(twists), '3d19696fd59c255dd8a09f7092d4bbf64857027b3e436790099f106dce799770');
+});
+
 test('matches one audited timing and VP fact for every mission', () => {
   for (const [id, [sectionCount, heading, vp]] of Object.entries(oracle)) {
     const mission = missionReferences[id];
@@ -111,6 +124,16 @@ test('exposes global Primary limits once through ordinary sections', () => {
     assert.equal(limited.length, 1, `${id} limit count`);
     assert.deepEqual(limited[0].limit, expected, `${id} limit`);
   }
+});
+
+test('keeps the shared Primary limit deeply immutable', () => {
+  const first = missionReferences['battlefield-dominance'].sections.find(section => section.limit).limit;
+  const second = missionReferences.sabotage.sections.find(section => section.limit).limit;
+  assert.throws(() => { first.total = 999; }, TypeError);
+  assert.throws(() => { first.text.en = 'changed'; }, TypeError);
+  assert.equal(first.total, 45);
+  assert.equal(second.total, 45);
+  assert.equal(second.text.en, 'Primary Mission limits');
 });
 
 test('keeps setup, status, marker, and all reverse-side action facts in renderable sections', () => {
@@ -177,6 +200,14 @@ test('rejects incomplete or unknown rules records', () => {
   missingSection.sabotage.sections = [];
   assert.throws(() => validateRules(missingSection, twists), /sabotage/);
 
+  const deletedScoringSection = structuredClone(missionReferences);
+  deletedScoringSection['battlefield-dominance'].sections.splice(1, 1);
+  assert.throws(() => validateRules(deletedScoringSection, twists), /battlefield-dominance/);
+
+  const changedVp = structuredClone(missionReferences);
+  changedVp['battlefield-dominance'].sections[0].conditions[0].vp = 999;
+  assert.throws(() => validateRules(changedVp, twists), /battlefield-dominance/);
+
   const missingDetail = structuredClone(missionReferences);
   missingDetail['death-trap'].sections = missingDetail['death-trap'].sections.filter(section => section.heading.en !== 'Booby Trap');
   assert.throws(() => validateRules(missingDetail, twists), /death-trap/);
@@ -204,6 +235,18 @@ test('rejects incomplete or unknown rules records', () => {
   const missingEffect = structuredClone(twists);
   missingEffect[0].effects.en = [];
   assert.throws(() => validateRules(missionReferences, missingEffect), /martial-pride/);
+
+  const missingRuEffect = structuredClone(twists);
+  missingRuEffect[0].effects.ru.pop();
+  assert.throws(() => validateRules(missionReferences, missingRuEffect), /martial-pride/);
+
+  const invalidPer = structuredClone(missionReferences);
+  invalidPer['battlefield-dominance'].sections[1].conditions[0].per = 'model';
+  assert.throws(() => validateRules(invalidPer, twists), /battlefield-dominance.*section 2.*condition 1.*per/);
+
+  const invalidAlternative = structuredClone(missionReferences);
+  invalidAlternative['purge-and-secure'].sections[0].conditions[1].alternative = 'yes';
+  assert.throws(() => validateRules(invalidAlternative, twists), /purge-and-secure.*section 1.*condition 2.*alternative/);
 });
 
 test('provides the six current twists in official order with exact effects', () => {
@@ -229,4 +272,10 @@ test('selects a twist uniformly through an injectable random source', () => {
   assert.equal(pickRandomTwist(() => 0).id, 'martial-pride');
   assert.equal(pickRandomTwist(() => 0.5).id, 'nowhere-to-hide');
   assert.equal(pickRandomTwist(() => 0.999999).id, 'scrambled-communications');
+});
+
+test('rejects an invalid injected random value', () => {
+  for (const value of [1, -0.01, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.throws(() => pickRandomTwist(() => value), RangeError);
+  }
 });

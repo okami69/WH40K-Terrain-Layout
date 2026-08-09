@@ -31,12 +31,12 @@ const s = (heading, timing, ...conditions) => ({
   conditions,
 });
 
-const primaryLimit = {
-  text: { ru: 'Лимиты основной миссии', en: 'Primary Mission limits' },
+const primaryLimit = Object.freeze({
+  text: Object.freeze({ ru: 'Лимиты основной миссии', en: 'Primary Mission limits' }),
   total: 45,
   perBattleRound: 15,
   endOfBattleExempt: true,
-};
+});
 
 const detail = (headingEn, headingRu, timing, ...conditions) => ({
   heading: { ru: headingRu, en: headingEn },
@@ -304,11 +304,23 @@ export const twists = [
 ];
 
 export function pickRandomTwist(random = Math.random) {
-  return twists[Math.floor(random() * twists.length)];
+  const value = random();
+  if (!Number.isFinite(value) || value < 0 || value >= 1) {
+    throw new RangeError('Random source must return a finite number from 0 (inclusive) to 1 (exclusive)');
+  }
+  return twists[Math.floor(value * twists.length)];
 }
 
 const bilingual = value => value && typeof value.ru === 'string' && value.ru.length > 0
   && typeof value.en === 'string' && value.en.length > 0;
+const stableSerialize = value => Array.isArray(value)
+  ? `[${value.map(stableSerialize).join(',')}]`
+  : value && typeof value === 'object'
+    ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableSerialize(value[key])}`).join(',')}}`
+    : JSON.stringify(value);
+const missionSnapshots = Object.fromEntries(Object.entries(missionReferences)
+  .map(([id, record]) => [id, stableSerialize(record)]));
+const twistSnapshots = Object.fromEntries(twists.map(record => [record.id, stableSerialize(record)]));
 
 const requiredMissionIds = [
   'battlefield-dominance', 'immovable-object', 'unstoppable-force',
@@ -351,10 +363,10 @@ function validateMissionReference(mission) {
   }
   let limitCount = 0;
   let hasScoring = false;
-  for (const section of mission.sections) {
+  for (const [sectionIndex, section] of mission.sections.entries()) {
     if (!bilingual(section.heading) || !bilingual(section.timing)
       || !Array.isArray(section.conditions) || !section.conditions.length) {
-      throw new Error(`${mission.id} has invalid section`);
+      throw new Error(`${mission.id} section ${sectionIndex + 1} is invalid`);
     }
     if (section.limit) {
       limitCount += 1;
@@ -363,11 +375,14 @@ function validateMissionReference(mission) {
         throw new Error(`${mission.id} has invalid Primary limit`);
       }
     }
-    for (const condition of section.conditions) {
+    for (const [conditionIndex, condition] of section.conditions.entries()) {
+      const context = `${mission.id} section ${sectionIndex + 1} condition ${conditionIndex + 1}`;
       if (!bilingual(condition.text) || (condition.vp !== null && !Number.isFinite(condition.vp))
         || typeof condition.cumulative !== 'boolean') {
-        throw new Error(`${mission.id} has invalid condition`);
+        throw new Error(`${context} is invalid`);
       }
+      if ('per' in condition && !['objective', 'terrain-area', 'unit'].includes(condition.per)) throw new Error(`${context} has invalid per`);
+      if ('alternative' in condition && typeof condition.alternative !== 'boolean') throw new Error(`${context} has invalid alternative`);
       hasScoring ||= condition.vp !== null;
     }
   }
@@ -377,6 +392,7 @@ function validateMissionReference(mission) {
     if (!section || section.conditions.length !== conditionCount
       || section.conditions.some(condition => condition.vp !== null)) throw new Error(`${mission.id} has incomplete detail sections`);
   }
+  if (stableSerialize(mission) !== missionSnapshots[mission.id]) throw new Error(`${mission.id} does not match the audited rules oracle`);
 }
 
 export function isCompleteMissionReference(mission) {
@@ -402,7 +418,9 @@ export function validateRules(references = missionReferences, twistRecords = twi
   for (const twist of twistRecords) {
     if (!bilingual(twist.name) || !Array.isArray(twist.effects?.ru) || !Array.isArray(twist.effects?.en)
       || !twist.effects.ru.length || !twist.effects.en.length
+      || twist.effects.ru.length !== twist.effects.en.length
       || twist.effects.ru.some(item => typeof item !== 'string' || !item)
       || twist.effects.en.some(item => typeof item !== 'string' || !item)) throw new Error(`${twist.id} has invalid effects`);
+    if (stableSerialize(twist) !== twistSnapshots[twist.id]) throw new Error(`${twist.id} does not match the audited rules oracle`);
   }
 }

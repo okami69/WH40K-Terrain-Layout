@@ -110,8 +110,10 @@ export const matchups = [
 }));
 
 for (const { leftMission, rightMission } of matchups) {
-  if (!isCompleteMissionReference(missionReferences[leftMission])) throw new Error(`Missing mission reference: ${leftMission}`);
-  if (!isCompleteMissionReference(missionReferences[rightMission])) throw new Error(`Missing mission reference: ${rightMission}`);
+  for (const missionId of [leftMission, rightMission]) {
+    if (!missionReferences[missionId]) throw new Error(`Missing mission reference: ${missionId}`);
+    if (!isCompleteMissionReference(missionReferences[missionId])) throw new Error(`Invalid mission reference: ${missionId}`);
+  }
 }
 
 export const deployments = [
