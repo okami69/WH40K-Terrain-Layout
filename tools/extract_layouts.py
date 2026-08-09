@@ -17,8 +17,6 @@ SCALE = 2
 CROP_POINTS = (82, 245, 513, 765)
 KEY_PAGE = 8
 KEY_CROP_POINTS = (94, 42, 502, 778)
-TERRAIN_RULES_PAGE = 7
-TERRAIN_RULES_CROP_POINTS = (24, 29, 362, 659)
 PAPER_PAGE = 9
 PAPER_OBJECT_COUNT = 2
 PAPER_TILES = 3
@@ -65,7 +63,6 @@ def main():
     BACKGROUND_OUTPUT.mkdir(parents=True, exist_ok=True)
     crop = tuple(point * SCALE for point in CROP_POINTS)
     key_crop = tuple(point * SCALE for point in KEY_CROP_POINTS)
-    terrain_rules_crop = tuple(point * SCALE for point in TERRAIN_RULES_CROP_POINTS)
 
     with pdfium.PdfDocument(SOURCE) as document:
         for first_page, slug in GROUPS:
@@ -75,9 +72,6 @@ def main():
 
         key = document[KEY_PAGE - 1].render(scale=SCALE).to_pil().convert("RGB")
         key.crop(key_crop).save(KEY_OUTPUT / "layouts-key.webp", "WEBP", lossless=True, method=6)
-
-        terrain_rules = document[TERRAIN_RULES_PAGE - 1].render(scale=SCALE).to_pil().convert("RGB")
-        terrain_rules.crop(terrain_rules_crop).save(KEY_OUTPUT / "terrain-rules.webp", "WEBP", lossless=True, method=6)
 
         for slug, page_no in ICON_PAGES.items():
             page = document[page_no - 1].render(scale=SCALE).to_pil().convert("RGBA")
@@ -135,7 +129,6 @@ def main():
     print(f"Created 45 layout maps in {OUTPUT.relative_to(ROOT)}")
     print(f"Created 5 disposition icons in {DISPOSITION_OUTPUT.relative_to(ROOT)}")
     print(f"Created layout key in {KEY_OUTPUT.relative_to(ROOT)}")
-    print(f"Created terrain rules in {KEY_OUTPUT.relative_to(ROOT)}")
     print(f"Created Event Companion paper in {BACKGROUND_OUTPUT.relative_to(ROOT)}")
 
 

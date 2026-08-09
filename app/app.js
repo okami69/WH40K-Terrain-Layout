@@ -86,6 +86,49 @@ const text = {
   },
 };
 
+const terrainRulesCopy = {
+  en: {
+    intro: [
+      "The following layouts are presented for Warhammer Event organisers and players to use in all of their games of Warhammer 40,000 using the most recent Chapter Approved Mission Deck. These are the layouts that are used at Games Workshop events and are designed for the best experience by the Warhammer Studio team, to reflect battlefields that create risk-and-reward decisions with each player's objectives in mind.",
+      'Each combination of Primary Missions has three recommended layouts, labelled A, B and C. As directed by the Warhammer Event organiser, the players either use the layout specified or randomly determine which of these layouts to use.',
+    ],
+    footprintsHeading: 'Recommended Terrain Area Footprints',
+    footprintsIntro: 'We have listed the terrain area footprints these recommended layouts use. You can find a PDF with these footprints ready for you to print on warhammer-community.com.',
+    sizeHeading: 'Terrain area footprint size',
+    quantityHeading: 'Quantity',
+    polygon: 'Polygon',
+    featuresHeading: 'Terrain Features',
+    features: [
+      "Each layout is shown with the terrain features from the Battlefields: Armageddon box using the 'Warhammer recommended' build configuration from the construction booklet. We've denoted each terrain feature from that set as either a dense or light terrain feature in these layouts. The configurations of the terrain features and terrain areas are designed to create the best experience with the Hidden rule and movement rules for various units, and to create plenty of interesting decisions during a battle. We've also purposely left space between a terrain feature and the edge of the terrain area to allow a line of models to be on the terrain area from the 'outside'.",
+      'If you do not have the Battlefields: Armageddon terrain, it is possible to recreate these layouts with your own terrain that is close to the same size of the various terrain features by denoting for all players if they are dense or light terrain features.',
+    ],
+  },
+  ru: {
+    intro: [
+      'Следующие схемы предназначены для организаторов мероприятий Warhammer и игроков и могут использоваться во всех играх Warhammer 40,000 с самой актуальной колодой миссий Chapter Approved. Эти схемы используются на мероприятиях Games Workshop и разработаны командой Warhammer Studio для наиболее интересной игры на полях боя, где игрокам приходится сопоставлять риск и награду с учётом своих целей.',
+      'Для каждой комбинации основных миссий предусмотрены три рекомендуемые схемы: A, B и C. По указанию организатора мероприятия Warhammer игроки используют назначенную схему или определяют одну из этих схем случайным образом.',
+    ],
+    footprintsHeading: 'Рекомендуемые размеры зон террейна',
+    footprintsIntro: 'Ниже перечислены размеры зон террейна, используемых в рекомендуемых схемах. На сайте warhammer-community.com можно найти готовый к печати PDF с этими контурами.',
+    sizeHeading: 'Размер зоны террейна',
+    quantityHeading: 'Количество',
+    polygon: 'Многоугольник',
+    featuresHeading: 'Элементы террейна',
+    features: [
+      'Каждая схема показана с элементами террейна из набора Battlefields: Armageddon в рекомендованной Warhammer конфигурации сборки из инструкции. Каждый элемент этого набора обозначен на схемах как плотный или лёгкий элемент террейна. Конфигурации элементов и зон террейна рассчитаны на наиболее интересную игру с учётом правила Hidden и правил перемещения различных подразделений и создают множество значимых решений во время боя. Между элементом террейна и краем зоны террейна намеренно оставлено место, чтобы ряд моделей мог размещаться в зоне террейна со стороны внешнего края.',
+      'Если у вас нет террейна Battlefields: Armageddon, эти схемы можно воспроизвести с собственным террейном близкого размера. Перед игрой сообщите всем игрокам, какие элементы считаются плотными, а какие лёгкими.',
+    ],
+  },
+};
+
+const terrainFootprints = [
+  ['6" x 4"', 4],
+  ['10" x 2.5"', 2],
+  ['6" x 2"', 4],
+  ['7" x 11.5"', 4],
+  ['8" x 11.5"', 2, 'polygon'],
+];
+
 const deploymentNames = {
   'crucible-of-battle': { ru: 'Горнило битвы', en: 'Crucible of Battle' },
   'dawn-of-war': { ru: 'Рассвет войны', en: 'Dawn of War' },
@@ -108,7 +151,7 @@ const title = document.querySelector('#layout-title');
 const terrainRulesButton = document.querySelector('#terrain-rules-button');
 const viewerTitle = document.querySelector('#viewer-title');
 const terrainRulesTitle = document.querySelector('#terrain-rules-title');
-const terrainRulesImage = document.querySelector('#terrain-rules-image');
+const terrainRulesContent = document.querySelector('#terrain-rules-content');
 const keyTitle = document.querySelector('#layout-key-title');
 const mapButton = document.querySelector('.map-button');
 const map = document.querySelector('#map');
@@ -436,6 +479,38 @@ function renderTwistDetail(focusDetail = false) {
   twistDialogFooter.replaceChildren(change);
 }
 
+function renderTerrainRules() {
+  const scrollTop = terrainRulesContent.scrollTop;
+  const copy = terrainRulesCopy[language];
+  const intro = copy.intro.map(paragraph => createReferenceElement('p', 'terrain-rules-paragraph', paragraph));
+  const footprintsHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.footprintsHeading);
+  const footprintsIntro = createReferenceElement('p', 'terrain-rules-paragraph', copy.footprintsIntro);
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  const tbody = document.createElement('tbody');
+  table.className = 'terrain-footprints';
+  for (const heading of [copy.sizeHeading, copy.quantityHeading]) {
+    const cell = createReferenceElement('th', '', heading);
+    cell.setAttribute('scope', 'col');
+    headerRow.append(cell);
+  }
+  thead.append(headerRow);
+  for (const [size, quantity, shape] of terrainFootprints) {
+    const row = document.createElement('tr');
+    row.append(
+      createReferenceElement('td', '', shape === 'polygon' ? `${size} ${copy.polygon}` : size),
+      createReferenceElement('td', '', quantity),
+    );
+    tbody.append(row);
+  }
+  table.append(thead, tbody);
+  const featuresHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.featuresHeading);
+  const features = copy.features.map(paragraph => createReferenceElement('p', 'terrain-rules-paragraph', paragraph));
+  terrainRulesContent.replaceChildren(...intro, footprintsHeading, footprintsIntro, table, featuresHeading, ...features);
+  terrainRulesContent.scrollTop = scrollTop;
+}
+
 function renderTwistPanel(focus = {}) {
   twistDialogTitle.textContent = text[language].twistTitle;
   if (twistPanelView === 'detail' && selectedTwist) renderTwistDetail(focus.focusDetail);
@@ -621,7 +696,7 @@ function render() {
     freeLayoutButton.setAttribute('aria-label', copy.chooseFreeLayout);
     freeLayoutButton.setAttribute('aria-pressed', String(Boolean(item)));
     terrainRulesTitle.textContent = copy.title;
-    terrainRulesImage.alt = copy.mapDescription;
+    renderTerrainRules();
     keyTitle.textContent = copy.key;
     keyImage.alt = copy.keyAlt;
     layoutGalleryTitle.textContent = copy.galleryTitle;

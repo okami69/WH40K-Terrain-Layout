@@ -598,19 +598,56 @@ dialog h2 {
   object-fit: contain;
 }
 
-#terrain-rules-image {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  height: auto;
-  max-height: calc(100vh - 106px);
-  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 106px);
-  margin: 0 auto;
-  object-fit: contain;
+#terrain-rules-viewer {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--surface);
 }
 
-#terrain-rules-viewer {
-  overflow: hidden;
+#terrain-rules-viewer:not([open]) {
+  display: none;
+}
+
+.terrain-rules-content {
+  min-height: 0;
+  padding: 4px 8px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  line-height: 1.45;
+}
+
+.terrain-rules-heading {
+  margin: 18px 0 6px;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.terrain-rules-paragraph {
+  margin: 0 0 12px;
+}
+
+.terrain-footprints {
+  width: 100%;
+  margin: 12px 0 18px;
+  border-collapse: collapse;
+}
+
+.terrain-footprints th,
+.terrain-footprints td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: center;
+}
+
+.terrain-footprints th {
+  color: var(--surface);
+  background: oklch(0.27 0.035 150);
+  text-transform: uppercase;
+}
+
+.terrain-footprints tbody tr:nth-child(even) {
+  background: var(--disabled);
 }
 
 #layout-key-viewer {

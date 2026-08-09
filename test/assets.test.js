@@ -46,6 +46,12 @@ test('layout key extraction crops to the official content panel', () => {
   assert.match(extractor, /key\.crop\(key_crop\)\.save\(/);
 });
 
+test('does not package the replaced Terrain Layout screenshot', () => {
+  assert.equal(existsSync('app/assets/key/terrain-rules.webp'), false);
+  const extractor = readFileSync('tools/extract_layouts.py', 'utf8');
+  assert.doesNotMatch(extractor, /TERRAIN_RULES_PAGE|TERRAIN_RULES_CROP_POINTS|terrain-rules\.webp/);
+});
+
 test('extracts the shared Event Companion paper as a required offline asset', () => {
   const background = 'app/assets/backgrounds/event-companion-paper.webp';
   assert.ok(existsSync(background), `Missing ${background}`);

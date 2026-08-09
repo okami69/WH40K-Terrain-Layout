@@ -7,7 +7,6 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.ok(existsSync('app/index.html'), 'Missing app/index.html');
   assert.ok(existsSync('app/styles.css'), 'Missing app/styles.css');
   assert.ok(existsSync('app/app.js'), 'Missing app/app.js');
-  assert.ok(existsSync('app/assets/key/terrain-rules.webp'), 'Missing app/assets/key/terrain-rules.webp');
 
   const html = readFileSync('app/index.html', 'utf8');
   assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">/);
@@ -39,7 +38,8 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<button[^>]+id="layout-key-button"[^>]+aria-label=/);
   assert.match(html, /<svg[^>]+aria-hidden="true"/);
   assert.match(html, /<dialog[^>]+id="terrain-rules-viewer"/);
-  assert.match(html, /<img[^>]+id="terrain-rules-image"[^>]+src="assets\/key\/terrain-rules\.webp"/);
+  assert.match(html, /<div id="terrain-rules-content" class="terrain-rules-content">/);
+  assert.doesNotMatch(html, /terrain-rules-image|assets\/key\/terrain-rules\.webp/);
   assert.match(html, /<dialog[^>]+id="layout-key-viewer"/);
   assert.match(html, /<dialog[^>]+id="viewer"/);
   assert.doesNotMatch(html, /id="layout-source"/);
@@ -79,8 +79,8 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.doesNotMatch(css, /\.app-sheet :is\(button, select\)\s*\{[\s\S]*?44px \/ var\(--sheet-scale\)/);
   assert.match(css, /\.title-button\s*\{[\s\S]*font-size:\s*1\.55rem/);
   assert.match(css, /#terrain-rules-viewer\s*\{[\s\S]*overflow:\s*hidden/);
-  assert.match(css, /#terrain-rules-image\s*\{[\s\S]*height:\s*auto/);
-  assert.match(css, /#terrain-rules-image\s*\{[\s\S]*max-height:\s*calc\(100vh - 106px\)/);
+  assert.match(css, /\.terrain-rules-content\s*\{[\s\S]*overflow-y:\s*auto/);
+  assert.match(css, /\.terrain-footprints\s*\{[\s\S]*border-collapse:\s*collapse/);
   const dispositionRule = css.match(/\.disposition-button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(dispositionRule, /\btext-align:\s*center;/);
   const matchupRule = css.match(/\.matchup\s*\{([\s\S]*?)\}/)?.[1] ?? '';
@@ -130,8 +130,6 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(dialogRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 24px\);/);
   const largeMapRule = css.match(/#large-map\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(largeMapRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 98px\);/);
-  const terrainRulesImageRule = css.match(/#terrain-rules-image\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-  assert.match(terrainRulesImageRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 106px\);/);
   const layoutKeyImageRule = css.match(/#layout-key-image\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(layoutKeyImageRule, /\bmax-height:\s*calc\(100dvh - env\(safe-area-inset-top\) - env\(safe-area-inset-bottom\) - 106px\);/);
   assert.match(css, /body\s*\{[\s\S]*overflow:\s*hidden/);
@@ -196,7 +194,10 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /const sheetWidth = 768;/);
   assert.match(js, /const terrainRulesButton = document\.querySelector\('#terrain-rules-button'\)/);
   assert.match(js, /const terrainRulesViewer = document\.querySelector\('#terrain-rules-viewer'\)/);
-  assert.match(js, /terrainRulesImage\.alt = copy\.mapDescription/);
+  assert.match(js, /const terrainRulesCopy = \{/);
+  assert.match(js, /function renderTerrainRules\(\)/);
+  assert.match(js, /warhammer-community\.com/);
+  assert.match(js, /Battlefields: Armageddon/);
   assert.match(js, /terrainRulesButton\.addEventListener\('click', \(\) => terrainRulesViewer\.showModal\(\)\)/);
   assert.match(js, /setDialogBackdropClose\(terrainRulesViewer\)/);
   assert.match(js, /missionReferences/);
@@ -218,11 +219,12 @@ test('provides the compact bilingual terrain sheet UI', () => {
 });
 
 class FakeElement {
-  constructor({ id = '', className = '', dataset = {}, hidden = false } = {}) {
+  constructor({ id = '', className = '', dataset = {}, hidden = false, tagName = '' } = {}) {
     this.id = id;
     this.className = className;
     this.dataset = dataset;
     this.hidden = hidden;
+    this.tagName = tagName.toUpperCase();
     this.children = [];
     this.listeners = new Map();
     this.attributes = new Map();
@@ -350,7 +352,7 @@ function createAppHarness() {
   for (const id of [
     'sheet',
     'left-icon', 'right-icon', 'left-disposition-button', 'right-disposition-button', 'left-mission', 'right-mission', 'layout-title', 'terrain-rules-button', 'viewer-title',
-    'terrain-rules-title', 'terrain-rules-image', 'layout-key-title', 'map', 'large-map', 'layout-key-button', 'layout-key-image',
+    'terrain-rules-title', 'terrain-rules-content', 'layout-key-title', 'map', 'large-map', 'layout-key-button', 'layout-key-image',
     'error', 'free-layout-button', 'viewer', 'terrain-rules-viewer', 'layout-key-viewer', 'layout-gallery',
     'layout-gallery-title', 'layout-gallery-scroll', 'mission-popover', 'disposition-menu', 'terrain-rules-close', 'layout-key-close', 'close',
     'layout-gallery-close', 'map-description', 'twist-button', 'twist-button-label', 'twist-dialog', 'twist-dialog-title',
@@ -396,8 +398,8 @@ function createAppHarness() {
     dispatch(type, event = {}) {
       for (const listener of documentListeners.get(type) ?? []) listener({ type, ...event });
     },
-    createElement() {
-      const element = new FakeElement();
+    createElement(tagName) {
+      const element = new FakeElement({ tagName });
       element.ownerDocument = document;
       return element;
     },
@@ -433,6 +435,36 @@ function byAction(root, action) {
 function textOf(root) {
   return [root, ...descendants(root)].map(item => item.textContent ?? '').join(' ');
 }
+
+test('renders localized semantic terrain rules without resetting scroll', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements } = harness;
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?terrain-rules-test=${Date.now()}`);
+    const content = elements.get('terrain-rules-content');
+    const rows = () => descendants(content).filter(item => item.tagName === 'TR');
+
+    assert.match(textOf(content), /Recommended Terrain Area Footprints/);
+    assert.match(textOf(content), /Battlefields: Armageddon/);
+    assert.match(textOf(content), /warhammer-community\.com/);
+    assert.equal(rows().length, 6);
+
+    content.scrollTop = 64;
+    document.querySelectorAll('[data-lang]')[0].dispatch('click');
+    assert.match(textOf(content), /Рекомендуемые размеры зон террейна/);
+    assert.match(textOf(content), /Элементы террейна/);
+    assert.equal(rows().length, 6);
+    assert.equal(content.scrollTop, 64);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
 
 test('keeps optional twists stable until No Twist is explicitly selected', async () => {
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
