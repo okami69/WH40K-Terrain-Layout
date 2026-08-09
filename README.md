@@ -6,6 +6,13 @@ Offline Windows and Android companion for finding the official Warhammer 40,000 
 
 Everything needed at the table is bundled with the application, so it works without an internet connection after installation. The interface supports Russian and English, includes the official Layouts Key and Terrain Layouts rules, and can enlarge any map for closer inspection.
 
+## What's new in v0.4.0
+
+- Added A / B / C / + layout controls and a scrollable gallery with large previews for all 45 bundled maps.
+- Free layout selection preserves both Force Dispositions and missions, including after either disposition changes.
+- Kept the free-map title compact so switching layouts does not push the map down.
+- Enlarged the map in portrait phone layouts and improved native Force Disposition option alignment where the platform supports it.
+
 ## Features
 
 - Resolves the terrain map from two Force Dispositions and layout A, B, or C.
