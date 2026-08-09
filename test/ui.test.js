@@ -216,6 +216,7 @@ class FakeElement {
 
   focus() {
     this.focused = true;
+    if (this.ownerDocument) this.ownerDocument.activeElement = this;
   }
 
   contains(target) {
@@ -269,7 +270,11 @@ function createAppHarness() {
     dispatch(type, event = {}) {
       for (const listener of documentListeners.get(type) ?? []) listener({ type, ...event });
     },
-    createElement() { return new FakeElement(); },
+    createElement() {
+      const element = new FakeElement();
+      element.ownerDocument = document;
+      return element;
+    },
     querySelector(selector) {
       if (selector === '#language-toggle') return languageToggle;
       if (selector.startsWith('#')) return elements.get(selector.slice(1)) ?? null;
@@ -287,12 +292,11 @@ function createAppHarness() {
   };
   document.documentElement.clientWidth = 768;
   document.documentElement.clientHeight = 1080;
+  for (const element of elements.values()) element.ownerDocument = document;
   return { document, elements, layoutButtons, window };
 }
 
-test('runs the free-layout gallery interactions without duplicate cards', async () => {
-  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
-  const { document, elements, layoutButtons, window } = createAppHarness();
+function installAppGlobals({ document, elements, window }) {
   const sheet = elements.get('sheet');
   sheet.computedWidth = '768px';
   sheet.computedHeight = '1080px';
@@ -306,6 +310,14 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
       : { paddingLeft: '0', paddingRight: '0', paddingTop: '0', paddingBottom: '0' } },
     Option: { configurable: true, value: function Option(text, value) { this.textContent = text; this.value = value; } },
   });
+  return sheet;
+}
+
+test('runs the free-layout gallery interactions without duplicate cards', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements, layoutButtons, window } = harness;
+  const sheet = installAppGlobals(harness);
 
   try {
     await import(`../app/app.js?gallery-test=${Date.now()}`);
@@ -378,20 +390,9 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
 
 test('runs the shared disposition menu through the existing select change path', async () => {
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
-  const { document, elements, window } = createAppHarness();
-  const sheet = elements.get('sheet');
-  sheet.computedWidth = '768px';
-  sheet.computedHeight = '1080px';
-  Object.defineProperties(globalThis, {
-    document: { configurable: true, value: document },
-    window: { configurable: true, value: window },
-    navigator: { configurable: true, value: { language: 'en-US' } },
-    localStorage: { configurable: true, value: { getItem() { return null; }, setItem() {} } },
-    getComputedStyle: { configurable: true, value: element => element === sheet
-      ? { width: sheet.computedWidth, height: sheet.computedHeight }
-      : { paddingLeft: '0', paddingRight: '0', paddingTop: '0', paddingBottom: '0' } },
-    Option: { configurable: true, value: function Option(text, value) { this.textContent = text; this.value = value; } },
-  });
+  const harness = createAppHarness();
+  const { document, elements, window } = harness;
+  installAppGlobals(harness);
 
   try {
     await import(`../app/app.js?disposition-test=${Date.now()}`);
@@ -402,11 +403,13 @@ test('runs the shared disposition menu through the existing select change path',
     const menu = elements.get('disposition-menu');
     const map = elements.get('map');
 
+    leftTrigger.focus();
     leftTrigger.dispatch('click');
     assert.equal(menu.open, true);
     assert.equal(menu.children.length, 5);
     assert.equal(menu.children.filter(button => button.getAttribute('aria-current') === 'true').length, 1);
     assert.equal(menu.children.find(button => button.getAttribute('aria-current') === 'true').dataset.disposition, 'disruption');
+    assert.equal(document.activeElement, menu.children.find(button => button.getAttribute('aria-current') === 'true'));
 
     const reconnaissance = menu.children.find(button => button.dataset.disposition === 'reconnaissance');
     reconnaissance.dispatch('click');
@@ -414,21 +417,51 @@ test('runs the shared disposition menu through the existing select change path',
     assert.equal(leftTrigger.textContent, 'Reconnaissance');
     assert.match(map.alt, /^Reconnaissance versus /);
     assert.equal(menu.open, false);
-    assert.equal(leftTrigger.focused, true);
+    assert.equal(document.activeElement, leftTrigger);
 
     rightTrigger.rect = { left: 700, right: 1000, top: 1012, bottom: 1060, width: 300, height: 48 };
+    rightTrigger.focus();
     rightTrigger.dispatch('click');
     assert.equal(menu.open, true);
     assert.equal(menu.style.left, '456px');
     assert.equal(menu.style.top, '840px');
     document.dispatch('keydown', { key: 'Escape' });
     assert.equal(menu.open, false);
-    assert.equal(rightTrigger.focused, true);
+    assert.equal(document.activeElement, rightTrigger);
 
     rightTrigger.dispatch('click');
     document.dispatch('pointerdown', { target: new FakeElement() });
     assert.equal(menu.open, false);
     assert.equal(right.value, 'priority-assets');
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('keeps the disposition menu usable without the Popover API', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements } = harness;
+  const menu = elements.get('disposition-menu');
+  menu.showPopover = undefined;
+  menu.hidePopover = undefined;
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?disposition-fallback-test=${Date.now()}`);
+    const trigger = elements.get('left-disposition-button');
+    trigger.focus();
+    trigger.dispatch('click');
+    assert.equal(menu.hidden, false);
+    assert.equal(document.activeElement.dataset.disposition, 'disruption');
+
+    menu.children.find(button => button.dataset.disposition === 'reconnaissance').dispatch('click');
+    assert.equal(elements.get('left').value, 'reconnaissance');
+    assert.equal(menu.hidden, true);
+    assert.equal(document.activeElement, trigger);
   } finally {
     for (const [name, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);

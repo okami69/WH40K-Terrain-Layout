@@ -172,11 +172,22 @@ function closeSummary() {
   for (const trigger of summaryTriggers) trigger.setAttribute('aria-expanded', 'false');
 }
 
+function setDispositionMenuVisible(visible) {
+  if (visible) {
+    dispositionMenu.hidden = false;
+    if (typeof dispositionMenu.showPopover === 'function') dispositionMenu.showPopover();
+    return;
+  }
+  if (typeof dispositionMenu.hidePopover === 'function'
+      && typeof dispositionMenu.matches === 'function'
+      && dispositionMenu.matches(':popover-open')) dispositionMenu.hidePopover();
+  dispositionMenu.hidden = true;
+}
+
 function closeDispositionMenu(restoreFocus = false) {
   const trigger = activeDispositionTrigger;
   if (!trigger) return;
-  if (dispositionMenu.matches(':popover-open')) dispositionMenu.hidePopover();
-  dispositionMenu.hidden = true;
+  setDispositionMenuVisible(false);
   trigger.setAttribute('aria-expanded', 'false');
   activeDispositionTrigger = null;
   if (restoreFocus) trigger.focus();
@@ -187,17 +198,20 @@ function openDispositionMenu(trigger) {
   activeDispositionTrigger = trigger;
   const select = dispositionTriggers.get(trigger);
   const rect = trigger.getBoundingClientRect();
+  let currentButton;
   for (const button of dispositionMenuButtons) {
-    button.setAttribute('aria-current', String(button.dataset.disposition === select.value));
+    const current = button.dataset.disposition === select.value;
+    button.setAttribute('aria-current', String(current));
+    if (current) currentButton = button;
   }
   trigger.setAttribute('aria-expanded', 'true');
   dispositionMenu.style.width = `${rect.width}px`;
-  dispositionMenu.hidden = false;
-  dispositionMenu.showPopover();
+  setDispositionMenuVisible(true);
   const width = dispositionMenu.offsetWidth || rect.width;
   const height = dispositionMenu.offsetHeight || dispositionMenuButtons.length * 44 + 8;
   dispositionMenu.style.left = `${Math.max(12, Math.min(rect.left, document.documentElement.clientWidth - width - 12))}px`;
   dispositionMenu.style.top = `${Math.max(12, Math.min(rect.bottom + 8, document.documentElement.clientHeight - height - 12))}px`;
+  currentButton.focus();
 }
 
 function openSummary(trigger, pin = false) {
