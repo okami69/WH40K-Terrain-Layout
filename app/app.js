@@ -131,6 +131,11 @@ const twistDialogTitle = document.querySelector('#twist-dialog-title');
 const twistDialogBody = document.querySelector('#twist-dialog-body');
 const twistDialogFooter = document.querySelector('#twist-dialog-footer');
 const twistDialogClose = document.querySelector('#twist-dialog-close');
+const terrainRulesClose = document.querySelector('#terrain-rules-close');
+const layoutKeyClose = document.querySelector('#layout-key-close');
+const viewerClose = document.querySelector('#close');
+const layoutGalleryClose = document.querySelector('#layout-gallery-close');
+const dialogCloseButtons = [twistDialogClose, terrainRulesClose, layoutKeyClose, viewerClose, layoutGalleryClose];
 const layoutButtons = [...document.querySelectorAll('[data-layout]')];
 const languageButtons = [...document.querySelectorAll('[data-lang]')];
 const summaryTriggers = [leftMission, rightMission];
@@ -428,14 +433,11 @@ function renderTwistDetail(focusDetail = false) {
     expandedTwist = null;
     renderTwistPanel({ focusTwist: selectedTwist.id });
   });
-  const close = createTwistButton(copy.close, 'close');
-  close.addEventListener('click', () => twistDialog.close());
-  twistDialogFooter.replaceChildren(change, close);
+  twistDialogFooter.replaceChildren(change);
 }
 
 function renderTwistPanel(focus = {}) {
   twistDialogTitle.textContent = text[language].twistTitle;
-  twistDialogClose.textContent = text[language].close;
   if (twistPanelView === 'detail' && selectedTwist) renderTwistDetail(focus.focusDetail);
   else renderTwistChooser(focus);
 }
@@ -620,13 +622,13 @@ function render() {
     freeLayoutButton.setAttribute('aria-pressed', String(Boolean(item)));
     terrainRulesTitle.textContent = copy.title;
     terrainRulesImage.alt = copy.mapDescription;
-    document.querySelector('#terrain-rules-close').textContent = copy.close;
     keyTitle.textContent = copy.key;
     keyImage.alt = copy.keyAlt;
-    document.querySelector('#layout-key-close').textContent = copy.close;
-    document.querySelector('#close').textContent = copy.close;
     layoutGalleryTitle.textContent = copy.galleryTitle;
-    document.querySelector('#layout-gallery-close').textContent = copy.close;
+    for (const button of dialogCloseButtons) {
+      button.setAttribute('aria-label', copy.close);
+      button.setAttribute('title', copy.close);
+    }
     renderTwistButton();
     if (twistDialog.open) renderTwistPanel();
 
@@ -728,13 +730,13 @@ twistDialogClose.addEventListener('click', () => twistDialog.close());
 twistDialog.addEventListener('close', () => twistButton.focus());
 twistDialog.addEventListener('cancel', () => twistButton.focus());
 mapButton.addEventListener('click', () => viewer.showModal());
-document.querySelector('#close').addEventListener('click', () => viewer.close());
+viewerClose.addEventListener('click', () => viewer.close());
 freeLayoutButton.addEventListener('click', openGallery);
-document.querySelector('#layout-gallery-close').addEventListener('click', () => layoutGallery.close());
+layoutGalleryClose.addEventListener('click', () => layoutGallery.close());
 terrainRulesButton.addEventListener('click', () => terrainRulesViewer.showModal());
-document.querySelector('#terrain-rules-close').addEventListener('click', () => terrainRulesViewer.close());
+terrainRulesClose.addEventListener('click', () => terrainRulesViewer.close());
 keyButton.addEventListener('click', () => keyViewer.showModal());
-document.querySelector('#layout-key-close').addEventListener('click', () => keyViewer.close());
+layoutKeyClose.addEventListener('click', () => keyViewer.close());
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     closeDispositionMenu(true);

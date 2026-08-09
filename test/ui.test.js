@@ -48,6 +48,12 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<div[^>]+id="layout-gallery-scroll"[^>]+class="layout-gallery-scroll"/);
   assert.match(html, /<script[^>]+type="module"[^>]+src="app\.js"/);
 
+  const dialogCloseIds = ['twist-dialog-close', 'terrain-rules-close', 'layout-key-close', 'close', 'layout-gallery-close'];
+  assert.equal(html.match(/class="dialog-close"/g)?.length, 5);
+  for (const id of dialogCloseIds) {
+    assert.match(html, new RegExp(`<button id="${id}" class="dialog-close" type="button" aria-label="Close" title="Close">×</button>`));
+  }
+
   const css = readFileSync('app/styles.css', 'utf8');
   assert.match(css, /--paper-image:\s*url\("assets\/backgrounds\/event-companion-paper\.webp"\)/);
   assert.match(css, /html\s*\{[\s\S]*?background-image:\s*var\(--paper-image\)/);
@@ -87,6 +93,10 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(twistButtonRule, /\bwidth:\s*44px;/);
   assert.match(twistButtonRule, /\bheight:\s*44px;/);
   assert.match(twistButtonRule, /\btransform:\s*translate\(-50%, 0\);/);
+  const dialogCloseRule = css.match(/\.dialog-close\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(dialogCloseRule, /\bwidth:\s*44px;/);
+  assert.match(dialogCloseRule, /\bheight:\s*44px;/);
+  assert.match(dialogCloseRule, /\bpadding:\s*0;/);
   assert.doesNotMatch(css, /\.disposition-select option/);
   const dispositionMenuRule = css.match(/\.disposition-menu\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(dispositionMenuRule, /\bposition:\s*fixed;/);
@@ -203,6 +213,8 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /layoutCatalog/);
   assert.match(js, /image\.loading\s*=\s*'lazy'/);
   assert.match(js, /image\.decoding\s*=\s*'async'/);
+  assert.doesNotMatch(js, /twistDialogFooter\.replaceChildren\(change, close\)/);
+  assert.doesNotMatch(js, /\.textContent\s*=\s*copy\.close/);
 });
 
 class FakeElement {
@@ -345,6 +357,14 @@ function createAppHarness() {
     'twist-dialog-body', 'twist-dialog-footer', 'twist-dialog-close',
   ]) add(id, { hidden: ['error', 'mission-popover', 'disposition-menu'].includes(id) });
 
+  for (const id of ['twist-dialog-close', 'terrain-rules-close', 'layout-key-close', 'close', 'layout-gallery-close']) {
+    const close = elements.get(id);
+    close.className = 'dialog-close';
+    close.textContent = '×';
+    close.setAttribute('aria-label', 'Close');
+    close.setAttribute('title', 'Close');
+  }
+
   const leftCard = new FakeElement({ className: 'selector-card' });
   const rightCard = new FakeElement({ className: 'selector-card' });
   leftCard.rect = { left: 24, right: 360, top: 40, bottom: 180, width: 336, height: 140 };
@@ -475,6 +495,7 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(button.getAttribute('aria-pressed'), 'true');
     assert.match(textOf(body), new RegExp(twists[0].name.en));
     assert.equal(document.activeElement, byClass(body, 'twist-detail-title')[0]);
+    assert.deepEqual(footer.children.map(item => item.dataset.action), ['change']);
 
     byAction(footer, 'change').dispatch('click');
     assert.equal(chooserRows().length, 6);
@@ -524,6 +545,9 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     ]) assert.notEqual(control.disabled, true);
 
     document.querySelectorAll('[data-lang]')[0].dispatch('click');
+    assert.equal(close.textContent, '×');
+    assert.equal(close.getAttribute('aria-label'), 'Закрыть');
+    assert.equal(close.getAttribute('title'), 'Закрыть');
     assert.equal(button.title, 'Без особенности');
     assert.match(button.getAttribute('aria-label'), /необязатель/i);
 
