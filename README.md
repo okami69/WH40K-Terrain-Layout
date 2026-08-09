@@ -80,8 +80,6 @@ npm.cmd run android:init
 npm.cmd run android:build
 ```
 
-The frontend and its tests need no network connection after dependencies are installed. The packaged Windows and Android apps also run offline because all rules, translations, and images are local.
-
 The Tauri NSIS installer is written under:
 
 `src-tauri/target/release/bundle/nsis/`
