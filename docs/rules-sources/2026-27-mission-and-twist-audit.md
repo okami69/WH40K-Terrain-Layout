@@ -7,7 +7,8 @@ Inspection date: 2026-08-09. Scope: the current 2026-27 mission pack only; the o
 - Event Companion: **v1.1**, local approved PDF `D:\WH40K Terrain Layout\eng_22_07_warhammer_40,000_event_companion_alyapl19us_b2drgwkji4.pdf`, SHA-256 `97AE5591BE2E58BDB636E97127EAC0877F9BF28B29FC607ED4EAD4D377FB8F20` (93 pages).
 - Official app identity:
   - package `com.gamesworkshop.w40k`; app `2.4.0`; versionCode `139`;
-    released 2026-08-05; inspected 2026-08-09.
+    APKPure publication 2026-08-05; official Google Play listing updated 2026-07-30;
+    inspected 2026-08-09.
   - embedded `metadata.data_version`: **925**.
   - mission pack UUID: `4f285f2e-3c40-40fb-8b2f-bfccd173f1fd`;
     EN name: `Chapter Approved 2026-2027`.
@@ -32,6 +33,9 @@ Run in PowerShell. The endpoint is mutable, so record the resolved version, insp
 and hashes immediately; the paths below are cache locations only.
 
 ```powershell
+New-Item -ItemType Directory -Path `
+  'D:\Temp\okami\w40k-app-2.4.0', `
+  'D:\Temp\okami\w40k-app-2.4.0\base' -Force | Out-Null
 curl.exe -L 'https://d.apkpure.net/b/XAPK/com.gamesworkshop.w40k?version=latest' `
   -o 'D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk'
 tar -xf 'D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk' `
@@ -59,19 +63,22 @@ $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
 
 ### Deterministic cross-check recipe
 
-1. Parse `dump.json`; assert `metadata.data_version == 925`.
-2. Select the `mission_pack` with the UUID above, then join by IDs:
-   `primary_mission` → `primary_mission_objective` →
-   `primary_mission_objective_scoring`, plus `primary_mission_action`.
-   Select `mission_twist` by `missionPackId`.
-3. Fetch the GDM version page and each mission route on 2026-08-09. Strip markup,
-   decode entities, normalize Unicode to NFC, convert typographic apostrophes to ASCII,
-   collapse whitespace, preserve array `displayOrder`, and sort mission object keys by slug.
-4. Emit UTF-8 without BOM and one final LF. Serialize with lexically sorted object keys and
-   compact JSON separators; never include retrieval timestamps or local paths in the payload.
-5. Compare all mission section/condition counts, VP, cumulative/mutually-exclusive flags,
-   and all action fields. The result must be 25 missions, 74 objectives, and 11 actions.
-6. Hash the immutable inputs and normalized result:
+The repository script contains the fixed 25-route list and performs the app joins, GDM
+extraction, normalization, comparison, canonical serialization, count checks, and hashing:
+
+```powershell
+node .\scripts\audit-rules-sources.mjs `
+  --dump 'D:\Temp\okami\w40k-app-2.4.0\base\assets\dump.json' `
+  --output 'D:\Temp\okami\wh40k-v05-mission-compare-normalized.json'
+```
+
+Equivalent environment variables are `W40K_DUMP_JSON` and `W40K_AUDIT_OUTPUT`; run
+`node .\scripts\audit-rules-sources.mjs --help` for usage. The script asserts
+`metadata.data_version == 925`, selects the mission pack UUID above, preserves source display
+order, excludes retrieval timestamps and local paths, and fails nonzero on network, schema,
+count, or substantive comparison errors.
+
+Hash the immutable inputs and normalized result:
 
 ```powershell
 Get-FileHash -Algorithm SHA256 -LiteralPath `
@@ -84,8 +91,10 @@ Get-FileHash -Algorithm SHA256 -LiteralPath `
   SHA-256 `0B5B924EA55DE00979F392544AFD93990163A2FDFB43A9B7568E993A8B172D02`.
 - Canonical normalized comparison:
   `D:\Temp\okami\wh40k-v05-mission-compare-normalized.json`;
-  25 missions; 32,782 bytes; SHA-256
+  25 missions. The archived 32,782-byte file omitted its documented final LF and has SHA-256
   `D81E2E1322C7B13CAFE4FC78024C743DDCAA07B2AC9D3C278A88D4C7DF5511CF`.
+  The script emits the identical payload with the required final LF: 32,783 bytes, SHA-256
+  `43B4FEC62B16E5808E23670EFA71622B698140EF4DE05FC3F6421C1C67ECB57C`.
 
 ## Global mission rules and translation notes
 
