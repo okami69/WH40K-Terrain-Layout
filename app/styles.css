@@ -704,15 +704,13 @@ dialog h2 {
 }
 
 @media (orientation: portrait) and (max-width: 600px) {
-  :root {
-    --sheet-height: 1280px;
-  }
-
   body {
     place-items: start center;
   }
 
   .app-sheet {
+    display: flex;
+    flex-direction: column;
     padding: 8px 32px;
   }
 
@@ -736,20 +734,24 @@ dialog h2 {
     margin: 4px 0;
   }
 
-  .map-panel,
+  .map-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+
   .map-button {
-    height: auto;
+    height: 100%;
+    min-height: 0;
+    place-items: center;
   }
 
-  #map {
-    width: 100%;
-    height: auto;
-    max-height: none;
-  }
-
+  #map,
   .map-button img {
     width: 100%;
     height: auto;
-    max-height: none;
+    max-height: 100%;
   }
 }

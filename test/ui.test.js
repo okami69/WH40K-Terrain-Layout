@@ -133,15 +133,30 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /#twist-dialog-footer\s*\{[\s\S]*?position:\s*sticky;/);
   assert.doesNotMatch(css, /#twist-dialog[^{]*\{[^}]*\b(?:transform|opacity|animation|view-transition-name)\s*:/);
   const portraitRule = css.match(/@media \(orientation: portrait\) and \(max-width: 600px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
-  assert.match(portraitRule, /:root\s*\{[\s\S]*?--sheet-height:\s*1280px;/);
+  assert.doesNotMatch(portraitRule, /--sheet-height:\s*1280px;/);
   assert.match(portraitRule, /body\s*\{[\s\S]*?place-items:\s*start center;/);
-  assert.match(portraitRule, /#map\s*\{[\s\S]*?height:\s*auto;/);
-  assert.match(portraitRule, /\.app-sheet\s*\{[\s\S]*?padding:\s*8px 32px;/);
+  const portraitSheetRule = portraitRule.match(/\.app-sheet\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(portraitSheetRule, /\bdisplay:\s*flex;/);
+  assert.match(portraitSheetRule, /\bflex-direction:\s*column;/);
+  assert.match(portraitSheetRule, /\bpadding:\s*8px 32px;/);
   assert.match(portraitRule, /\.masthead\s*\{[\s\S]*?margin-bottom:\s*8px;/);
   assert.match(portraitRule, /\.masthead h1\s*\{[\s\S]*?margin-bottom:\s*4px;/);
   assert.match(portraitRule, /\.masthead-tools\s*\{[\s\S]*?margin-bottom:\s*4px;/);
   assert.match(portraitRule, /\.layouts\s*\{[\s\S]*?margin:\s*8px 0 4px;/);
   assert.match(portraitRule, /\.map-panel h2\s*\{[\s\S]*?margin:\s*4px 0;/);
+  const portraitMapPanelRule = portraitRule.match(/\.map-panel\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(portraitMapPanelRule, /\bdisplay:\s*grid;/);
+  assert.match(portraitMapPanelRule, /\bgrid-template-rows:\s*auto minmax\(0, 1fr\);/);
+  assert.match(portraitMapPanelRule, /\bflex:\s*1;/);
+  assert.match(portraitMapPanelRule, /\bmin-height:\s*0;/);
+  const portraitMapButtonRule = portraitRule.match(/\.map-button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(portraitMapButtonRule, /\bheight:\s*100%;/);
+  assert.match(portraitMapButtonRule, /\bmin-height:\s*0;/);
+  assert.match(portraitMapButtonRule, /\bplace-items:\s*center;/);
+  const portraitMapRule = portraitRule.match(/#map,\s*\n\s*\.map-button img\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(portraitMapRule, /\bwidth:\s*100%;/);
+  assert.match(portraitMapRule, /\bheight:\s*auto;/);
+  assert.match(portraitMapRule, /\bmax-height:\s*100%;/);
 
   const js = readFileSync('app/app.js', 'utf8');
   assert.doesNotMatch(js, /querySelector\('#layout-source'\)/);
@@ -149,8 +164,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /document\.documentElement\.clientWidth/);
   assert.match(js, /document\.documentElement\.clientHeight/);
   assert.match(js, /window\.visualViewport\?\.addEventListener\('resize', handleViewportResize\)/);
-  assert.match(js, /sheetStyle\.width/);
-  assert.match(js, /sheetStyle\.height/);
+  assert.match(js, /const sheetWidth = 768;/);
   assert.match(js, /const terrainRulesButton = document\.querySelector\('#terrain-rules-button'\)/);
   assert.match(js, /const terrainRulesViewer = document\.querySelector\('#terrain-rules-viewer'\)/);
   assert.match(js, /terrainRulesImage\.alt = copy\.mapDescription/);
@@ -722,6 +736,75 @@ function installAppGlobals({ document, elements, window }) {
   return sheet;
 }
 
+function sheetMetrics(document) {
+  return {
+    height: Number.parseFloat(document.documentElement.style.getPropertyValue('--sheet-height')),
+    scale: Number.parseFloat(document.documentElement.style.getPropertyValue('--sheet-scale')),
+  };
+}
+
+test('balances the logical sheet across tall and short portrait viewports and resets on desktop', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, window } = harness;
+  window.visualViewport.width = 412;
+  window.visualViewport.height = 915;
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?portrait-fit-test=${Date.now()}`);
+    let metrics = sheetMetrics(document);
+    const widthScale = 412 / 768;
+    assert.equal(metrics.scale, widthScale);
+    assert.equal(metrics.height, 915 / widthScale);
+    assert.equal(metrics.height * metrics.scale, 915, 'tall portrait consumes the exact available height');
+
+    window.visualViewport.height = 640;
+    window.visualViewport.dispatch('resize');
+    metrics = sheetMetrics(document);
+    assert.equal(metrics.height, 1280, 'short portrait retains the base logical height');
+    assert.equal(metrics.scale, 0.5, 'short portrait fits by height without clipping');
+
+    window.visualViewport.width = 800;
+    window.visualViewport.height = 600;
+    window.visualViewport.dispatch('resize');
+    metrics = sheetMetrics(document);
+    assert.equal(metrics.height, 1080, 'desktop restores the desktop logical height');
+    assert.equal(metrics.scale, 600 / 1080);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('fits portrait sheets to VisualViewport dimensions inside safe-area padding', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements, window } = harness;
+  window.visualViewport.width = 420;
+  window.visualViewport.height = 900;
+  const sheet = installAppGlobals(harness);
+  Object.defineProperty(globalThis, 'getComputedStyle', { configurable: true, value: element => element === sheet
+    ? { width: sheet.computedWidth, height: sheet.computedHeight }
+    : { paddingLeft: '4px', paddingRight: '4px', paddingTop: '10px', paddingBottom: '20px' } });
+
+  try {
+    await import(`../app/app.js?portrait-safe-fit-test=${Date.now()}`);
+    const metrics = sheetMetrics(document);
+    const widthScale = 412 / 768;
+    assert.equal(metrics.scale, widthScale);
+    assert.equal(metrics.height, 870 / widthScale);
+    assert.equal(metrics.height * metrics.scale, 870, 'safe-area-adjusted height has no unused top/bottom space');
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
 test('runs the free-layout gallery interactions without duplicate cards', async () => {
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   const harness = createAppHarness();
@@ -731,9 +814,9 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
   try {
     await import(`../app/app.js?gallery-test=${Date.now()}`);
     assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '1');
-    sheet.computedHeight = '1280px';
     window.dispatch('resize');
-    assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '0.84375');
+    assert.equal(document.documentElement.style.getPropertyValue('--sheet-height'), '1080px');
+    assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '1');
     const gallery = elements.get('layout-gallery');
     const galleryScroll = elements.get('layout-gallery-scroll');
     const freeButton = elements.get('free-layout-button');

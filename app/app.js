@@ -183,12 +183,17 @@ function cssPixels(value) {
 
 function fitSheet() {
   const bodyStyle = getComputedStyle(document.body);
-  const sheetStyle = getComputedStyle(document.querySelector('#sheet'));
   const horizontalInsets = cssPixels(bodyStyle.paddingLeft) + cssPixels(bodyStyle.paddingRight);
   const verticalInsets = cssPixels(bodyStyle.paddingTop) + cssPixels(bodyStyle.paddingBottom);
-  const availableWidth = document.documentElement.clientWidth - horizontalInsets;
-  const availableHeight = document.documentElement.clientHeight - verticalInsets;
-  const scale = Math.min(availableWidth / cssPixels(sheetStyle.width), availableHeight / cssPixels(sheetStyle.height));
+  const availableWidth = (window.visualViewport?.width || document.documentElement.clientWidth) - horizontalInsets;
+  const availableHeight = (window.visualViewport?.height || document.documentElement.clientHeight) - verticalInsets;
+  const sheetWidth = 768;
+  const portrait = availableWidth <= 600 && availableHeight > availableWidth;
+  const widthScale = availableWidth / sheetWidth;
+  let sheetHeight = portrait ? 1280 : 1080;
+  if (portrait && sheetHeight * widthScale < availableHeight) sheetHeight = availableHeight / widthScale;
+  const scale = Math.min(widthScale, availableHeight / sheetHeight);
+  document.documentElement.style.setProperty('--sheet-height', `${sheetHeight}px`);
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
 }
 
