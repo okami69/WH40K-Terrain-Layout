@@ -108,6 +108,8 @@ def main():
         paper_tile = paper_page.render(scale=SCALE).to_pil().convert("RGB")
         for object_ in paper_objects:
             object_.close()
+        if paper_tile.size != (1191, 1684):
+            raise SystemExit(f"Unexpected Event Companion paper render size: expected (1191, 1684), got {paper_tile.size}")
         paper_tile = paper_tile.crop((0, 0, 1190, 1684))
         paper_width, paper_height = paper_tile.size
         paper = Image.new("RGB", (paper_width * PAPER_TILES, paper_height * PAPER_TILES))
