@@ -23,7 +23,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<button[^>]+id="right-disposition-button"[^>]+class="disposition-button"[^>]+aria-controls="disposition-menu"/);
   assert.match(html, /<button[^>]+id="left-mission"[^>]+class="mission-summary-trigger"/);
   assert.match(html, /<button[^>]+id="right-mission"[^>]+class="mission-summary-trigger"/);
-  assert.match(html, /id="mission-popover"/);
+  assert.match(html, /<div[^>]+id="mission-popover"[^>]+role="region"[^>]+tabindex="0"[^>]+aria-labelledby="mission-popover-title"/);
   assert.match(html, /<div[^>]+id="disposition-menu"[^>]+popover="manual"/);
   assert.match(html, /<div class="layouts" role="group" aria-label="Terrain layout">/);
   assert.match(html, /<button[^>]+id="free-layout-button"[^>]+aria-pressed="false"[^>]*>\+<\/button>/);
@@ -123,7 +123,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.doesNotMatch(js, /layoutSource\.(?:textContent|hidden)/);
   assert.match(js, /document\.documentElement\.clientWidth/);
   assert.match(js, /document\.documentElement\.clientHeight/);
-  assert.match(js, /window\.visualViewport\?\.addEventListener\('resize', fitSheet\)/);
+  assert.match(js, /window\.visualViewport\?\.addEventListener\('resize', handleViewportResize\)/);
   assert.match(js, /sheetStyle\.width/);
   assert.match(js, /sheetStyle\.height/);
   assert.match(js, /const terrainRulesButton = document\.querySelector\('#terrain-rules-button'\)/);
@@ -136,6 +136,8 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /--mission-popover-width/);
   assert.match(js, /trigger\.closest\('\.selector-card'\)\.getBoundingClientRect\(\)/);
   assert.match(js, /popover\.dataset\.anchor/);
+  assert.match(js, /function positionSummary\(trigger = activeSummaryTrigger\)/);
+  assert.match(js, /window\.addEventListener\('orientationchange', handleViewportResize\)/);
   assert.doesNotMatch(js, /popover\.textContent\s*=\s*missions\[mission\]\.summary\[language\]/);
   assert.doesNotMatch(js, /innerHTML/);
   assert.match(js, /layoutCatalog/);
@@ -234,7 +236,13 @@ class FakeElement {
 
   focus() {
     this.focused = true;
-    if (this.ownerDocument) this.ownerDocument.activeElement = this;
+    if (this.ownerDocument) {
+      const previous = this.ownerDocument.activeElement;
+      if (previous === this) return;
+      this.ownerDocument.activeElement = this;
+      previous?.dispatch('focusout', { relatedTarget: this });
+      this.dispatch('focus', { relatedTarget: previous });
+    }
   }
 
   contains(target) {
@@ -284,6 +292,8 @@ function createAppHarness() {
   const mapButton = new FakeElement({ className: 'map-button' });
   const languageToggle = new FakeElement({ className: 'language-toggle' });
   const window = new FakeElement();
+  window.innerWidth = 768;
+  window.innerHeight = 1080;
   window.visualViewport = new FakeElement();
   const documentListeners = new Map();
   const document = {
@@ -373,6 +383,94 @@ test('renders and positions detailed bilingual mission references without moving
     assert.ok(descendants(popover).some(item => item.textContent === reference.overview.ru));
     assert.ok(descendants(popover).some(item => item.className === 'mission-reference-vp' && / ПО$/.test(item.textContent)));
     assert.match(popover.children.at(-1).textContent, /Физическая карта миссии/);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('isolates pinned mission content and restores keyboard focus on Escape', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements } = harness;
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?mission-pin-test=${Date.now()}`);
+    const leftTrigger = elements.get('left-mission');
+    const rightTrigger = elements.get('right-mission');
+    const popover = elements.get('mission-popover');
+    const title = () => descendants(popover).find(item => item.className === 'mission-reference-title').textContent;
+
+    leftTrigger.focus();
+    leftTrigger.dispatch('click');
+    const leftTitle = title();
+    assert.equal(document.activeElement, popover);
+    assert.equal(leftTrigger.getAttribute('aria-expanded'), 'true');
+    assert.equal(rightTrigger.getAttribute('aria-expanded'), 'false');
+
+    rightTrigger.dispatch('pointerenter');
+    rightTrigger.focus();
+    rightTrigger.dispatch('focus');
+    assert.equal(title(), leftTitle);
+    assert.equal(leftTrigger.getAttribute('aria-expanded'), 'true');
+    assert.equal(rightTrigger.getAttribute('aria-expanded'), 'false');
+    rightTrigger.dispatch('pointerleave', { relatedTarget: new FakeElement() });
+    rightTrigger.dispatch('focusout', { relatedTarget: new FakeElement() });
+    assert.equal(popover.open, true);
+    assert.equal(title(), leftTitle);
+
+    rightTrigger.dispatch('click');
+    assert.notEqual(title(), leftTitle);
+    assert.equal(document.activeElement, popover);
+    assert.equal(leftTrigger.getAttribute('aria-expanded'), 'false');
+    assert.equal(rightTrigger.getAttribute('aria-expanded'), 'true');
+    document.dispatch('keydown', { key: 'Escape' });
+    assert.equal(popover.open, false);
+    assert.equal(document.activeElement, rightTrigger);
+    assert.equal(rightTrigger.getAttribute('aria-expanded'), 'false');
+
+    leftTrigger.dispatch('pointerenter');
+    assert.equal(document.activeElement, rightTrigger, 'hover preview must not steal focus');
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('repositions an open mission reference for narrow and short viewports', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements, window } = harness;
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?mission-resize-test=${Date.now()}`);
+    const trigger = elements.get('left-mission');
+    const popover = elements.get('mission-popover');
+    trigger.dispatch('pointerenter');
+
+    window.innerWidth = document.documentElement.clientWidth = 340;
+    window.innerHeight = document.documentElement.clientHeight = 300;
+    trigger.rect = { left: 20, right: 320, top: 172, bottom: 220, width: 300, height: 48 };
+    window.dispatch('resize');
+    assert.equal(popover.style.width, '316px');
+    assert.equal(popover.style.left, '12px');
+    assert.equal(popover.style.top, '228px');
+    assert.equal(popover.style.maxHeight, '60px');
+
+    window.innerWidth = document.documentElement.clientWidth = 360;
+    window.innerHeight = document.documentElement.clientHeight = 340;
+    trigger.rect = { left: 16, right: 344, top: 112, bottom: 160, width: 328, height: 48 };
+    window.visualViewport.dispatch('resize');
+    assert.equal(popover.style.width, '336px');
+    assert.equal(popover.style.left, '12px');
+    assert.equal(popover.style.top, '168px');
+    assert.equal(popover.style.maxHeight, '160px');
   } finally {
     for (const [name, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);

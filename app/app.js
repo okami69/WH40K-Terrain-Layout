@@ -180,7 +180,9 @@ function setPopoverVisible(visible) {
   }
 }
 
-function closeSummary() {
+function closeSummary(restoreFocus = false) {
+  const trigger = pinnedSummary;
+  if (restoreFocus) trigger?.focus();
   pinnedSummary = null;
   activeSummaryTrigger = null;
   setPopoverVisible(false);
@@ -240,6 +242,7 @@ function renderMissionReference(missionId) {
   const reference = missionReferences[missionId];
   const copy = text[language];
   const title = createReferenceElement('h3', 'mission-reference-title', `${copy.mission}: ${missions[missionId].name[language]}`);
+  title.id = 'mission-popover-title';
   const overview = createReferenceElement('p', 'mission-reference-overview', reference.overview[language]);
   const sections = reference.sections.map(item => {
     const section = createReferenceElement('section', 'mission-reference-section', '');
@@ -270,11 +273,8 @@ function renderMissionReference(missionId) {
   popover.replaceChildren(title, overview, ...sections, reminder);
 }
 
-function openSummary(trigger, pin = false) {
-  const mission = trigger.dataset.mission;
-  if (!mission) return;
-
-  renderMissionReference(mission);
+function positionSummary(trigger = activeSummaryTrigger) {
+  if (!trigger) return;
   const rect = trigger.getBoundingClientRect();
   const cardRect = trigger.closest('.selector-card').getBoundingClientRect();
   const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
@@ -290,10 +290,20 @@ function openSummary(trigger, pin = false) {
   popover.style.left = `${left}px`;
   popover.style.top = `${top}px`;
   popover.style.maxHeight = `${Math.max(0, Math.min(viewportHeight * 0.65, viewportHeight - top - 12))}px`;
+}
+
+function openSummary(trigger, pin = false) {
+  if (pinnedSummary && !pin) return;
+  const mission = trigger.dataset.mission;
+  if (!mission) return;
+
+  renderMissionReference(mission);
+  activeSummaryTrigger = trigger;
+  if (pin) pinnedSummary = trigger;
+  positionSummary(trigger);
   setPopoverVisible(true);
   for (const item of summaryTriggers) item.setAttribute('aria-expanded', String(item === trigger));
-  activeSummaryTrigger = trigger;
-  pinnedSummary = pin ? trigger : pinnedSummary;
+  if (pin) popover.focus({ preventScroll: true });
 }
 
 function withinSummary(target, trigger = activeSummaryTrigger) {
@@ -465,10 +475,10 @@ for (const trigger of summaryTriggers) {
   trigger.addEventListener('pointerenter', () => openSummary(trigger));
   trigger.addEventListener('focus', () => openSummary(trigger));
   trigger.addEventListener('pointerleave', event => {
-    if (pinnedSummary !== trigger && !withinSummary(event.relatedTarget, trigger)) closeSummary();
+    if (!pinnedSummary && !withinSummary(event.relatedTarget, trigger)) closeSummary();
   });
   trigger.addEventListener('focusout', event => {
-    if (pinnedSummary !== trigger && !withinSummary(event.relatedTarget, trigger)) closeSummary();
+    if (!pinnedSummary && !withinSummary(event.relatedTarget, trigger)) closeSummary();
   });
   trigger.addEventListener('click', () => {
     if (pinnedSummary === trigger) closeSummary();
@@ -495,7 +505,7 @@ document.querySelector('#layout-key-close').addEventListener('click', () => keyV
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     closeDispositionMenu(true);
-    closeSummary();
+    closeSummary(true);
   }
 });
 document.addEventListener('pointerdown', event => {
@@ -504,8 +514,14 @@ document.addEventListener('pointerdown', event => {
       && !dispositionMenu.contains(event.target)) closeDispositionMenu();
   if (activeSummaryTrigger && !withinSummary(event.target)) closeSummary();
 });
-window.addEventListener('resize', fitSheet);
-window.visualViewport?.addEventListener('resize', fitSheet);
+function handleViewportResize() {
+  fitSheet();
+  positionSummary();
+}
+
+window.addEventListener('resize', handleViewportResize);
+window.addEventListener('orientationchange', handleViewportResize);
+window.visualViewport?.addEventListener('resize', handleViewportResize);
 setDialogBackdropClose(viewer);
 setDialogBackdropClose(terrainRulesViewer);
 setDialogBackdropClose(keyViewer);
