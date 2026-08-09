@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pypdfium2 as pdfium
+from PIL import Image, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,12 +12,16 @@ if not SOURCE.exists() and ROOT.parent.name == ".worktrees":
 OUTPUT = ROOT / "app" / "assets" / "layouts"
 KEY_OUTPUT = ROOT / "app" / "assets" / "key"
 DISPOSITION_OUTPUT = ROOT / "app" / "assets" / "dispositions"
+BACKGROUND_OUTPUT = ROOT / "app" / "assets" / "backgrounds"
 SCALE = 2
 CROP_POINTS = (82, 245, 513, 765)
 KEY_PAGE = 8
 KEY_CROP_POINTS = (94, 42, 502, 778)
 TERRAIN_RULES_PAGE = 7
 TERRAIN_RULES_CROP_POINTS = (24, 29, 362, 659)
+PAPER_PAGE = 9
+PAPER_OBJECT_COUNT = 2
+PAPER_TILES = 3
 ICON_CROPS = {
     "take-and-hold": (160, 76, 208, 124),
     "purge-the-foe": (384, 76, 432, 124),
@@ -57,6 +62,7 @@ def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     KEY_OUTPUT.mkdir(parents=True, exist_ok=True)
     DISPOSITION_OUTPUT.mkdir(parents=True, exist_ok=True)
+    BACKGROUND_OUTPUT.mkdir(parents=True, exist_ok=True)
     crop = tuple(point * SCALE for point in CROP_POINTS)
     key_crop = tuple(point * SCALE for point in KEY_CROP_POINTS)
     terrain_rules_crop = tuple(point * SCALE for point in TERRAIN_RULES_CROP_POINTS)
@@ -85,6 +91,42 @@ def main():
                         pixels[x, y] = (255, 255, 255, 0)
             icon.save(DISPOSITION_OUTPUT / f"{slug}.webp", "WEBP", lossless=True, method=6)
 
+        paper_page = document[PAPER_PAGE - 1]
+        paper_objects = list(paper_page.get_objects())
+        if len(paper_objects) < PAPER_OBJECT_COUNT:
+            raise SystemExit("Event Companion paper objects are missing")
+
+        page_width, page_height = paper_page.get_size()
+        for object_ in paper_objects[:PAPER_OBJECT_COUNT]:
+            left, bottom, right, top = object_.get_bounds()
+            if left > 0 or bottom > 0 or right < page_width or top < page_height:
+                raise SystemExit("Event Companion paper object no longer covers the full page")
+
+        for object_ in paper_objects[PAPER_OBJECT_COUNT:]:
+            paper_page.remove_obj(object_)
+
+        paper_tile = paper_page.render(scale=SCALE).to_pil().convert("RGB")
+        for object_ in paper_objects:
+            object_.close()
+        paper_tile = paper_tile.crop((0, 0, 1190, 1684))
+        paper_width, paper_height = paper_tile.size
+        paper = Image.new("RGB", (paper_width * PAPER_TILES, paper_height * PAPER_TILES))
+        for row in range(PAPER_TILES):
+            for column in range(PAPER_TILES):
+                tile = paper_tile
+                if column != 1:
+                    tile = ImageOps.mirror(tile)
+                if row != 1:
+                    tile = ImageOps.flip(tile)
+                paper.paste(tile, (column * paper_width, row * paper_height))
+
+        paper.save(
+            BACKGROUND_OUTPUT / "event-companion-paper.webp",
+            "WEBP",
+            lossless=True,
+            method=6,
+        )
+
     for old in OUTPUT.glob("*.png"):
         old.unlink()
 
@@ -92,6 +134,7 @@ def main():
     print(f"Created 5 disposition icons in {DISPOSITION_OUTPUT.relative_to(ROOT)}")
     print(f"Created layout key in {KEY_OUTPUT.relative_to(ROOT)}")
     print(f"Created terrain rules in {KEY_OUTPUT.relative_to(ROOT)}")
+    print(f"Created Event Companion paper in {BACKGROUND_OUTPUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

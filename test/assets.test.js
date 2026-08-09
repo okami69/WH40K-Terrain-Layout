@@ -6,6 +6,7 @@ import { layoutCatalog, matchups, resolveMatchup } from '../app/matchups.js';
 test('all matchup layouts have unique image assets', () => {
   const images = new Set();
   const required = [
+    'app/assets/backgrounds/event-companion-paper.webp',
     'app/assets/key/layouts-key.webp',
     'app/assets/dispositions/take-and-hold.webp',
     'app/assets/dispositions/purge-the-foe.webp',
@@ -43,4 +44,17 @@ test('layout key extraction crops to the official content panel', () => {
   const extractor = readFileSync('tools/extract_layouts.py', 'utf8');
   assert.match(extractor, /KEY_CROP_POINTS = \(94, 42, 502, 778\)/);
   assert.match(extractor, /key\.crop\(key_crop\)\.save\(/);
+});
+
+test('extracts the shared Event Companion paper as a required offline asset', () => {
+  const background = 'app/assets/backgrounds/event-companion-paper.webp';
+  assert.ok(existsSync(background), `Missing ${background}`);
+  assert.ok(statSync(background).size > 0, `Empty ${background}`);
+
+  const extractor = readFileSync('tools/extract_layouts.py', 'utf8');
+  assert.match(extractor, /PAPER_PAGE = 9/);
+  assert.match(extractor, /PAPER_OBJECT_COUNT = 2/);
+  assert.match(extractor, /paper_objects = list\(paper_page\.get_objects\(\)\)/);
+  assert.match(extractor, /for object_ in paper_objects\[PAPER_OBJECT_COUNT:\]:\s+paper_page\.remove_obj\(object_\)/);
+  assert.match(extractor, /paper\.save\(\s*BACKGROUND_OUTPUT \/ "event-companion-paper\.webp"/);
 });
