@@ -53,7 +53,9 @@ test('does not package the replaced Terrain Layout screenshot', () => {
 
   const readme = readFileSync('README.md', 'utf8');
   assert.match(readme, /app\/assets\/backgrounds\/event-companion-paper\.webp/);
+  assert.match(readme, /Terrain Layout rules are bundled as bilingual semantic text/i);
   assert.doesNotMatch(readme, /app\/assets\/key\/terrain-rules\.webp/);
+  assert.doesNotMatch(readme, /rules images remain English|rules (?:are )?packaged as (?:an )?image/i);
 });
 
 test('extracts the shared Event Companion paper as a required offline asset', () => {

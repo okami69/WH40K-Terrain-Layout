@@ -81,7 +81,7 @@ Automated acceptance passed 60 Node tests and Chromium checks at 320×568, 360×
 5. Hover, focus, click, or tap a mission name for its detailed RU/ENG scoring and VP reference.
 6. Use the key icon for the official layouts key, or click the map for the enlarged map viewer.
 
-The UI switches between RU and ENG. First launch follows the OS language when it starts with `ru`; explicit RU/ENG clicks are saved locally. Official map, key, and rules images remain English because they are packaged from Event Companion v1.1.
+The UI switches between RU and ENG. First launch follows the OS language when it starts with `ru`; explicit RU/ENG clicks are saved locally. Official map and key images remain English because they are packaged from Event Companion v1.1; Terrain Layout rules are bundled as bilingual semantic text.
 
 ## How it is built
 
