@@ -277,19 +277,21 @@ function positionSummary(trigger = activeSummaryTrigger) {
   if (!trigger) return;
   const rect = trigger.getBoundingClientRect();
   const cardRect = trigger.closest('.selector-card').getBoundingClientRect();
-  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-  const width = Math.min(500, viewportWidth - 24);
+  const viewportWidth = window.visualViewport?.width || window.innerWidth || document.documentElement.clientWidth;
+  const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+  const viewportLeft = window.visualViewport?.offsetLeft || 0;
+  const viewportTop = window.visualViewport?.offsetTop || 0;
+  const width = Math.max(0, Math.min(500, viewportWidth - 24));
   const anchor = trigger === rightMission ? 'right' : 'left';
   const targetLeft = anchor === 'right' ? cardRect.right - width : cardRect.left;
-  const left = Math.max(12, Math.min(targetLeft, viewportWidth - width - 12));
-  const top = rect.bottom + 8;
+  const left = Math.max(viewportLeft + 12, Math.min(targetLeft, viewportLeft + viewportWidth - width - 12));
+  const top = Math.max(viewportTop + 12, Math.min(rect.bottom + 8, viewportTop + viewportHeight - 12));
   popover.dataset.anchor = anchor;
   popover.style.setProperty('--mission-popover-width', '500px');
   popover.style.width = `${width}px`;
   popover.style.left = `${left}px`;
   popover.style.top = `${top}px`;
-  popover.style.maxHeight = `${Math.max(0, Math.min(viewportHeight * 0.65, viewportHeight - top - 12))}px`;
+  popover.style.maxHeight = `${Math.max(0, Math.min(viewportHeight * 0.65, viewportTop + viewportHeight - top - 12))}px`;
 }
 
 function openSummary(trigger, pin = false) {
@@ -308,6 +310,13 @@ function openSummary(trigger, pin = false) {
 
 function withinSummary(target, trigger = activeSummaryTrigger) {
   return Boolean(target && (trigger?.contains(target) || popover.contains(target)));
+}
+
+function canReceiveFocus(target) {
+  for (let element = target; element; element = element.parentElement) {
+    if (element.tabIndex >= 0 && !element.disabled) return true;
+  }
+  return false;
 }
 
 function sourceText(item) {
@@ -512,7 +521,10 @@ document.addEventListener('pointerdown', event => {
   if (activeDispositionTrigger
       && !activeDispositionTrigger.contains(event.target)
       && !dispositionMenu.contains(event.target)) closeDispositionMenu();
-  if (activeSummaryTrigger && !withinSummary(event.target)) closeSummary();
+  if (activeSummaryTrigger && !withinSummary(event.target)) {
+    const restoreFocus = Boolean(pinnedSummary && popover.contains(document.activeElement) && !canReceiveFocus(event.target));
+    closeSummary(restoreFocus);
+  }
 });
 function handleViewportResize() {
   fitSheet();

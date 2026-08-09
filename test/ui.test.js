@@ -442,6 +442,41 @@ test('isolates pinned mission content and restores keyboard focus on Escape', as
   }
 });
 
+test('restores the pinned trigger when a non-focusable outside pointer target dismisses the popover', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements } = harness;
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?mission-outside-test=${Date.now()}`);
+    const trigger = elements.get('left-mission');
+    const popover = elements.get('mission-popover');
+    trigger.dispatch('click');
+    assert.equal(document.activeElement, popover);
+
+    document.dispatch('pointerdown', { target: new FakeElement() });
+    assert.equal(popover.open, false);
+    assert.equal(document.activeElement, trigger);
+    assert.equal(trigger.getAttribute('aria-expanded'), 'false');
+
+    trigger.dispatch('click');
+    const focusableTarget = new FakeElement();
+    focusableTarget.ownerDocument = document;
+    focusableTarget.tabIndex = 0;
+    document.dispatch('pointerdown', { target: focusableTarget });
+    assert.equal(document.activeElement, popover, 'focusable target receives focus after pointerdown default handling');
+    focusableTarget.focus();
+    assert.equal(popover.open, false);
+    assert.equal(document.activeElement, focusableTarget);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
 test('repositions an open mission reference for narrow and short viewports', async () => {
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   const harness = createAppHarness();
@@ -471,6 +506,18 @@ test('repositions an open mission reference for narrow and short viewports', asy
     assert.equal(popover.style.left, '12px');
     assert.equal(popover.style.top, '168px');
     assert.equal(popover.style.maxHeight, '160px');
+
+    window.visualViewport.width = 240;
+    window.visualViewport.height = 180;
+    window.visualViewport.offsetLeft = 100;
+    window.visualViewport.offsetTop = 200;
+    window.visualViewport.dispatch('resize');
+    assert.equal(window.innerWidth, 360, 'layout viewport width must stay unchanged');
+    assert.equal(window.innerHeight, 340, 'layout viewport height must stay unchanged');
+    assert.equal(popover.style.width, '216px');
+    assert.equal(popover.style.left, '112px');
+    assert.equal(popover.style.top, '212px');
+    assert.equal(popover.style.maxHeight, '117px');
   } finally {
     for (const [name, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);
