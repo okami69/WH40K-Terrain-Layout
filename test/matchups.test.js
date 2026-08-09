@@ -10,6 +10,7 @@ import {
   missions,
   resolveMatchup,
 } from '../app/matchups.js';
+import { missionReferences } from '../app/rules.js';
 
 const expectedDispositions = [
   'take-and-hold',
@@ -167,6 +168,14 @@ test('covers every ordered disposition selection and layout', () => {
       assert.match(result.image('B'), /-b\.webp$/);
       assert.match(result.image('C'), /-c\.webp$/);
     }
+  }
+});
+
+test('every resolved mission has a detailed reference', () => {
+  for (const left of dispositions) for (const right of dispositions) {
+    const result = resolveMatchup(left, right);
+    assert.ok(missionReferences[result.leftMission], `${left}/${right} left details`);
+    assert.ok(missionReferences[result.rightMission], `${left}/${right} right details`);
   }
 });
 
