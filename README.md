@@ -4,7 +4,7 @@ Offline Windows and Android companion for finding the official Warhammer 40,000 
 
 **Current source version:** v0.5.1
 
-**Latest published release:** [v0.5.0](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0)
+**Latest published release:** [v0.5.1](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.1)
 
 Everything needed at the table is bundled with the application, so it works without an internet connection after installation. The interface supports Russian and English, includes the official Layouts Key and Terrain Layouts rules, and can enlarge any map for closer inspection.
 
@@ -54,9 +54,20 @@ All screenshots below use the English interface and were captured from the verif
 
 ## Download
 
-Download the signed **Android ARM64** APK from the [v0.5.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. It was physically verified on a OnePlus 15R by the project owner and checked at 320 x 568, 360 x 800, 412 x 915, 480 x 1040, 560 x 1280, and 768 x 1080 portrait viewports.
+Download the signed **Android ARM64** APK from the [v0.5.1 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.1). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. The release candidate was physically approved on a OnePlus 15R by the project owner and checked at 320 x 568, 360 x 800, 412 x 915, 480 x 1040, 560 x 1280, and 768 x 1080 portrait viewports.
 
-The Windows x64 NSIS installer is available from the [v0.5.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0). It uses the Windows WebView2 Runtime and downloads it only if it is not already present.
+The Windows x64 NSIS installer and standalone application are available from the [v0.5.1 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.1). The installer uses the Windows WebView2 Runtime and downloads it only if it is not already present.
+
+## v0.5.1 verification
+
+The following v0.5.1 release artifacts were built and independently checked locally before publication.
+
+- Windows application: `WH40K-Terrain-Layout-v0.5.1-windows-x64.exe` — 27,450,368 bytes; SHA-256 `7fd1ed12d1d3cf5520715e36a8d66aedd999d55f6864fef4251c6edd5e1525e7`.
+- Windows NSIS installer: `WH40K-Terrain-Layout-v0.5.1-windows-x64-setup.exe` — 25,394,082 bytes; SHA-256 `639c70d0da68266f0f88fc524c943e1a20ab453010134d5822273f668fb5efba`. The Windows binaries are x64 and are not Authenticode-signed.
+- Signed Android ARM64 release APK: `WH40K-Terrain-Layout-v0.5.1-android-arm64.apk` — 35,410,326 bytes; SHA-256 `ab1e030b3a4b3e07c4e1410094550a1bda1c0ae01312b775073b4dbef8d85c03`.
+- APK verification: application ID `com.okami69.wh40kterrainlayout`, version name `0.5.1`, version code `5001`, only `arm64-v8a`, APK Signature Scheme v2 verified, and signer certificate SHA-256 `f26b5207728358d27b718e47c1e09e02c3c80c181b71fb73ca1f34607807ca54` matching prior releases.
+
+Automated acceptance passed 63 Node tests and Playwright checks at 320×568, 360×800, 412×915, 480×1040, 560×1280, 768×1080, and 1366×728. The nine README screenshots were separately generated and visually checked at the default 768×1080 desktop window size. The release candidate also passed the project owner's physical Android smoke test.
 
 ## v0.5.0 verification
 
@@ -110,7 +121,7 @@ The Tauri NSIS installer is written under:
 
 The signed Android APK is written under `src-tauri/gen/android/app/build/outputs/apk/arm64/release/`. Release signing requires the ignored `src-tauri/gen/android/keystore.properties` file and the external private keystore it references. Never commit either file. Keep a secure backup of the same keystore and password: both are required to publish installable upgrades. On Windows, Android builds also require Developer Mode or an elevated shell because Tauri creates JNI symbolic links.
 
-Published v0.5.0 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, responsive Playwright checks, the packaged Windows launch, and a physical Android smoke test.
+Published v0.5.1 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, responsive Playwright checks, the README desktop gallery, the packaged Windows application, and a physical Android smoke test.
 
 ## Re-extract assets
 

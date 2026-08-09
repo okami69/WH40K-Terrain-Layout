@@ -1190,16 +1190,16 @@ test('publishes the complete English v0.5.1 desktop screenshot gallery at the de
   assert.doesNotMatch(readme, /### Mobile/i);
 });
 
-test('records the published v0.5 release artifacts', () => {
+test('records the published v0.5.1 release artifacts', () => {
   const readme = readFileSync('README.md', 'utf8');
-  assert.match(readme, /## v0\.5\.0 verification/i);
-  assert.match(readme, /WH40K Terrain Layout_0\.5\.0_x64-setup\.exe/);
-  assert.match(readme, /WH40K-Terrain-Layout-v0\.5\.0-arm64-release\.apk/);
-  assert.match(readme, /23360C5F73DCD4B775FD67985A35DD5B5EA0F1760C13A4EB90032C3CFB046A89/);
-  assert.match(readme, /AA902340A9E3EBFA0436EDE7D6291C79639DBCC28C4B813F36F2A4CC3F28E2A6/);
-  assert.match(readme, /66DCD9EB642077C8D64FE518E29AD1B2FF7A5020D2E41913866E270A12490BE8/);
-  assert.match(readme, /Latest published release:\*\* \[v0\.5\.0\]/);
-  assert.doesNotMatch(readme, /physical-device v0\.5\.0 verification is pending/i);
+  assert.match(readme, /## v0\.5\.1 verification/i);
+  assert.match(readme, /WH40K-Terrain-Layout-v0\.5\.1-windows-x64-setup\.exe/);
+  assert.match(readme, /WH40K-Terrain-Layout-v0\.5\.1-android-arm64\.apk/);
+  assert.match(readme, /7fd1ed12d1d3cf5520715e36a8d66aedd999d55f6864fef4251c6edd5e1525e7/i);
+  assert.match(readme, /639c70d0da68266f0f88fc524c943e1a20ab453010134d5822273f668fb5efba/i);
+  assert.match(readme, /ab1e030b3a4b3e07c4e1410094550a1bda1c0ae01312b775073b4dbef8d85c03/i);
+  assert.match(readme, /Latest published release:\*\* \[v0\.5\.1\]/);
+  assert.doesNotMatch(readme, /physical-device v0\.5\.1 verification is pending/i);
   assert.doesNotMatch(readme, /have \*\*not\*\* been published/i);
 });
 
