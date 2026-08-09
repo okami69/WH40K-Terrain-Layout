@@ -303,12 +303,12 @@ export const twists = [
   { id: 'scrambled-communications', name: { ru: 'Нарушенная связь', en: 'Scrambled Communications' }, effects: { ru: ['Игроки обмениваются своими картами основных миссий.'], en: ['The players exchange their Primary Mission cards.'] } },
 ];
 
-export function pickRandomTwist(random = Math.random) {
+export function pickRandomTwist(random = Math.random, pool = twists) {
   const value = random();
   if (!Number.isFinite(value) || value < 0 || value >= 1) {
     throw new RangeError('Random source must return a finite number from 0 (inclusive) to 1 (exclusive)');
   }
-  return twists[Math.floor(value * twists.length)];
+  return pool[Math.floor(value * pool.length)];
 }
 
 const bilingual = value => value && typeof value.ru === 'string' && value.ru.length > 0

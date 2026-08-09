@@ -272,6 +272,10 @@ test('selects a twist uniformly through an injectable random source', () => {
   assert.equal(pickRandomTwist(() => 0).id, 'martial-pride');
   assert.equal(pickRandomTwist(() => 0.5).id, 'nowhere-to-hide');
   assert.equal(pickRandomTwist(() => 0.999999).id, 'scrambled-communications');
+
+  const selectable = [twists[1], twists[4]];
+  assert.equal(pickRandomTwist(() => 0, selectable), twists[1]);
+  assert.equal(pickRandomTwist(() => 0.999999, selectable), twists[4]);
 });
 
 test('rejects an invalid injected random value', () => {

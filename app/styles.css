@@ -260,7 +260,7 @@ select:disabled {
   border-radius: 50%;
   color: var(--surface);
   background: var(--primary);
-  transform: translate(-50%, 50%);
+  transform: translate(-50%, 0);
 }
 
 .layouts {

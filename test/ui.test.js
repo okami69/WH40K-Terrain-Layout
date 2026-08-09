@@ -71,7 +71,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(twistButtonRule, /\bbottom:\s*0;/);
   assert.match(twistButtonRule, /\bwidth:\s*44px;/);
   assert.match(twistButtonRule, /\bheight:\s*44px;/);
-  assert.match(twistButtonRule, /\btransform:\s*translate\(-50%, 50%\);/);
+  assert.match(twistButtonRule, /\btransform:\s*translate\(-50%, 0\);/);
   assert.doesNotMatch(css, /\.disposition-select option/);
   const dispositionMenuRule = css.match(/\.disposition-menu\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(dispositionMenuRule, /\bposition:\s*fixed;/);
@@ -374,7 +374,7 @@ function textOf(root) {
 test('keeps optional twists stable until No Twist is explicitly selected', async () => {
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   const originalRandom = Math.random;
-  const missingEffects = twists.at(-1).effects.en;
+  const originalEffects = twists.map(twist => ({ ...twist.effects }));
   const harness = createAppHarness();
   const { document, elements, layoutButtons } = harness;
   installAppGlobals(harness);
@@ -405,6 +405,14 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(chooserRows().slice(0, -1).some(row => row.children[0].disabled), false);
 
     chooserRows()[0].children[0].dispatch('click');
+    const firstHeader = chooserRows()[0].children[0];
+    const firstPanel = chooserRows()[0].children[1];
+    assert.equal(firstHeader.id, 'twist-header-martial-pride');
+    assert.equal(firstHeader.getAttribute('aria-controls'), 'twist-panel-martial-pride');
+    assert.equal(firstPanel.id, 'twist-panel-martial-pride');
+    assert.equal(firstPanel.getAttribute('role'), 'region');
+    assert.equal(firstPanel.getAttribute('aria-labelledby'), firstHeader.id);
+    assert.equal(document.activeElement, firstHeader);
     assert.equal(byClass(body, 'twist-effects').length, 1);
     assert.notEqual(byAction(body, 'select').disabled, true);
     byAction(body, 'select').dispatch('click');
@@ -413,14 +421,19 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(button.title, twists[0].name.en);
     assert.equal(button.getAttribute('aria-pressed'), 'true');
     assert.match(textOf(body), new RegExp(twists[0].name.en));
+    assert.equal(document.activeElement, byClass(body, 'twist-detail-title')[0]);
 
     byAction(footer, 'change').dispatch('click');
     assert.equal(chooserRows().length, 6);
+    assert.equal(document.activeElement, chooserRows()[0].children[0]);
     chooserRows()[1].children[0].dispatch('click');
+    assert.equal(document.activeElement, chooserRows()[1].children[0]);
+    assert.equal(byClass(body, 'twist-row-panel').length, 1);
     byAction(body, 'select').dispatch('click');
     assert.equal(dialog.showModalCalls, 1);
     assert.equal(button.title, twists[1].name.en);
     assert.match(textOf(body), new RegExp(twists[1].name.en));
+    assert.equal(document.activeElement, byClass(body, 'twist-detail-title')[0]);
 
     close.dispatch('click');
     assert.equal(dialog.open, false);
@@ -430,14 +443,16 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.match(textOf(body), new RegExp(twists[1].name.en));
 
     byAction(footer, 'change').dispatch('click');
-    Math.random = () => 0.5;
+    assert.equal(document.activeElement, chooserRows()[1].children[0]);
+    Math.random = () => 0.999999;
     byAction(footer, 'random').dispatch('click');
     assert.equal(dialog.open, true);
     assert.equal(dialog.showModalCalls, 2);
-    assert.equal(button.title, twists[3].name.en);
+    assert.equal(button.title, twists[4].name.en);
+    assert.equal(document.activeElement, byClass(body, 'twist-detail-title')[0]);
     button.dispatch('click');
     button.dispatch('click');
-    assert.equal(button.title, twists[3].name.en);
+    assert.equal(button.title, twists[4].name.en);
     assert.equal(dialog.showModalCalls, 2);
 
     byAction(footer, 'change').dispatch('click');
@@ -446,6 +461,7 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(button.title, 'No Twist');
     assert.equal(button.getAttribute('aria-pressed'), 'false');
     assert.match(byClass(body, 'twist-confirmation')[0].textContent, /no twist selected/i);
+    assert.equal(document.activeElement, byClass(body, 'twist-confirmation')[0]);
 
     for (const control of [
       elements.get('left-disposition-button'), elements.get('right-disposition-button'),
@@ -457,6 +473,15 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(button.title, 'Без особенности');
     assert.match(button.getAttribute('aria-label'), /необязатель/i);
 
+    for (const twist of twists) twist.effects = { ru: [], en: [] };
+    byAction(footer, 'random').dispatch('click');
+    assert.equal(dialog.open, true);
+    assert.equal(button.title, 'Без особенности');
+    const unavailable = byClass(body, 'twist-confirmation').find(item => /нет доступных/i.test(item.textContent));
+    assert.ok(unavailable);
+    assert.equal(document.activeElement, unavailable);
+    assert.notEqual(byAction(footer, 'none').disabled, true);
+
     dialog.dispatch('click', { target: dialog });
     assert.equal(dialog.open, false);
     assert.equal(document.activeElement, button);
@@ -466,7 +491,7 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(button.title, 'Без особенности');
   } finally {
     Math.random = originalRandom;
-    twists.at(-1).effects.en = missingEffects;
+    twists.forEach((twist, index) => { twist.effects = originalEffects[index]; });
     for (const [name, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);
       else delete globalThis[name];

@@ -41,6 +41,7 @@ const text = {
     random: 'Случайная',
     change: 'Изменить',
     unavailable: 'Описание недоступно',
+    noTwistsAvailable: 'Нет доступных особенностей. Оставьте «Без особенности».',
   },
   en: {
     title: 'Terrain Layout',
@@ -81,6 +82,7 @@ const text = {
     random: 'Random',
     change: 'Change',
     unavailable: 'Details unavailable',
+    noTwistsAvailable: 'No Twists are available. Keep No Twist selected.',
   },
 };
 
@@ -277,9 +279,9 @@ function createTwistButton(label, action) {
 }
 
 function hasTwistEffects(twist) {
-  return Array.isArray(twist.effects?.[language])
-    && twist.effects[language].length > 0
-    && twist.effects[language].every(effect => typeof effect === 'string' && effect.length > 0);
+  return ['ru', 'en'].every(locale => Array.isArray(twist.effects?.[locale])
+    && twist.effects[locale].length > 0
+    && twist.effects[locale].every(effect => typeof effect === 'string' && effect.length > 0));
 }
 
 function createTwistEffects(twist) {
@@ -293,14 +295,17 @@ function selectTwist(twist) {
   selectedTwist = twist;
   expandedTwist = twist.id;
   twistPanelView = 'detail';
-  delete twistDialog.dataset.cleared;
+  delete twistDialog.dataset.notice;
   renderTwistButton();
-  renderTwistPanel();
+  renderTwistPanel({ focusDetail: true });
 }
 
-function renderTwistChooser() {
+function renderTwistChooser({ focusTwist = null, focusChooser = false, focusConfirmation = false } = {}) {
   const copy = text[language];
   const note = createReferenceElement('p', 'twist-note', copy.twistOptional);
+  note.id = 'twist-chooser-note';
+  note.tabIndex = -1;
+  let focusedHeader = null;
   const rows = twists.map(twist => {
     const row = document.createElement('section');
     row.className = 'twist-row';
@@ -308,19 +313,25 @@ function renderTwistChooser() {
     const available = hasTwistEffects(twist);
     const toggle = createTwistButton(twist.name[language], 'expand');
     toggle.className = 'twist-row-toggle';
+    toggle.id = `twist-header-${twist.id}`;
     toggle.disabled = !available;
     toggle.setAttribute('aria-expanded', String(available && expandedTwist === twist.id));
     toggle.setAttribute('aria-current', String(selectedTwist?.id === twist.id));
+    toggle.setAttribute('aria-controls', `twist-panel-${twist.id}`);
+    if (focusTwist === twist.id && available) focusedHeader = toggle;
     if (!available) toggle.title = copy.unavailable;
     toggle.addEventListener('click', () => {
       expandedTwist = expandedTwist === twist.id ? null : twist.id;
-      renderTwistPanel();
+      renderTwistPanel({ focusTwist: twist.id });
     });
     row.append(toggle);
 
     if (available && expandedTwist === twist.id) {
       const panel = document.createElement('div');
       panel.className = 'twist-row-panel';
+      panel.id = `twist-panel-${twist.id}`;
+      panel.setAttribute('role', 'region');
+      panel.setAttribute('aria-labelledby', toggle.id);
       const select = createTwistButton(copy.select, 'select');
       select.className = 'twist-select';
       select.addEventListener('click', () => selectTwist(twist));
@@ -330,50 +341,68 @@ function renderTwistChooser() {
     return row;
   });
   const children = [note];
-  if (twistDialog.dataset.cleared === 'true') {
-    children.push(createReferenceElement('p', 'twist-confirmation', copy.noTwistSelected));
+  let confirmation = null;
+  if (twistDialog.dataset.notice) {
+    const message = twistDialog.dataset.notice === 'unavailable' ? copy.noTwistsAvailable : copy.noTwistSelected;
+    confirmation = createReferenceElement('p', 'twist-confirmation', message);
+    confirmation.tabIndex = -1;
+    children.push(confirmation);
   }
   twistDialogBody.replaceChildren(...children, ...rows);
+  if (focusConfirmation) confirmation?.focus();
+  else if (focusTwist) (focusedHeader ?? note).focus();
+  else if (focusChooser) note.focus();
 
   const random = createTwistButton(copy.random, 'random');
-  random.addEventListener('click', () => selectTwist(pickRandomTwist()));
+  random.addEventListener('click', () => {
+    const selectableTwists = twists.filter(hasTwistEffects);
+    if (!selectableTwists.length) {
+      twistDialog.dataset.notice = 'unavailable';
+      renderTwistPanel({ focusConfirmation: true });
+      return;
+    }
+    selectTwist(pickRandomTwist(Math.random, selectableTwists));
+  });
   const none = createTwistButton(copy.noTwist, 'none');
   none.addEventListener('click', () => {
     selectedTwist = null;
     expandedTwist = null;
     twistPanelView = 'chooser';
-    twistDialog.dataset.cleared = 'true';
+    twistDialog.dataset.notice = 'none';
     renderTwistButton();
-    renderTwistPanel();
+    renderTwistPanel({ focusConfirmation: true });
   });
   twistDialogFooter.replaceChildren(random, none);
 }
 
-function renderTwistDetail() {
+function renderTwistDetail(focusDetail = false) {
   const copy = text[language];
   const detail = document.createElement('section');
   detail.className = 'twist-detail';
-  detail.append(createReferenceElement('h3', '', selectedTwist.name[language]));
+  const heading = createReferenceElement('h3', 'twist-detail-title', selectedTwist.name[language]);
+  heading.tabIndex = -1;
+  detail.append(heading);
   if (hasTwistEffects(selectedTwist)) detail.append(createTwistEffects(selectedTwist));
   else detail.append(createReferenceElement('p', 'twist-confirmation', copy.unavailable));
   twistDialogBody.replaceChildren(detail);
+  if (focusDetail) heading.focus();
 
   const change = createTwistButton(copy.change, 'change');
   change.addEventListener('click', () => {
     twistPanelView = 'chooser';
     expandedTwist = null;
-    renderTwistPanel();
+    renderTwistPanel({ focusTwist: selectedTwist?.id, focusChooser: !selectedTwist });
   });
   const close = createTwistButton(copy.close, 'close');
   close.addEventListener('click', () => twistDialog.close());
   twistDialogFooter.replaceChildren(change, close);
 }
 
-function renderTwistPanel() {
+function renderTwistPanel(focus = {}) {
   twistDialogTitle.textContent = text[language].twistTitle;
   twistDialogClose.textContent = text[language].close;
-  if (twistPanelView === 'detail' && selectedTwist) renderTwistDetail();
-  else renderTwistChooser();
+  if (twistPanelView === 'detail' && selectedTwist) renderTwistDetail(focus.focusDetail);
+  else renderTwistChooser(focus);
 }
 
 function renderTwistButton() {
