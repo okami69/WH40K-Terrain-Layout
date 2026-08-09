@@ -49,7 +49,7 @@ The following v0.5.0 artifacts were built and checked locally. They have **not**
 
 - Windows application: `src-tauri/target/release/wh40k-terrain-layout.exe` — 24,181,248 bytes; SHA-256 `FC7414168A370CBA645EF07A515838CCCD9CC5CEFB9E7175C72D8115051593DC`.
 - Windows NSIS installer: `src-tauri/target/release/bundle/nsis/WH40K Terrain Layout_0.5.0_x64-setup.exe` — 22,053,250 bytes; SHA-256 `A4EDC1E0829A9DD57DBFAF57AA02ED27A121222CD5B7776639F115FBDBE24449`. Both Windows binaries report version `0.5.0`; neither is Authenticode-signed.
-- Signed Android ARM64 release APK: source `src-tauri/gen/android/app/build/outputs/apk/arm64/release/app-arm64-release.apk`; stable copy `output/android/WH40K-Terrain-Layout-v0.5.0-arm64-release.apk` — 32,141,398 bytes; SHA-256 `C4A775D5CB229359641EB0F958AD6873733834823965277A30E2F4D7D2CF4AC7`.
+- Signed Android ARM64 release APK: source `src-tauri/gen/android/app/build/outputs/apk/arm64/release/app-arm64-release.apk`; stable copy `output/android/WH40K-Terrain-Layout-v0.5.0-arm64-release.apk` — 32,141,462 bytes; SHA-256 `66DCD9EB642077C8D64FE518E29AD1B2FF7A5020D2E41913866E270A12490BE8`.
 - APK verification: application ID `com.okami69.wh40kterrainlayout`, version name `0.5.0`, version code `5000`, only `arm64-v8a`, APK Signature Scheme v2 verified, and signer certificate SHA-256 `f26b5207728358d27b718e47c1e09e02c3c80c181b71fb73ca1f34607807ca54` matching v0.4.0. No v3 signature is present.
 
 Automated acceptance passed 60 Node tests and Chromium checks at 320×568, 360×800, 412×915, 480×1040, 560×1280, 768×1080, and 1366×728. The packaged Windows executable also launched successfully. Physical-device v0.5.0 verification is pending; no v0.5.0 release is published yet.

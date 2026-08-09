@@ -440,6 +440,7 @@ select:disabled {
   width: 100%;
   padding: 4px 28px;
   border-color: transparent;
+  font-size: var(--disposition-menu-font-size, 1rem);
   font-weight: 900;
   text-align: center;
   text-transform: uppercase;

@@ -85,6 +85,7 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(dispositionMenuButtonRule, /\bwidth:\s*100%;/);
   assert.match(dispositionMenuButtonRule, /\btext-align:\s*center;/);
   assert.match(dispositionMenuButtonRule, /\bfont-weight:\s*900;/);
+  assert.match(dispositionMenuButtonRule, /\bfont-size:\s*var\(--disposition-menu-font-size,\s*1rem\);/);
   assert.match(dispositionMenuButtonRule, /\btext-transform:\s*uppercase;/);
   const popoverRule = css.match(/\.mission-popover\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(popoverRule, /\bposition:\s*fixed;/);
@@ -761,6 +762,7 @@ test('balances the logical sheet across tall and short portrait viewports and re
     const widthScale = 412 / 768;
     assert.equal(metrics.scale, widthScale);
     assert.equal(metrics.height, 915 / widthScale);
+    assert.equal(document.documentElement.style.getPropertyValue('--disposition-menu-font-size'), `${widthScale}rem`);
     assert.equal(metrics.height * metrics.scale, 915, 'tall portrait consumes the exact available height');
 
     window.visualViewport.height = 640;
@@ -1066,7 +1068,7 @@ test('records local v0.5 artifacts without claiming a published release', () => 
   assert.match(readme, /local v0\.5\.0 verification/i);
   assert.match(readme, /WH40K Terrain Layout_0\.5\.0_x64-setup\.exe/);
   assert.match(readme, /WH40K-Terrain-Layout-v0\.5\.0-arm64-release\.apk/);
-  assert.match(readme, /C4A775D5CB229359641EB0F958AD6873733834823965277A30E2F4D7D2CF4AC7/);
+  assert.match(readme, /66DCD9EB642077C8D64FE518E29AD1B2FF7A5020D2E41913866E270A12490BE8/);
   assert.match(readme, /physical-device v0\.5\.0 verification is pending/i);
   assert.match(readme, /Latest published release:\*\* \[v0\.4\.0\]/);
   assert.doesNotMatch(readme, /Latest published release:\*\* \[v0\.5\.0\]/);

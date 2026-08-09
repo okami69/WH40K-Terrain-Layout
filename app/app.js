@@ -210,6 +210,7 @@ function fitSheet() {
   const scale = Math.min(widthScale, availableHeight / sheetHeight);
   document.documentElement.style.setProperty('--sheet-height', `${sheetHeight}px`);
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
+  document.documentElement.style.setProperty('--disposition-menu-font-size', `${scale}rem`);
 }
 
 function showError(message) {
