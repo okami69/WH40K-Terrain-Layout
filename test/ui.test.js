@@ -1047,12 +1047,22 @@ test('keeps the disposition menu usable without the Popover API', async () => {
   }
 });
 
-test('publishes four unambiguous verified v0.5 application screenshots in the README', () => {
+test('publishes the complete English v0.5 application screenshot gallery in the README', () => {
   const screenshots = [
+    'v05-desktop-main.png',
     'v05-desktop-disposition-menu.png',
+    'v05-desktop-mission-details.png',
+    'v05-desktop-twist-chooser.png',
+    'v05-desktop-twist-detail.png',
+    'v05-desktop-layouts-key.png',
+    'v05-desktop-terrain-rules.png',
+    'v05-desktop-gallery.png',
+    'v05-desktop-map-viewer.png',
+    'v05-mobile-main.png',
+    'v05-mobile-disposition-menu.png',
     'v05-mobile-mission-details.png',
     'v05-mobile-twist-chooser.png',
-    'v05-windows-packaged.png',
+    'v05-mobile-twist-detail.png',
   ];
   const readme = readFileSync('README.md', 'utf8');
 
@@ -1060,18 +1070,20 @@ test('publishes four unambiguous verified v0.5 application screenshots in the RE
     assert.ok(existsSync(`docs/screenshots/${screenshot}`), `Missing ${screenshot}`);
     assert.match(readme, new RegExp(`docs/screenshots/${screenshot.replaceAll('.', '\\.')}`));
   }
-  assert.doesNotMatch(readme, /v05-mobile-twist-detail\.png/);
+  assert.match(readme, /All screenshots below use the English interface/i);
 });
 
-test('records local v0.5 artifacts without claiming a published release', () => {
+test('records the published v0.5 release artifacts', () => {
   const readme = readFileSync('README.md', 'utf8');
-  assert.match(readme, /local v0\.5\.0 verification/i);
+  assert.match(readme, /## v0\.5\.0 verification/i);
   assert.match(readme, /WH40K Terrain Layout_0\.5\.0_x64-setup\.exe/);
   assert.match(readme, /WH40K-Terrain-Layout-v0\.5\.0-arm64-release\.apk/);
+  assert.match(readme, /23360C5F73DCD4B775FD67985A35DD5B5EA0F1760C13A4EB90032C3CFB046A89/);
+  assert.match(readme, /AA902340A9E3EBFA0436EDE7D6291C79639DBCC28C4B813F36F2A4CC3F28E2A6/);
   assert.match(readme, /66DCD9EB642077C8D64FE518E29AD1B2FF7A5020D2E41913866E270A12490BE8/);
-  assert.match(readme, /physical-device v0\.5\.0 verification is pending/i);
-  assert.match(readme, /Latest published release:\*\* \[v0\.4\.0\]/);
-  assert.doesNotMatch(readme, /Latest published release:\*\* \[v0\.5\.0\]/);
+  assert.match(readme, /Latest published release:\*\* \[v0\.5\.0\]/);
+  assert.doesNotMatch(readme, /physical-device v0\.5\.0 verification is pending/i);
+  assert.doesNotMatch(readme, /have \*\*not\*\* been published/i);
 });
 
 test('attributes the Twist order to the current official app', () => {

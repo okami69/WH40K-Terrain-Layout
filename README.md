@@ -2,9 +2,9 @@
 
 Offline Windows and Android companion for finding the official Warhammer 40,000 terrain map for a match. Choose both players' Force Dispositions and layout A, B, or C; the app shows the corresponding terrain placement diagram, assigned missions, and detailed scoring references.
 
-**Current source version:** v0.5.0 (local artifacts built and automated verification complete; physical-device verification pending)
+**Current source version:** v0.5.0
 
-**Latest published release:** [v0.4.0](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.4.0)
+**Latest published release:** [v0.5.0](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0)
 
 Everything needed at the table is bundled with the application, so it works without an internet connection after installation. The interface supports Russian and English, includes the official Layouts Key and Terrain Layouts rules, and can enlarge any map for closer inspection.
 
@@ -29,30 +29,48 @@ Everything needed at the table is bundled with the application, so it works with
 
 ## Screenshots
 
-These screenshots were captured from the verified v0.5.0 source and locally built Windows package.
+All screenshots below use the English interface and were captured from the verified v0.5.0 source.
 
-| Centered desktop disposition menu | Mobile mission details |
+### Desktop
+
+| Main screen | Force Disposition menu |
 | --- | --- |
-| ![English desktop disposition menu with all five centered choices](docs/screenshots/v05-desktop-disposition-menu.png) | ![Mobile Locate and Deny detailed mission reference](docs/screenshots/v05-mobile-mission-details.png) |
-| Mobile Twist chooser | Packaged Windows application |
-| ![Mobile chooser showing all six optional Twists](docs/screenshots/v05-mobile-twist-chooser.png) | ![Locally built v0.5.0 Windows application](docs/screenshots/v05-windows-packaged.png) |
+| ![English desktop main screen](docs/screenshots/v05-desktop-main.png) | ![English desktop Force Disposition menu with all five centered choices](docs/screenshots/v05-desktop-disposition-menu.png) |
+| Mission details | Twist chooser |
+| ![English desktop Locate and Deny mission details](docs/screenshots/v05-desktop-mission-details.png) | ![English desktop chooser with all six optional Twists](docs/screenshots/v05-desktop-twist-chooser.png) |
+| Selected Twist | Layouts Key |
+| ![English desktop Martial Pride Twist details](docs/screenshots/v05-desktop-twist-detail.png) | ![English desktop official Layouts Key](docs/screenshots/v05-desktop-layouts-key.png) |
+| Terrain Layout rules | All-layout gallery |
+| ![English desktop official Terrain Layout rules](docs/screenshots/v05-desktop-terrain-rules.png) | ![English desktop all-layout gallery](docs/screenshots/v05-desktop-gallery.png) |
+| Enlarged map | |
+| ![English desktop enlarged terrain map](docs/screenshots/v05-desktop-map-viewer.png) | |
+
+### Mobile
+
+| Main screen | Force Disposition menu |
+| --- | --- |
+| ![English mobile main screen](docs/screenshots/v05-mobile-main.png) | ![English mobile Force Disposition menu with all five centered choices](docs/screenshots/v05-mobile-disposition-menu.png) |
+| Mission details | Twist chooser |
+| ![English mobile Locate and Deny mission details](docs/screenshots/v05-mobile-mission-details.png) | ![English mobile chooser with all six optional Twists](docs/screenshots/v05-mobile-twist-chooser.png) |
+| Selected Twist | |
+| ![English mobile Martial Pride Twist details](docs/screenshots/v05-mobile-twist-detail.png) | |
 
 ## Download
 
-Download the signed **Android ARM64** APK from the [v0.4.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.4.0). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. It was physically verified on a OnePlus 15R and checked at 320 x 568, 360 x 800, 412 x 915, and 480 x 1040 portrait viewports.
+Download the signed **Android ARM64** APK from the [v0.5.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. It was physically verified on a OnePlus 15R by the project owner and checked at 320 x 568, 360 x 800, 412 x 915, 480 x 1040, 560 x 1280, and 768 x 1080 portrait viewports.
 
-The Windows x64 NSIS installer is available from the [v0.4.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.4.0). It uses the Windows WebView2 Runtime and downloads it only if it is not already present.
+The Windows x64 NSIS installer is available from the [v0.5.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0). It uses the Windows WebView2 Runtime and downloads it only if it is not already present.
 
-## Local v0.5.0 verification
+## v0.5.0 verification
 
-The following v0.5.0 artifacts were built and checked locally. They have **not** been published as a GitHub release.
+The following v0.5.0 release artifacts were built and checked locally before publication.
 
-- Windows application: `src-tauri/target/release/wh40k-terrain-layout.exe` — 24,181,248 bytes; SHA-256 `FC7414168A370CBA645EF07A515838CCCD9CC5CEFB9E7175C72D8115051593DC`.
-- Windows NSIS installer: `src-tauri/target/release/bundle/nsis/WH40K Terrain Layout_0.5.0_x64-setup.exe` — 22,053,250 bytes; SHA-256 `A4EDC1E0829A9DD57DBFAF57AA02ED27A121222CD5B7776639F115FBDBE24449`. Both Windows binaries report version `0.5.0`; neither is Authenticode-signed.
+- Windows application: `src-tauri/target/release/wh40k-terrain-layout.exe` — 24,181,248 bytes; SHA-256 `23360C5F73DCD4B775FD67985A35DD5B5EA0F1760C13A4EB90032C3CFB046A89`.
+- Windows NSIS installer: `src-tauri/target/release/bundle/nsis/WH40K Terrain Layout_0.5.0_x64-setup.exe` — 22,053,157 bytes; SHA-256 `AA902340A9E3EBFA0436EDE7D6291C79639DBCC28C4B813F36F2A4CC3F28E2A6`. Both Windows binaries report version `0.5.0`; neither is Authenticode-signed.
 - Signed Android ARM64 release APK: source `src-tauri/gen/android/app/build/outputs/apk/arm64/release/app-arm64-release.apk`; stable copy `output/android/WH40K-Terrain-Layout-v0.5.0-arm64-release.apk` — 32,141,462 bytes; SHA-256 `66DCD9EB642077C8D64FE518E29AD1B2FF7A5020D2E41913866E270A12490BE8`.
 - APK verification: application ID `com.okami69.wh40kterrainlayout`, version name `0.5.0`, version code `5000`, only `arm64-v8a`, APK Signature Scheme v2 verified, and signer certificate SHA-256 `f26b5207728358d27b718e47c1e09e02c3c80c181b71fb73ca1f34607807ca54` matching v0.4.0. No v3 signature is present.
 
-Automated acceptance passed 60 Node tests and Chromium checks at 320×568, 360×800, 412×915, 480×1040, 560×1280, 768×1080, and 1366×728. The packaged Windows executable also launched successfully. Physical-device v0.5.0 verification is pending; no v0.5.0 release is published yet.
+Automated acceptance passed 60 Node tests and Chromium checks at 320×568, 360×800, 412×915, 480×1040, 560×1280, 768×1080, and 1366×728. The packaged Windows executable launched successfully, and the final Android build passed physical-device verification.
 
 ## Use
 
@@ -95,7 +113,7 @@ The Tauri NSIS installer is written under:
 
 The signed Android APK is written under `src-tauri/gen/android/app/build/outputs/apk/arm64/release/`. Release signing requires the ignored `src-tauri/gen/android/keystore.properties` file and the external private keystore it references. Never commit either file. Keep a secure backup of the same keystore and password: both are required to publish installable upgrades. On Windows, Android builds also require Developer Mode or an elevated shell because Tauri creates JNI symbolic links.
 
-Current published v0.4.0 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, representative portrait Playwright checks, and a physical OnePlus 15R smoke test. The v0.5.0 evidence above is local automated verification only; physical-device verification and publication remain pending.
+Published v0.5.0 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, responsive Playwright checks, the packaged Windows launch, and a physical Android smoke test.
 
 ## Re-extract assets
 
