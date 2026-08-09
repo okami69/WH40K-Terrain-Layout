@@ -2,13 +2,90 @@
 
 Inspection date: 2026-08-09. Scope: the current 2026-27 mission pack only; the obsolete June Event Companion and the older nine-card Twist set are excluded.
 
-## Versions
+## Sources, versions, and acquisition
 
 - Event Companion: **v1.1**, local approved PDF `D:\WH40K Terrain Layout\eng_22_07_warhammer_40,000_event_companion_alyapl19us_b2drgwkji4.pdf`, SHA-256 `97AE5591BE2E58BDB636E97127EAC0877F9BF28B29FC607ED4EAD4D377FB8F20` (93 pages).
-- Official Warhammer 40,000 app: package `com.gamesworkshop.w40k`, app `2.4.0`, versionCode `139`, released 2026-08-05; embedded `metadata.data_version` **925**. Mission pack UUID `4f285f2e-3c40-40fb-8b2f-bfccd173f1fd`, localized EN name `Chapter Approved 2026-2027`.
-- Captured XAPK file: `D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk`, SHA-256 `A908E4842A2C28D93962B6CA13F3CBA97214ACBF080C6844AF6F4844BA7EC97D`. Reproduce with `Get-FileHash -Algorithm SHA256 -LiteralPath 'D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk'`. The archive was expanded read-only; its base APK is `D:\Temp\okami\w40k-app-2.4.0\com.gamesworkshop.w40k.apk`, SHA-256 `B5A01880E3669C8277195C23367F95E3D363726A455EADE28CAC1F6407FAC12B`. Extracted rules source: `D:\Temp\okami\w40k-app-2.4.0\base\assets\dump.json`, SHA-256 `78E56902FE11D2EF4DA29F51D7BFB8BBD3FA2489BE86B4918F83CB7E29CBF4ED`; hash each file with the same `Get-FileHash` recipe. Verify the base APK independently with `$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; & "$env:LOCALAPPDATA\Android\Sdk\build-tools\36.0.0\apksigner.bat" verify --verbose --print-certs 'D:\Temp\okami\w40k-app-2.4.0\com.gamesworkshop.w40k.apk'`: APK Signature Scheme v2 and v3 and SourceStamp are true; signer certificate SHA-256 is `ce6b982051e7140507a1bde17ff099a0ec27c305f68f88d5cfd369655a8de231`. The XAPK hash, extracted JSON hash, and base-APK signature are separate provenance checks.
-- GDM mission text: **version 4.9**, released 2026-07-25, inspected 2026-08-09 at `https://game-datamissions.com/version-history` and the 25 URLs below. All 25 returned HTTP 200 with structured Primary data.
+- Official app identity:
+  - package `com.gamesworkshop.w40k`; app `2.4.0`; versionCode `139`;
+    released 2026-08-05; inspected 2026-08-09.
+  - embedded `metadata.data_version`: **925**.
+  - mission pack UUID: `4f285f2e-3c40-40fb-8b2f-bfccd173f1fd`;
+    EN name: `Chapter Approved 2026-2027`.
+  - durable official listing: [Google Play][play].
+  - acquisition page: [APKPure download page][apkpure-page]; immutable audit input was
+    downloaded from the [XAPK endpoint][apkpure-xapk] on 2026-08-09.
+- Local cache (not a source URL):
+  - XAPK: `D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk`;
+    SHA-256 `A908E4842A2C28D93962B6CA13F3CBA97214ACBF080C6844AF6F4844BA7EC97D`.
+  - base APK: `D:\Temp\okami\w40k-app-2.4.0\com.gamesworkshop.w40k.apk`;
+    SHA-256 `B5A01880E3669C8277195C23367F95E3D363726A455EADE28CAC1F6407FAC12B`.
+  - extracted source: `D:\Temp\okami\w40k-app-2.4.0\base\assets\dump.json`;
+    SHA-256 `78E56902FE11D2EF4DA29F51D7BFB8BBD3FA2489BE86B4918F83CB7E29CBF4ED`.
+- GDM mission text: **version 4.9**, released 2026-07-25 and inspected
+  2026-08-09 at [version history][gdm-history] and the 25 mission routes identified below.
+  All 25 returned HTTP 200 with structured Primary data.
 - Official corroboration: `https://www.warhammer-community.com/en-gb/articles/oefzq9fg/new40k-how-your-army-affects-your-mission/` confirms the five dispositions, optional Twists, Mirrored World/Scrambled Communications behavior, and 45VP/15VP caps; `https://www.warhammer-community.com/en-gb/articles/ka6kjyka/warhammer-40000-faction-focus-thousand-sons/` corroborates Martial Pride.
+
+### Minimal retrieval and extraction recipe
+
+Run in PowerShell. The endpoint is mutable, so record the resolved version, inspection date,
+and hashes immediately; the paths below are cache locations only.
+
+```powershell
+curl.exe -L 'https://d.apkpure.net/b/XAPK/com.gamesworkshop.w40k?version=latest' `
+  -o 'D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk'
+tar -xf 'D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk' `
+  -C 'D:\Temp\okami\w40k-app-2.4.0'
+tar -xf 'D:\Temp\okami\w40k-app-2.4.0\com.gamesworkshop.w40k.apk' `
+  -C 'D:\Temp\okami\w40k-app-2.4.0\base' assets/dump.json
+Get-FileHash -Algorithm SHA256 -LiteralPath `
+  'D:\Temp\okami\Warhammer40000-The-App_2.4.0_APKPure.xapk', `
+  'D:\Temp\okami\w40k-app-2.4.0\com.gamesworkshop.w40k.apk', `
+  'D:\Temp\okami\w40k-app-2.4.0\base\assets\dump.json'
+```
+
+Signature verification is independent of the archive and JSON hashes:
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
+& "$env:LOCALAPPDATA\Android\Sdk\build-tools\36.0.0\apksigner.bat" verify `
+  --verbose --print-certs `
+  'D:\Temp\okami\w40k-app-2.4.0\com.gamesworkshop.w40k.apk'
+```
+
+- Observed: APK Signature Schemes v2/v3 and SourceStamp all `true`.
+- Signer certificate SHA-256:
+  `ce6b982051e7140507a1bde17ff099a0ec27c305f68f88d5cfd369655a8de231`.
+
+### Deterministic cross-check recipe
+
+1. Parse `dump.json`; assert `metadata.data_version == 925`.
+2. Select the `mission_pack` with the UUID above, then join by IDs:
+   `primary_mission` → `primary_mission_objective` →
+   `primary_mission_objective_scoring`, plus `primary_mission_action`.
+   Select `mission_twist` by `missionPackId`.
+3. Fetch the GDM version page and each mission route on 2026-08-09. Strip markup,
+   decode entities, normalize Unicode to NFC, convert typographic apostrophes to ASCII,
+   collapse whitespace, preserve array `displayOrder`, and sort mission object keys by slug.
+4. Emit UTF-8 without BOM and one final LF. Serialize with lexically sorted object keys and
+   compact JSON separators; never include retrieval timestamps or local paths in the payload.
+5. Compare all mission section/condition counts, VP, cumulative/mutually-exclusive flags,
+   and all action fields. The result must be 25 missions, 74 objectives, and 11 actions.
+6. Hash the immutable inputs and normalized result:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -LiteralPath `
+  'D:\Temp\okami\wh40k-v05-mission-oracle.json', `
+  'D:\Temp\okami\wh40k-v05-mission-compare-normalized.json'
+```
+
+- Mutable GDM snapshot/oracle cache:
+  `D:\Temp\okami\wh40k-v05-mission-oracle.json`;
+  SHA-256 `0B5B924EA55DE00979F392544AFD93990163A2FDFB43A9B7568E993A8B172D02`.
+- Canonical normalized comparison:
+  `D:\Temp\okami\wh40k-v05-mission-compare-normalized.json`;
+  25 missions; 32,782 bytes; SHA-256
+  `D81E2E1322C7B13CAFE4FC78024C743DDCAA07B2AC9D3C278A88D4C7DF5511CF`.
 
 ## Global mission rules and translation notes
 
@@ -444,3 +521,9 @@ Source: the six `mission_twist` records belonging to current app mission pack UU
 - GDM is the readable mission transcription; the current official app data is the numeric, timing, status, marker, and action cross-check. The Event Companion controls event caps, terminology, and FAQs.
 - Full card artwork/screens are intentionally absent. Temporary extraction paths and checksums are recorded only to make the audit reproducible; package files, credentials, and private app data remain outside the repository.
 - Implementation should store concise bilingual facts, not copied card HTML or artwork. Re-check the official app data version before any later rules update.
+- Publication scope is an explicit issue #11 requirement: retain only normalized operative facts and concise derived translations needed by the offline reference. Do not publish card presentation, full source HTML, artwork, lore, or Designer's Notes.
+
+[play]: https://play.google.com/store/apps/details?id=com.gamesworkshop.w40k
+[apkpure-page]: https://apkpure.net/warhammer-40-000-the-app/com.gamesworkshop.w40k/download
+[apkpure-xapk]: https://d.apkpure.net/b/XAPK/com.gamesworkshop.w40k?version=latest
+[gdm-history]: https://game-datamissions.com/version-history
