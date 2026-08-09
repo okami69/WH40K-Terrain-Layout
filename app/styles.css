@@ -171,6 +171,7 @@ select:disabled {
 }
 
 .matchup {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
   gap: 12px;
@@ -204,8 +205,7 @@ select:disabled {
   text-transform: uppercase;
 }
 
-.disposition-select {
-  appearance: none;
+.disposition-button {
   width: 100%;
   min-height: 48px;
   margin-top: 4px;
@@ -215,16 +215,11 @@ select:disabled {
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
-  text-align-last: center;
   text-transform: uppercase;
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
-}
-
-.disposition-select::-ms-expand {
-  display: none;
 }
 
 .selector-card hr {
@@ -250,6 +245,22 @@ select:disabled {
 .versus {
   color: var(--primary-dark);
   font-size: 1.55rem;
+}
+
+.twist-button {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--surface);
+  background: var(--primary);
+  transform: translate(-50%, 0);
 }
 
 .layouts {
@@ -285,11 +296,6 @@ select:disabled {
   margin: 8px 0 6px;
   font-size: 1.15rem;
   text-transform: uppercase;
-}
-
-.disposition-select option {
-  padding-inline-end: 30px;
-  text-align: center;
 }
 
 .map-button {
@@ -329,6 +335,8 @@ select:disabled {
 .mission-popover {
   position: fixed;
   inset: auto;
+  width: min(500px, calc(100vw - 24px));
+  max-height: 65dvh;
   margin: 0;
   z-index: 20;
   padding: 10px 12px;
@@ -339,8 +347,114 @@ select:disabled {
   box-shadow: 0 6px 14px oklch(0 0 0 / 0.18);
   font-size: 0.9rem;
   line-height: 1.35;
+  overflow-y: auto;
   overflow-wrap: anywhere;
   text-align: left;
+}
+
+.mission-reference-title,
+.mission-reference-heading,
+.mission-reference-overview,
+.mission-reference-timing,
+.mission-reference-limit,
+.mission-reference-reminder {
+  margin: 0;
+}
+
+.mission-reference-overview,
+.mission-reference-section,
+.mission-reference-reminder {
+  margin-top: 10px;
+}
+
+.mission-reference-section {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.mission-reference-heading {
+  font-size: 0.95rem;
+}
+
+.mission-reference-timing {
+  color: var(--muted-ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mission-reference-limit {
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+.mission-reference-conditions {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.mission-reference-conditions li + li {
+  margin-top: 6px;
+}
+
+.mission-reference-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 6px;
+}
+
+.mission-reference-vp,
+.mission-reference-tag {
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--disabled);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.mission-reference-vp {
+  color: var(--surface);
+  background: var(--primary-dark);
+}
+
+.mission-reference-reminder {
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.disposition-menu {
+  position: fixed;
+  inset: auto;
+  z-index: 30;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 6px 14px oklch(0 0 0 / 0.18);
+}
+
+.disposition-menu button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 4px 28px;
+  border-color: transparent;
+  font-size: var(--disposition-menu-font-size, 1rem);
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.disposition-menu button::after {
+  position: absolute;
+  right: 8px;
+  content: "✓";
+  opacity: 0;
+}
+
+.disposition-menu button[aria-current="true"]::after {
+  opacity: 1;
 }
 
 dialog {
@@ -372,6 +486,87 @@ dialog h2 {
   margin: 0;
   font-size: 1.15rem;
   text-transform: uppercase;
+}
+
+#twist-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right) - 24px), 620px);
+  overflow: hidden;
+}
+
+#twist-dialog:not([open]) {
+  display: none;
+}
+
+#twist-dialog-body {
+  min-height: 0;
+  padding-right: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#twist-dialog-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  background: var(--surface);
+}
+
+.twist-note,
+.twist-confirmation,
+.twist-detail h3,
+.twist-effects {
+  margin: 0;
+}
+
+.twist-note,
+.twist-confirmation {
+  padding: 8px 0 12px;
+  color: var(--muted-ink);
+}
+
+.twist-row {
+  border-top: 1px solid var(--line-soft);
+}
+
+.twist-row-toggle {
+  width: 100%;
+  padding: 0 12px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.twist-row-toggle[aria-current="true"] {
+  color: var(--primary-dark);
+}
+
+.twist-row-panel {
+  padding: 4px 12px 12px;
+}
+
+.twist-effects {
+  padding-left: 22px;
+}
+
+.twist-effects li + li {
+  margin-top: 6px;
+}
+
+.twist-select {
+  margin-top: 10px;
+  padding: 0 18px;
+}
+
+.twist-detail h3 {
+  font-size: 1.1rem;
+}
+
+.twist-detail .twist-effects {
+  margin-top: 12px;
 }
 
 #close,
@@ -510,15 +705,13 @@ dialog h2 {
 }
 
 @media (orientation: portrait) and (max-width: 600px) {
-  :root {
-    --sheet-height: 1280px;
-  }
-
   body {
     place-items: start center;
   }
 
   .app-sheet {
+    display: flex;
+    flex-direction: column;
     padding: 8px 32px;
   }
 
@@ -542,20 +735,24 @@ dialog h2 {
     margin: 4px 0;
   }
 
-  .map-panel,
+  .map-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+
   .map-button {
-    height: auto;
+    height: 100%;
+    min-height: 0;
+    place-items: center;
   }
 
-  #map {
-    width: 100%;
-    height: auto;
-    max-height: none;
-  }
-
+  #map,
   .map-button img {
     width: 100%;
     height: auto;
-    max-height: none;
+    max-height: 100%;
   }
 }

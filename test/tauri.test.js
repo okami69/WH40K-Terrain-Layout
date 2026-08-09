@@ -52,15 +52,23 @@ test('uses Tauri scripts and no Electron packaging dependencies', () => {
   assert.equal(packageJson.devDependencies['@tauri-apps/cli'], '2.11.4');
 });
 
-test('keeps package and Tauri versions at v0.4.0', () => {
+test('keeps package, Tauri, and Android versions at v0.5.0', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
   const packageLock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
   const tauriConfig = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+  const cargoToml = readFileSync('src-tauri/Cargo.toml', 'utf8');
+  const cargoLock = readFileSync('src-tauri/Cargo.lock', 'utf8');
+  const androidGradle = readFileSync('src-tauri/gen/android/app/build.gradle.kts', 'utf8');
 
-  assert.equal(packageJson.version, '0.4.0');
-  assert.equal(packageLock.version, '0.4.0');
-  assert.equal(packageLock.packages[''].version, '0.4.0');
-  assert.equal(tauriConfig.version, '0.4.0');
+  assert.equal(packageJson.version, '0.5.0');
+  assert.equal(packageLock.version, '0.5.0');
+  assert.equal(packageLock.packages[''].version, '0.5.0');
+  assert.equal(tauriConfig.version, '0.5.0');
+  assert.match(cargoToml, /^version = "0\.5\.0"$/m);
+  assert.match(cargoLock, /name = "wh40k-terrain-layout"\r?\nversion = "0\.5\.0"/);
+  assert.equal(tauriConfig.bundle.android.versionCode, 5000);
+  assert.match(androidGradle, /tauri\.android\.versionCode", "5000"/);
+  assert.match(androidGradle, /tauri\.android\.versionName", "0\.5\.0"/);
 });
 
 test('tracks the Android scaffold without committing local signing secrets', () => {

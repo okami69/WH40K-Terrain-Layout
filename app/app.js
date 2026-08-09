@@ -1,4 +1,5 @@
 import { deployments, dispositions, labels, languages, layoutCatalog, missions, resolveMatchup } from './matchups.js';
+import { missionReferences, pickRandomTwist, twists } from './rules.js';
 
 const text = {
   ru: {
@@ -8,6 +9,12 @@ const text = {
     rightDisposition: 'Диспозиция правой армии',
     forceDisposition: 'Диспозиция армии',
     mission: 'Миссия',
+    exactScoring: 'Физическая карта миссии или официальное приложение задает точный подсчет очков.',
+    vp: value => `${value} ПО`,
+    cumulative: 'Дополнительно',
+    alternative: 'Альтернатива',
+    per: { marker: 'За маркер', objective: 'За цель', 'terrain-area': 'За зону ландшафта', unit: 'За подразделение' },
+    primaryLimit: limit => `${limit.text.ru}: ${limit.total} ПО всего; ${limit.perBattleRound} ПО за боевой раунд; подсчёт в конце боя не входит в лимит.`,
     layout: layout => `Расстановка ${layout}`,
     layoutGroup: 'Расстановка террейна',
     openMap: 'Открыть карту в полном размере',
@@ -24,6 +31,17 @@ const text = {
     chooseFreeLayout: 'Выбрать любую расстановку',
     galleryTitle: 'Все расстановки',
     layoutSource: (left, right, value) => `${left} / ${right} · Расстановка ${value}`,
+    twistTitle: 'Особенность',
+    twistOptional: 'Необязательно. Выберите одну, только если оба игрока хотят её использовать.',
+    noTwist: 'Без особенности',
+    noTwistSelected: 'Особенность не выбрана. Играйте стандартную миссию.',
+    twistButtonEmpty: 'Необязательная особенность: ничего не выбрано',
+    twistButtonSelected: name => `Необязательная особенность: ${name}`,
+    select: 'Выбрать',
+    random: 'Случайная',
+    change: 'Изменить',
+    unavailable: 'Описание недоступно',
+    noTwistsAvailable: 'Нет доступных особенностей. Оставьте «Без особенности».',
   },
   en: {
     title: 'Terrain Layout',
@@ -32,6 +50,12 @@ const text = {
     rightDisposition: 'Right Force Disposition',
     forceDisposition: 'Force Disposition',
     mission: 'Mission',
+    exactScoring: 'Use the physical mission card or official app for exact scoring.',
+    vp: value => `${value} VP`,
+    cumulative: 'Cumulative',
+    alternative: 'Alternative',
+    per: { marker: 'Per marker', objective: 'Per objective', 'terrain-area': 'Per terrain area', unit: 'Per unit' },
+    primaryLimit: limit => `${limit.text.en}: ${limit.total} VP total; ${limit.perBattleRound} VP per battle round; end-of-battle scoring is exempt.`,
     layout: layout => `Layout ${layout}`,
     layoutGroup: 'Terrain layout',
     openMap: 'Open layout at full size',
@@ -48,6 +72,17 @@ const text = {
     chooseFreeLayout: 'Choose any layout',
     galleryTitle: 'All layouts',
     layoutSource: (left, right, value) => `${left} / ${right} · Layout ${value}`,
+    twistTitle: 'Twist',
+    twistOptional: 'Optional. Select one only if both players want to use it.',
+    noTwist: 'No Twist',
+    noTwistSelected: 'No twist selected. Play the standard mission.',
+    twistButtonEmpty: 'Optional Twist: no Twist selected',
+    twistButtonSelected: name => `Optional Twist: ${name}`,
+    select: 'Select',
+    random: 'Random',
+    change: 'Change',
+    unavailable: 'Details unavailable',
+    noTwistsAvailable: 'No Twists are available. Keep No Twist selected.',
   },
 };
 
@@ -62,6 +97,9 @@ const deploymentNames = {
 
 const left = document.querySelector('#left');
 const right = document.querySelector('#right');
+const leftDispositionButton = document.querySelector('#left-disposition-button');
+const rightDispositionButton = document.querySelector('#right-disposition-button');
+const dispositionMenu = document.querySelector('#disposition-menu');
 const leftIcon = document.querySelector('#left-icon');
 const rightIcon = document.querySelector('#right-icon');
 const leftMission = document.querySelector('#left-mission');
@@ -86,14 +124,30 @@ const layoutGallery = document.querySelector('#layout-gallery');
 const layoutGalleryTitle = document.querySelector('#layout-gallery-title');
 const layoutGalleryScroll = document.querySelector('#layout-gallery-scroll');
 const popover = document.querySelector('#mission-popover');
+const twistButton = document.querySelector('#twist-button');
+const twistButtonLabel = document.querySelector('#twist-button-label');
+const twistDialog = document.querySelector('#twist-dialog');
+const twistDialogTitle = document.querySelector('#twist-dialog-title');
+const twistDialogBody = document.querySelector('#twist-dialog-body');
+const twistDialogFooter = document.querySelector('#twist-dialog-footer');
+const twistDialogClose = document.querySelector('#twist-dialog-close');
 const layoutButtons = [...document.querySelectorAll('[data-layout]')];
 const languageButtons = [...document.querySelectorAll('[data-lang]')];
 const summaryTriggers = [leftMission, rightMission];
+const dispositionTriggers = new Map([
+  [leftDispositionButton, left],
+  [rightDispositionButton, right],
+]);
 let layout = 'A';
 let language = initialLanguage();
 let pinnedSummary = null;
 let mapMode = 'official';
 let freeMap = null;
+let activeDispositionTrigger = null;
+let activeSummaryTrigger = null;
+let selectedTwist = null;
+let twistPanelView = 'chooser';
+let expandedTwist = null;
 
 for (const select of [left, right]) {
   for (const disposition of dispositions) select.add(new Option('', disposition));
@@ -101,6 +155,21 @@ for (const select of [left, right]) {
 
 left.value = 'disruption';
 right.value = 'priority-assets';
+
+const dispositionMenuButtons = dispositions.map(disposition => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.disposition = disposition;
+  button.addEventListener('click', () => {
+    const select = dispositionTriggers.get(activeDispositionTrigger);
+    if (!select) return;
+    select.value = disposition;
+    select.dispatchEvent(new Event('change'));
+    closeDispositionMenu(true);
+  });
+  return button;
+});
+dispositionMenu.append(...dispositionMenuButtons);
 
 function initialLanguage() {
   const saved = localStorage.getItem('wh40k-language');
@@ -112,15 +181,36 @@ function cssPixels(value) {
   return Number.parseFloat(value) || 0;
 }
 
+function positiveDimension(...values) {
+  return values.find(value => Number.isFinite(value) && value > 0) ?? 1;
+}
+
 function fitSheet() {
   const bodyStyle = getComputedStyle(document.body);
-  const sheetStyle = getComputedStyle(document.querySelector('#sheet'));
   const horizontalInsets = cssPixels(bodyStyle.paddingLeft) + cssPixels(bodyStyle.paddingRight);
   const verticalInsets = cssPixels(bodyStyle.paddingTop) + cssPixels(bodyStyle.paddingBottom);
-  const availableWidth = document.documentElement.clientWidth - horizontalInsets;
-  const availableHeight = document.documentElement.clientHeight - verticalInsets;
-  const scale = Math.min(availableWidth / cssPixels(sheetStyle.width), availableHeight / cssPixels(sheetStyle.height));
+  const layoutWidth = positiveDimension(document.documentElement.clientWidth, window.innerWidth, 768);
+  const layoutHeight = positiveDimension(document.documentElement.clientHeight, window.innerHeight, 1080);
+  const visualViewport = window.visualViewport;
+  const viewportScale = visualViewport?.scale ?? 1;
+  const useVisualViewport = visualViewport
+    && Number.isFinite(viewportScale)
+    && Math.abs(viewportScale - 1) < 0.01
+    && Number.isFinite(visualViewport.width) && visualViewport.width > 0
+    && Number.isFinite(visualViewport.height) && visualViewport.height > 0;
+  const viewportWidth = useVisualViewport ? visualViewport.width : layoutWidth;
+  const viewportHeight = useVisualViewport ? visualViewport.height : layoutHeight;
+  const availableWidth = positiveDimension(viewportWidth - horizontalInsets);
+  const availableHeight = positiveDimension(viewportHeight - verticalInsets);
+  const sheetWidth = 768;
+  const portrait = layoutWidth <= 600 && layoutHeight > layoutWidth;
+  const widthScale = availableWidth / sheetWidth;
+  let sheetHeight = portrait ? 1280 : 1080;
+  if (portrait && sheetHeight * widthScale < availableHeight) sheetHeight = availableHeight / widthScale;
+  const scale = Math.min(widthScale, availableHeight / sheetHeight);
+  document.documentElement.style.setProperty('--sheet-height', `${sheetHeight}px`);
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
+  document.documentElement.style.setProperty('--disposition-menu-font-size', `${scale}rem`);
 }
 
 function showError(message) {
@@ -143,24 +233,291 @@ function setPopoverVisible(visible) {
   }
 }
 
-function closeSummary() {
+function closeSummary(restoreFocus = false) {
+  const trigger = pinnedSummary;
+  if (restoreFocus) trigger?.focus();
   pinnedSummary = null;
+  activeSummaryTrigger = null;
   setPopoverVisible(false);
   for (const trigger of summaryTriggers) trigger.setAttribute('aria-expanded', 'false');
 }
 
+function setDispositionMenuVisible(visible) {
+  if (visible) {
+    dispositionMenu.hidden = false;
+    if (typeof dispositionMenu.showPopover === 'function') dispositionMenu.showPopover();
+    return;
+  }
+  if (typeof dispositionMenu.hidePopover === 'function'
+      && typeof dispositionMenu.matches === 'function'
+      && dispositionMenu.matches(':popover-open')) dispositionMenu.hidePopover();
+  dispositionMenu.hidden = true;
+}
+
+function closeDispositionMenu(restoreFocus = false) {
+  const trigger = activeDispositionTrigger;
+  if (!trigger) return;
+  setDispositionMenuVisible(false);
+  trigger.setAttribute('aria-expanded', 'false');
+  activeDispositionTrigger = null;
+  if (restoreFocus) trigger.focus();
+}
+
+function openDispositionMenu(trigger) {
+  if (activeDispositionTrigger) closeDispositionMenu();
+  activeDispositionTrigger = trigger;
+  const select = dispositionTriggers.get(trigger);
+  const rect = trigger.getBoundingClientRect();
+  let currentButton;
+  for (const button of dispositionMenuButtons) {
+    const current = button.dataset.disposition === select.value;
+    button.setAttribute('aria-current', String(current));
+    if (current) currentButton = button;
+  }
+  trigger.setAttribute('aria-expanded', 'true');
+  dispositionMenu.style.width = `${rect.width}px`;
+  setDispositionMenuVisible(true);
+  const width = dispositionMenu.offsetWidth || rect.width;
+  const height = dispositionMenu.offsetHeight || dispositionMenuButtons.length * 44 + 8;
+  dispositionMenu.style.left = `${Math.max(12, Math.min(rect.left, document.documentElement.clientWidth - width - 12))}px`;
+  dispositionMenu.style.top = `${Math.max(12, Math.min(rect.bottom + 8, document.documentElement.clientHeight - height - 12))}px`;
+  currentButton.focus();
+}
+
+function createReferenceElement(tag, className, content) {
+  const element = document.createElement(tag);
+  element.className = className;
+  element.textContent = content;
+  return element;
+}
+
+function createTwistButton(label, action) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.dataset.action = action;
+  return button;
+}
+
+function hasTwistEffects(twist) {
+  return ['ru', 'en'].every(locale => Array.isArray(twist.effects?.[locale])
+    && twist.effects[locale].length > 0
+    && twist.effects[locale].every(effect => typeof effect === 'string' && effect.length > 0));
+}
+
+function createTwistEffects(twist) {
+  const list = document.createElement('ul');
+  list.className = 'twist-effects';
+  for (const effect of twist.effects[language]) list.append(createReferenceElement('li', '', effect));
+  return list;
+}
+
+function selectTwist(twist) {
+  selectedTwist = twist;
+  expandedTwist = twist.id;
+  twistPanelView = 'detail';
+  delete twistDialog.dataset.notice;
+  renderTwistButton();
+  renderTwistPanel({ focusDetail: true });
+}
+
+function renderTwistChooser({ focusTwist = null, focusConfirmation = false } = {}) {
+  const copy = text[language];
+  const note = createReferenceElement('p', 'twist-note', copy.twistOptional);
+  note.id = 'twist-chooser-note';
+  note.tabIndex = -1;
+  let focusedHeader = null;
+  const rows = twists.map(twist => {
+    const row = document.createElement('section');
+    row.className = 'twist-row';
+    row.dataset.twist = twist.id;
+    const available = hasTwistEffects(twist);
+    const toggle = createTwistButton(twist.name[language], 'expand');
+    toggle.className = 'twist-row-toggle';
+    toggle.id = `twist-header-${twist.id}`;
+    toggle.disabled = !available;
+    toggle.setAttribute('aria-expanded', String(available && expandedTwist === twist.id));
+    toggle.setAttribute('aria-current', String(selectedTwist?.id === twist.id));
+    toggle.setAttribute('aria-controls', `twist-panel-${twist.id}`);
+    if (focusTwist === twist.id && available) focusedHeader = toggle;
+    if (!available) toggle.title = copy.unavailable;
+    toggle.addEventListener('click', () => {
+      expandedTwist = expandedTwist === twist.id ? null : twist.id;
+      renderTwistPanel({ focusTwist: twist.id });
+    });
+    const panel = document.createElement('div');
+    panel.className = 'twist-row-panel';
+    panel.id = `twist-panel-${twist.id}`;
+    panel.hidden = !available || expandedTwist !== twist.id;
+    panel.setAttribute('role', 'region');
+    panel.setAttribute('aria-labelledby', toggle.id);
+    if (!panel.hidden) {
+      const select = createTwistButton(copy.select, 'select');
+      select.className = 'twist-select';
+      select.addEventListener('click', () => selectTwist(twist));
+      panel.append(createTwistEffects(twist), select);
+    }
+    row.append(toggle, panel);
+    return row;
+  });
+  const children = [note];
+  let confirmation = null;
+  if (twistDialog.dataset.notice) {
+    const message = twistDialog.dataset.notice === 'unavailable' ? copy.noTwistsAvailable : copy.noTwistSelected;
+    confirmation = createReferenceElement('p', 'twist-confirmation', message);
+    confirmation.tabIndex = -1;
+    children.push(confirmation);
+  }
+  twistDialogBody.replaceChildren(...children, ...rows);
+  if (focusConfirmation) confirmation?.focus();
+  else if (focusTwist) (focusedHeader ?? note).focus();
+
+  const random = createTwistButton(copy.random, 'random');
+  random.addEventListener('click', () => {
+    const selectableTwists = twists.filter(hasTwistEffects);
+    if (!selectableTwists.length) {
+      twistDialog.dataset.notice = 'unavailable';
+      renderTwistPanel({ focusConfirmation: true });
+      return;
+    }
+    selectTwist(pickRandomTwist(Math.random, selectableTwists));
+  });
+  const none = createTwistButton(copy.noTwist, 'none');
+  none.addEventListener('click', () => {
+    selectedTwist = null;
+    expandedTwist = null;
+    twistPanelView = 'chooser';
+    twistDialog.dataset.notice = 'none';
+    renderTwistButton();
+    renderTwistPanel({ focusConfirmation: true });
+  });
+  twistDialogFooter.replaceChildren(random, none);
+}
+
+function renderTwistDetail(focusDetail = false) {
+  const copy = text[language];
+  const detail = document.createElement('section');
+  detail.className = 'twist-detail';
+  const heading = createReferenceElement('h3', 'twist-detail-title', selectedTwist.name[language]);
+  heading.tabIndex = -1;
+  detail.append(heading);
+  if (hasTwistEffects(selectedTwist)) detail.append(createTwistEffects(selectedTwist));
+  else detail.append(createReferenceElement('p', 'twist-confirmation', copy.unavailable));
+  twistDialogBody.replaceChildren(detail);
+  if (focusDetail) heading.focus();
+
+  const change = createTwistButton(copy.change, 'change');
+  change.addEventListener('click', () => {
+    twistPanelView = 'chooser';
+    expandedTwist = null;
+    renderTwistPanel({ focusTwist: selectedTwist.id });
+  });
+  const close = createTwistButton(copy.close, 'close');
+  close.addEventListener('click', () => twistDialog.close());
+  twistDialogFooter.replaceChildren(change, close);
+}
+
+function renderTwistPanel(focus = {}) {
+  twistDialogTitle.textContent = text[language].twistTitle;
+  twistDialogClose.textContent = text[language].close;
+  if (twistPanelView === 'detail' && selectedTwist) renderTwistDetail(focus.focusDetail);
+  else renderTwistChooser(focus);
+}
+
+function renderTwistButton() {
+  const copy = text[language];
+  const name = selectedTwist?.name[language] ?? copy.noTwist;
+  twistButtonLabel.textContent = name;
+  twistButton.title = name;
+  twistButton.setAttribute('aria-label', selectedTwist ? copy.twistButtonSelected(name) : copy.twistButtonEmpty);
+  twistButton.setAttribute('aria-pressed', String(Boolean(selectedTwist)));
+}
+
+function openTwistDialog() {
+  twistPanelView = selectedTwist ? 'detail' : 'chooser';
+  renderTwistPanel();
+  if (!twistDialog.open) twistDialog.showModal();
+}
+
+function renderMissionReference(missionId) {
+  const reference = missionReferences[missionId];
+  const copy = text[language];
+  const title = createReferenceElement('h3', 'mission-reference-title', `${copy.mission}: ${missions[missionId].name[language]}`);
+  title.id = 'mission-popover-title';
+  const overview = createReferenceElement('p', 'mission-reference-overview', reference.overview[language]);
+  const sections = reference.sections.map(item => {
+    const section = createReferenceElement('section', 'mission-reference-section', '');
+    const heading = createReferenceElement('h4', 'mission-reference-heading', item.heading[language]);
+    const timing = createReferenceElement('p', 'mission-reference-timing', item.timing[language]);
+    const conditions = document.createElement('ul');
+    conditions.className = 'mission-reference-conditions';
+
+    for (const condition of item.conditions) {
+      const row = document.createElement('li');
+      const conditionText = createReferenceElement('span', 'mission-reference-condition-text', condition.text[language]);
+      const badges = document.createElement('span');
+      badges.className = 'mission-reference-badges';
+      if (condition.vp !== null) badges.append(createReferenceElement('span', 'mission-reference-vp', copy.vp(condition.vp)));
+      if (condition.cumulative) badges.append(createReferenceElement('span', 'mission-reference-tag', copy.cumulative));
+      if (condition.per) badges.append(createReferenceElement('span', 'mission-reference-tag', copy.per[condition.per]));
+      if (condition.alternative) badges.append(createReferenceElement('span', 'mission-reference-tag', copy.alternative));
+      row.append(conditionText, badges);
+      conditions.append(row);
+    }
+
+    section.append(heading, timing);
+    if (item.limit) section.append(createReferenceElement('p', 'mission-reference-limit', copy.primaryLimit(item.limit)));
+    section.append(conditions);
+    return section;
+  });
+  const reminder = createReferenceElement('p', 'mission-reference-reminder', copy.exactScoring);
+  popover.replaceChildren(title, overview, ...sections, reminder);
+}
+
+function positionSummary(trigger = activeSummaryTrigger) {
+  if (!trigger) return;
+  const rect = trigger.getBoundingClientRect();
+  const cardRect = trigger.closest('.selector-card').getBoundingClientRect();
+  const viewportWidth = window.visualViewport?.width || window.innerWidth || document.documentElement.clientWidth;
+  const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+  const viewportLeft = window.visualViewport?.offsetLeft || 0;
+  const viewportTop = window.visualViewport?.offsetTop || 0;
+  const width = Math.max(0, Math.min(500, viewportWidth - 24));
+  const anchor = trigger === rightMission ? 'right' : 'left';
+  const targetLeft = anchor === 'right' ? cardRect.right - width : cardRect.left;
+  const left = Math.max(viewportLeft + 12, Math.min(targetLeft, viewportLeft + viewportWidth - width - 12));
+  const top = Math.max(viewportTop + 12, Math.min(rect.bottom + 8, viewportTop + viewportHeight - 12));
+  popover.dataset.anchor = anchor;
+  popover.style.setProperty('--mission-popover-width', '500px');
+  popover.style.width = `${width}px`;
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+  popover.style.maxHeight = `${Math.max(0, Math.min(viewportHeight * 0.65, viewportTop + viewportHeight - top - 12))}px`;
+}
+
 function openSummary(trigger, pin = false) {
+  if (pinnedSummary && !pin) return;
   const mission = trigger.dataset.mission;
   if (!mission) return;
 
-  const rect = trigger.getBoundingClientRect();
-  popover.textContent = missions[mission].summary[language];
-  popover.style.width = `${rect.width}px`;
-  popover.style.left = `${rect.left}px`;
-  popover.style.top = `${rect.bottom + 8}px`;
+  renderMissionReference(mission);
+  activeSummaryTrigger = trigger;
+  if (pin) pinnedSummary = trigger;
+  positionSummary(trigger);
   setPopoverVisible(true);
   for (const item of summaryTriggers) item.setAttribute('aria-expanded', String(item === trigger));
-  pinnedSummary = pin ? trigger : pinnedSummary;
+  if (pin) popover.focus({ preventScroll: true });
+}
+
+function withinSummary(target, trigger = activeSummaryTrigger) {
+  return Boolean(target && (trigger?.contains(target) || popover.contains(target)));
+}
+
+function canReceiveFocus(target) {
+  for (let element = target; element; element = element.parentElement) {
+    if (element.tabIndex >= 0 && !element.disabled) return true;
+  }
+  return false;
 }
 
 function sourceText(item) {
@@ -238,6 +595,8 @@ function render() {
     document.querySelector('#map-description').textContent = copy.mapDescription;
     left.setAttribute('aria-label', copy.leftDisposition);
     right.setAttribute('aria-label', copy.rightDisposition);
+    leftDispositionButton.setAttribute('aria-label', copy.leftDisposition);
+    rightDispositionButton.setAttribute('aria-label', copy.rightDisposition);
     keyButton.setAttribute('aria-label', copy.openKey);
     keyButton.title = copy.openKey;
     mapButton.setAttribute('aria-label', copy.openMap);
@@ -252,6 +611,8 @@ function render() {
     document.querySelector('#close').textContent = copy.close;
     layoutGalleryTitle.textContent = copy.galleryTitle;
     document.querySelector('#layout-gallery-close').textContent = copy.close;
+    renderTwistButton();
+    if (twistDialog.open) renderTwistPanel();
 
     for (const select of [left, right]) {
       for (const option of select.options) option.textContent = labels[option.value][language];
@@ -262,8 +623,17 @@ function render() {
     mapButton.hidden = false;
     leftIcon.src = labels[left.value].icon;
     leftIcon.alt = leftLabel;
+    leftDispositionButton.textContent = leftLabel;
     rightIcon.src = labels[right.value].icon;
     rightIcon.alt = rightLabel;
+    rightDispositionButton.textContent = rightLabel;
+    for (const button of dispositionMenuButtons) {
+      button.textContent = labels[button.dataset.disposition][language];
+      if (activeDispositionTrigger) {
+        const select = dispositionTriggers.get(activeDispositionTrigger);
+        button.setAttribute('aria-current', String(button.dataset.disposition === select.value));
+      }
+    }
     leftMission.textContent = missions[matchup.leftMission].name[language];
     leftMission.dataset.mission = matchup.leftMission;
     leftMission.setAttribute('aria-label', `${copy.mission}: ${missions[matchup.leftMission].name[language]}`);
@@ -293,6 +663,10 @@ right.addEventListener('change', () => {
   render();
 });
 
+for (const trigger of dispositionTriggers.keys()) {
+  trigger.addEventListener('click', () => openDispositionMenu(trigger));
+}
+
 for (const button of layoutButtons) {
   button.addEventListener('click', () => {
     mapMode = 'official';
@@ -312,11 +686,11 @@ for (const button of languageButtons) {
 for (const trigger of summaryTriggers) {
   trigger.addEventListener('pointerenter', () => openSummary(trigger));
   trigger.addEventListener('focus', () => openSummary(trigger));
-  trigger.addEventListener('pointerleave', () => {
-    if (pinnedSummary !== trigger) closeSummary();
+  trigger.addEventListener('pointerleave', event => {
+    if (!pinnedSummary && !withinSummary(event.relatedTarget, trigger)) closeSummary();
   });
-  trigger.addEventListener('blur', () => {
-    if (pinnedSummary !== trigger) closeSummary();
+  trigger.addEventListener('focusout', event => {
+    if (!pinnedSummary && !withinSummary(event.relatedTarget, trigger)) closeSummary();
   });
   trigger.addEventListener('click', () => {
     if (pinnedSummary === trigger) closeSummary();
@@ -324,7 +698,18 @@ for (const trigger of summaryTriggers) {
   });
 }
 
+popover.addEventListener('pointerleave', event => {
+  if (!pinnedSummary && !withinSummary(event.relatedTarget)) closeSummary();
+});
+popover.addEventListener('focusout', event => {
+  if (!pinnedSummary && !withinSummary(event.relatedTarget)) closeSummary();
+});
+
 map.addEventListener('error', () => showError(text[language].missingImage(mapMode === 'free' ? freeMap?.layout ?? layout : layout)));
+twistButton.addEventListener('click', openTwistDialog);
+twistDialogClose.addEventListener('click', () => twistDialog.close());
+twistDialog.addEventListener('close', () => twistButton.focus());
+twistDialog.addEventListener('cancel', () => twistButton.focus());
 mapButton.addEventListener('click', () => viewer.showModal());
 document.querySelector('#close').addEventListener('click', () => viewer.close());
 freeLayoutButton.addEventListener('click', openGallery);
@@ -334,14 +719,33 @@ document.querySelector('#terrain-rules-close').addEventListener('click', () => t
 keyButton.addEventListener('click', () => keyViewer.showModal());
 document.querySelector('#layout-key-close').addEventListener('click', () => keyViewer.close());
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') closeSummary();
+  if (event.key === 'Escape') {
+    closeDispositionMenu(true);
+    closeSummary(true);
+  }
 });
-window.addEventListener('resize', fitSheet);
-window.visualViewport?.addEventListener('resize', fitSheet);
+document.addEventListener('pointerdown', event => {
+  if (activeDispositionTrigger
+      && !activeDispositionTrigger.contains(event.target)
+      && !dispositionMenu.contains(event.target)) closeDispositionMenu();
+  if (activeSummaryTrigger && !withinSummary(event.target)) {
+    const restoreFocus = Boolean(pinnedSummary && popover.contains(document.activeElement) && !canReceiveFocus(event.target));
+    closeSummary(restoreFocus);
+  }
+});
+function handleViewportResize() {
+  fitSheet();
+  positionSummary();
+}
+
+window.addEventListener('resize', handleViewportResize);
+window.addEventListener('orientationchange', handleViewportResize);
+window.visualViewport?.addEventListener('resize', handleViewportResize);
 setDialogBackdropClose(viewer);
 setDialogBackdropClose(terrainRulesViewer);
 setDialogBackdropClose(keyViewer);
 setDialogBackdropClose(layoutGallery);
+setDialogBackdropClose(twistDialog);
 
 fitSheet();
 render();

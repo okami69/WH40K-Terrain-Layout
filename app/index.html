@@ -31,8 +31,15 @@
       <section class="matchup" aria-label="Force disposition matchup">
         <article class="selector-card">
           <img id="left-icon" class="disposition-icon" alt="">
-          <label class="card-kicker" for="left">Force Disposition</label>
-          <select id="left" class="disposition-select" aria-label="Left Force Disposition"></select>
+          <span class="card-kicker">Force Disposition</span>
+          <select id="left" hidden tabindex="-1" aria-hidden="true"></select>
+          <button
+            id="left-disposition-button"
+            class="disposition-button"
+            type="button"
+            aria-controls="disposition-menu"
+            aria-expanded="false"
+          ></button>
           <hr>
           <span class="mission-label">Mission</span>
           <button
@@ -49,8 +56,15 @@
 
         <article class="selector-card">
           <img id="right-icon" class="disposition-icon" alt="">
-          <label class="card-kicker" for="right">Force Disposition</label>
-          <select id="right" class="disposition-select" aria-label="Right Force Disposition"></select>
+          <span class="card-kicker">Force Disposition</span>
+          <select id="right" hidden tabindex="-1" aria-hidden="true"></select>
+          <button
+            id="right-disposition-button"
+            class="disposition-button"
+            type="button"
+            aria-controls="disposition-menu"
+            aria-expanded="false"
+          ></button>
           <hr>
           <span class="mission-label">Mission</span>
           <button
@@ -62,6 +76,14 @@
             data-side="right"
           ></button>
         </article>
+
+        <button id="twist-button" class="twist-button" type="button" aria-controls="twist-dialog" aria-pressed="false">
+          <svg class="twist-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M4 7h10a4 4 0 0 1 4 4v6M14 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 17H10a4 4 0 0 1-4-4V7M10 21l-4-4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span id="twist-button-label" class="visually-hidden">No Twist</span>
+        </button>
       </section>
 
       <div class="layouts" role="group" aria-label="Terrain layout">
@@ -82,7 +104,17 @@
     </main>
   </div>
 
-  <div id="mission-popover" class="mission-popover" popover="manual" role="tooltip" hidden></div>
+  <div id="disposition-menu" class="disposition-menu" popover="manual" hidden></div>
+  <div id="mission-popover" class="mission-popover" popover="manual" role="region" tabindex="0" aria-labelledby="mission-popover-title" hidden></div>
+
+  <dialog id="twist-dialog" aria-labelledby="twist-dialog-title">
+    <header>
+      <h2 id="twist-dialog-title">Twist</h2>
+      <button id="twist-dialog-close" type="button">Close</button>
+    </header>
+    <div id="twist-dialog-body"></div>
+    <footer id="twist-dialog-footer"></footer>
+  </dialog>
 
   <dialog id="terrain-rules-viewer" aria-labelledby="terrain-rules-title">
     <header>

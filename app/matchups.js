@@ -1,3 +1,5 @@
+import { isCompleteMissionReference, missionReferences } from './rules.js';
+
 export const languages = ['ru', 'en'];
 
 export const dispositions = [
@@ -106,6 +108,13 @@ export const matchups = [
   rightMission,
   slug: `${left}--${right}`,
 }));
+
+for (const { leftMission, rightMission } of matchups) {
+  for (const missionId of [leftMission, rightMission]) {
+    if (!missionReferences[missionId]) throw new Error(`Missing mission reference: ${missionId}`);
+    if (!isCompleteMissionReference(missionReferences[missionId])) throw new Error(`Invalid mission reference: ${missionId}`);
+  }
+}
 
 export const deployments = [
   'crucible-of-battle',
