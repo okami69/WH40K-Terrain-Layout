@@ -50,6 +50,10 @@ test('does not package the replaced Terrain Layout screenshot', () => {
   assert.equal(existsSync('app/assets/key/terrain-rules.webp'), false);
   const extractor = readFileSync('tools/extract_layouts.py', 'utf8');
   assert.doesNotMatch(extractor, /TERRAIN_RULES_PAGE|TERRAIN_RULES_CROP_POINTS|terrain-rules\.webp/);
+
+  const readme = readFileSync('README.md', 'utf8');
+  assert.match(readme, /app\/assets\/backgrounds\/event-companion-paper\.webp/);
+  assert.doesNotMatch(readme, /app\/assets\/key\/terrain-rules\.webp/);
 });
 
 test('extracts the shared Event Companion paper as a required offline asset', () => {
