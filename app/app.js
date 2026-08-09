@@ -300,7 +300,7 @@ function selectTwist(twist) {
   renderTwistPanel({ focusDetail: true });
 }
 
-function renderTwistChooser({ focusTwist = null, focusChooser = false, focusConfirmation = false } = {}) {
+function renderTwistChooser({ focusTwist = null, focusConfirmation = false } = {}) {
   const copy = text[language];
   const note = createReferenceElement('p', 'twist-note', copy.twistOptional);
   note.id = 'twist-chooser-note';
@@ -350,7 +350,6 @@ function renderTwistChooser({ focusTwist = null, focusChooser = false, focusConf
   twistDialogBody.replaceChildren(...children, ...rows);
   if (focusConfirmation) confirmation?.focus();
   else if (focusTwist) (focusedHeader ?? note).focus();
-  else if (focusChooser) note.focus();
 
   const random = createTwistButton(copy.random, 'random');
   random.addEventListener('click', () => {
@@ -390,7 +389,7 @@ function renderTwistDetail(focusDetail = false) {
   change.addEventListener('click', () => {
     twistPanelView = 'chooser';
     expandedTwist = null;
-    renderTwistPanel({ focusTwist: selectedTwist?.id, focusChooser: !selectedTwist });
+    renderTwistPanel({ focusTwist: selectedTwist.id });
   });
   const close = createTwistButton(copy.close, 'close');
   close.addEventListener('click', () => twistDialog.close());

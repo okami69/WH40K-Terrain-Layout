@@ -283,3 +283,14 @@ test('rejects an invalid injected random value', () => {
     assert.throws(() => pickRandomTwist(() => value), RangeError);
   }
 });
+
+test('rejects an invalid or empty random Twist pool', () => {
+  assert.throws(() => pickRandomTwist(() => 0, null), {
+    name: 'TypeError',
+    message: 'Twist pool must be an array',
+  });
+  assert.throws(() => pickRandomTwist(() => 0, []), {
+    name: 'RangeError',
+    message: 'Twist pool must contain at least one Twist',
+  });
+});

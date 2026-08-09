@@ -304,6 +304,8 @@ export const twists = [
 ];
 
 export function pickRandomTwist(random = Math.random, pool = twists) {
+  if (!Array.isArray(pool)) throw new TypeError('Twist pool must be an array');
+  if (!pool.length) throw new RangeError('Twist pool must contain at least one Twist');
   const value = random();
   if (!Number.isFinite(value) || value < 0 || value >= 1) {
     throw new RangeError('Random source must return a finite number from 0 (inclusive) to 1 (exclusive)');
