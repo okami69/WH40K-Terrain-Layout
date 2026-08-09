@@ -10,7 +10,7 @@ import {
   missions,
   resolveMatchup,
 } from '../app/matchups.js';
-import { missionReferences } from '../app/rules.js';
+import { isCompleteMissionReference, missionReferences } from '../app/rules.js';
 
 const expectedDispositions = [
   'take-and-hold',
@@ -174,9 +174,13 @@ test('covers every ordered disposition selection and layout', () => {
 test('every resolved mission has a detailed reference', () => {
   for (const left of dispositions) for (const right of dispositions) {
     const result = resolveMatchup(left, right);
-    assert.ok(missionReferences[result.leftMission], `${left}/${right} left details`);
-    assert.ok(missionReferences[result.rightMission], `${left}/${right} right details`);
+    assert.ok(isCompleteMissionReference(missionReferences[result.leftMission]), `${left}/${right} left details`);
+    assert.ok(isCompleteMissionReference(missionReferences[result.rightMission]), `${left}/${right} right details`);
   }
+});
+
+test('rejects an incomplete detailed mission reference', () => {
+  assert.equal(isCompleteMissionReference({ id: 'broken', overview: { ru: '', en: '' }, sections: [] }), false);
 });
 
 test('swaps missions but not the map when selection order is reversed', () => {

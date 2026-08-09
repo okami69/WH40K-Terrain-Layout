@@ -1,4 +1,4 @@
-import { missionReferences } from './rules.js';
+import { isCompleteMissionReference, missionReferences } from './rules.js';
 
 export const languages = ['ru', 'en'];
 
@@ -110,8 +110,8 @@ export const matchups = [
 }));
 
 for (const { leftMission, rightMission } of matchups) {
-  if (!missionReferences[leftMission]) throw new Error(`Missing mission reference: ${leftMission}`);
-  if (!missionReferences[rightMission]) throw new Error(`Missing mission reference: ${rightMission}`);
+  if (!isCompleteMissionReference(missionReferences[leftMission])) throw new Error(`Missing mission reference: ${leftMission}`);
+  if (!isCompleteMissionReference(missionReferences[rightMission])) throw new Error(`Missing mission reference: ${rightMission}`);
 }
 
 export const deployments = [

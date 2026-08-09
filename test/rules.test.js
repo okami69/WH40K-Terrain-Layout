@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { missionReferences, twists, pickRandomTwist, validateRules } from '../app/rules.js';
+import {
+  missionReferences,
+  twists,
+  pickRandomTwist,
+  validateRules,
+  isCompleteMissionReference,
+} from '../app/rules.js';
 
 const missionIds = [
   'battlefield-dominance', 'immovable-object', 'unstoppable-force',
@@ -58,6 +64,7 @@ const oracle = {
 test('provides complete bilingual structured references for all primary missions', () => {
   assert.deepEqual(Object.keys(missionReferences).sort(), missionIds.toSorted());
   for (const [id, mission] of Object.entries(missionReferences)) {
+    assert.deepEqual(Object.keys(mission).sort(), ['id', 'overview', 'sections']);
     assert.equal(mission.id, id);
     assert.ok(mission.overview.ru && mission.overview.en, `${id} overview`);
     assert.ok(mission.sections.length > 0, `${id} sections`);
@@ -78,23 +85,90 @@ test('provides complete bilingual structured references for all primary missions
 test('matches one audited timing and VP fact for every mission', () => {
   for (const [id, [sectionCount, heading, vp]] of Object.entries(oracle)) {
     const mission = missionReferences[id];
-    assert.equal(mission.sections.length, sectionCount, `${id} section count`);
+    assert.equal(mission.sections.filter(section => section.conditions.some(condition => condition.vp !== null)).length, sectionCount, `${id} scoring section count`);
     const section = mission.sections.find(item => item.heading.en === heading
       && item.conditions.some(condition => condition.vp === vp));
     assert.ok(section, `${id} audited timing`);
   }
   assert.equal(missionReferences['battlefield-dominance'].sections[1].conditions[1].cumulative, true);
   assert.equal(missionReferences['purge-and-secure'].sections[0].conditions[1].alternative, true);
-  assert.equal(missionReferences['locate-and-deny'].action.useLimit.en, 'Once per turn.');
-  assert.match(missionReferences['locate-and-deny'].action.restriction.en, /only one operation marker/);
-  assert.match(missionReferences.punishment.status.en, /condemned until the start of your next turn/);
-  assert.match(missionReferences.consecrate.status.en, /place an operation marker/);
-  assert.deepEqual(Object.values(missionReferences).filter(item => item.action).map(item => item.action.title.en), [
+});
+
+test('exposes global Primary limits once through ordinary sections', () => {
+  const expected = {
+    text: { ru: 'Лимиты основной миссии', en: 'Primary Mission limits' },
+    total: 45,
+    perBattleRound: 15,
+    endOfBattleExempt: true,
+  };
+  for (const [id, mission] of Object.entries(missionReferences)) {
+    const limited = mission.sections.filter(section => section.limit);
+    assert.equal(limited.length, 1, `${id} limit count`);
+    assert.deepEqual(limited[0].limit, expected, `${id} limit`);
+  }
+});
+
+test('keeps setup, status, marker, and all reverse-side action facts in renderable sections', () => {
+  const actionTitles = [
     'Booby Trap', 'Secure Asset', 'Triangulate', 'Maintain Control', 'Decoy',
     'Surveil the Foe', 'Sensor Sweep', 'Sensor Sweep', 'Extract Intelligence',
     'Vanguard Operation', 'Sabotage',
-  ]);
-  assert.equal(missionReferences['gather-intel'].maximum, 45);
+  ];
+  const detailSections = Object.values(missionReferences).flatMap(mission => mission.sections
+    .filter(section => section.conditions.every(condition => condition.vp === null)));
+  assert.deepEqual(detailSections.filter(section => actionTitles.includes(section.heading.en)).map(section => section.heading.en), actionTitles);
+  const details = detailSections.flatMap(section => section.conditions.map(condition => condition.text.en)).join('\n');
+  assert.match(details, /At the start of battle, select five terrain areas/);
+  assert.match(details, /condemned until the start of your next turn/);
+  assert.match(details, /becomes a consecration unit/);
+  assert.match(details, /Removing the marker removes the status/);
+  assert.match(details, /When a friendly unit ends a move.*remove those markers/);
+  assert.match(details, /Restriction: A unit cannot start this action if only one operation marker remains/);
+  assert.match(details, /Effect: Place one of your operation markers/);
+});
+
+test('preserves exact Booby Trap eligibility through its section', () => {
+  const section = missionReferences['death-trap'].sections.find(item => item.heading.en === 'Booby Trap');
+  assert.ok(section);
+  assert.ok(section.conditions.some(condition => condition.text.en === 'Units: One friendly unit within range of one objective (excluding your home objective) or within one terrain area that is not within your deployment zone and that you have not yet trapped.'));
+  assert.ok(section.conditions.some(condition => condition.text.ru === 'Подразделения: Одно дружественное подразделение в пределах одной цели (кроме вашей домашней цели) либо внутри одной зоны ландшафта вне вашей зоны развёртывания, которую вы ещё не заминировали.'));
+});
+
+test('rejects incomplete or unknown rules records', () => {
+  assert.equal(isCompleteMissionReference(missionReferences['death-trap']), true);
+  assert.equal(isCompleteMissionReference({ ...missionReferences['death-trap'], sections: [] }), false);
+
+  const missingMission = structuredClone(missionReferences);
+  delete missingMission.sabotage;
+  assert.throws(() => validateRules(missingMission, twists), /mission IDs/);
+
+  const missingSection = structuredClone(missionReferences);
+  missingSection.sabotage.sections = [];
+  assert.throws(() => validateRules(missingSection, twists), /sabotage/);
+
+  const missingDetail = structuredClone(missionReferences);
+  missingDetail['death-trap'].sections = missingDetail['death-trap'].sections.filter(section => section.heading.en !== 'Booby Trap');
+  assert.throws(() => validateRules(missingDetail, twists), /death-trap/);
+
+  const missingActionFact = structuredClone(missionReferences);
+  missingActionFact['death-trap'].sections.find(section => section.heading.en === 'Booby Trap').conditions.pop();
+  assert.throws(() => validateRules(missingActionFact, twists), /death-trap/);
+
+  const mismatchedMissionId = structuredClone(missionReferences);
+  mismatchedMissionId['battlefield-dominance'].id = 'immovable-object';
+  assert.throws(() => validateRules(mismatchedMissionId, twists), /mission IDs/);
+
+  const missingLimit = structuredClone(missionReferences);
+  delete missingLimit['battlefield-dominance'].sections[0].limit;
+  assert.throws(() => validateRules(missingLimit, twists), /battlefield-dominance/);
+
+  const missingTwistId = structuredClone(twists);
+  delete missingTwistId[0].id;
+  assert.throws(() => validateRules(missionReferences, missingTwistId), /twist IDs/);
+
+  const missingEffect = structuredClone(twists);
+  missingEffect[0].effects.en = [];
+  assert.throws(() => validateRules(missionReferences, missingEffect), /martial-pride/);
 });
 
 test('provides the six current twists in official order with exact effects', () => {

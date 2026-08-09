@@ -16,6 +16,9 @@ const timings = {
   'End of your Command phase': 'В конце вашей фазы командования',
   'End of your Command phase (or the end of your turn in the fifth battle round)': 'В конце вашей фазы командования (или в конце вашего хода в пятом боевом раунде)',
   'At end of battle': 'В конце боя',
+  'Reverse side': 'Обратная сторона',
+  'Always': 'Постоянно',
+  'Start of battle': 'В начале боя',
 };
 
 const c = (en, ru, vp, cumulative = false, extra = {}) => ({
@@ -28,13 +31,28 @@ const s = (heading, timing, ...conditions) => ({
   conditions,
 });
 
-const mission = (id, overviewEn, overviewRu, sections, extra = {}) => ({
-  id,
-  overview: { ru: overviewRu, en: overviewEn },
-  sections,
-  maximum: 45,
-  ...extra,
+const primaryLimit = {
+  text: { ru: 'Лимиты основной миссии', en: 'Primary Mission limits' },
+  total: 45,
+  perBattleRound: 15,
+  endOfBattleExempt: true,
+};
+
+const detail = (headingEn, headingRu, timing, ...conditions) => ({
+  heading: { ru: headingRu, en: headingEn },
+  timing: { ru: timings[timing], en: timing },
+  conditions,
 });
+
+const mission = (id, overviewEn, overviewRu, scoringSections, extra = {}) => {
+  const sections = scoringSections.map((section, index) => index === 0 ? { ...section, limit: primaryLimit } : section);
+  for (const [kind, value] of Object.entries(extra)) {
+    if (kind === 'action') sections.push(value);
+    if (kind === 'status') sections.push(detail('Mission rule', 'Правило миссии', 'Always', c(value.en, value.ru, null)));
+    if (kind === 'setup') sections.push(detail('Setup', 'Подготовка', 'Start of battle', c(value.en, value.ru, null)));
+  }
+  return { id, overview: { ru: overviewRu, en: overviewEn }, sections };
+};
 
 const commandTiming = 'End of your Command phase (or the end of your turn in the fifth battle round)';
 const nonHome = c(
@@ -61,15 +79,17 @@ const enemyHome = vp => c(
 );
 const endBattle = (...conditions) => s('END OF BATTLE', 'At end of battle', ...conditions);
 
-const action = (titleEn, titleRu, startsEn, startsRu, unitsEn, unitsRu, useLimitEn, useLimitRu, completesEn, completesRu, effectEn, effectRu, restriction) => ({
-  title: { ru: titleRu, en: titleEn },
-  starts: { ru: startsRu, en: startsEn },
-  units: { ru: unitsRu, en: unitsEn },
-  useLimit: { ru: useLimitRu, en: useLimitEn },
-  completes: { ru: completesRu, en: completesEn },
-  effect: { ru: effectRu, en: effectEn },
-  ...(restriction ? { restriction: { ru: restriction[1], en: restriction[0] } } : {}),
-});
+const action = (titleEn, titleRu, startsEn, startsRu, unitsEn, unitsRu, useLimitEn, useLimitRu, completesEn, completesRu, effectEn, effectRu, restriction) => detail(
+  titleEn,
+  titleRu,
+  'Reverse side',
+  c(`Starts: ${startsEn}`, `Начало: ${startsRu}`, null),
+  c(`Units: ${unitsEn}`, `Подразделения: ${unitsRu}`, null),
+  c(`Use limit: ${useLimitEn}`, `Лимит: ${useLimitRu}`, null),
+  c(`Completes: ${completesEn}`, `Завершение: ${completesRu}`, null),
+  c(`Effect: ${effectEn}`, `Эффект: ${effectRu}`, null),
+  ...(restriction ? [c(`Restriction: ${restriction[0]}`, `Ограничение: ${restriction[1]}`, null)] : []),
+);
 
 export const missionReferences = {
   'battlefield-dominance': mission('battlefield-dominance', 'Hold more objectives than the enemy and reinforce that control from your home objective.', 'Контролируйте больше целей, чем противник, усиливая контроль удержанием домашней цели.', [
@@ -101,7 +121,7 @@ export const missionReferences = {
       c('For each of those terrain areas that is an objective.', 'Ещё за каждую из этих зон, являющуюся целью.', 3, true, { per: 'objective' })),
     s('ANY BATTLE ROUND', 'End of your turn', c('One or more enemy units that started the turn within a terrain area were destroyed, if that terrain area is trapped.', 'Уничтожено хотя бы одно вражеское подразделение, начавшее ход в заминированной зоне ландшафта.', 3)),
     s('SECOND BATTLE ROUND ONWARDS', commandTiming, holdOneNonHome(4)),
-  ], { action: action('Booby Trap', 'Мина-ловушка', 'Your Shooting phase.', 'Ваша фаза стрельбы.', 'One friendly unit within an untrapped objective or eligible terrain area outside your deployment zone.', 'Одно дружественное подразделение в пределах незаминированной цели или подходящей зоны ландшафта вне вашей зоны развёртывания.', 'Unlimited; each acting unit must use a different terrain area.', 'Без лимита; каждое действующее подразделение должно выбрать другую зону ландшафта.', 'Immediately.', 'Немедленно.', 'The terrain area becomes trapped; place one of your operation markers within it.', 'Зона становится заминированной; поместите в неё один из ваших маркеров операции.') }),
+  ], { action: action('Booby Trap', 'Мина-ловушка', 'Your Shooting phase.', 'Ваша фаза стрельбы.', 'One friendly unit within range of one objective (excluding your home objective) or within one terrain area that is not within your deployment zone and that you have not yet trapped.', 'Одно дружественное подразделение в пределах одной цели (кроме вашей домашней цели) либо внутри одной зоны ландшафта вне вашей зоны развёртывания, которую вы ещё не заминировали.', 'Unlimited; each acting unit must use a different terrain area.', 'Без лимита; каждое действующее подразделение должно выбрать другую зону ландшафта.', 'Immediately.', 'Немедленно.', 'The terrain area becomes trapped; place one of your operation markers within it.', 'Зона становится заминированной; поместите в неё один из ваших маркеров операции.') }),
   'purge-and-secure': mission('purge-and-secure', 'Destroy enemies around objectives, secure new ground, and hold non-home objectives.', 'Уничтожайте врагов у целей, занимайте новые позиции и удерживайте не домашние цели.', [
     s('ANY BATTLE ROUND', 'End of your turn',
       c('An enemy unit was destroyed by a friendly unit within range of an objective.', 'Вражеское подразделение уничтожено дружественным подразделением в пределах цели.', 3),
@@ -276,19 +296,96 @@ export function pickRandomTwist(random = Math.random) {
 const bilingual = value => value && typeof value.ru === 'string' && value.ru.length > 0
   && typeof value.en === 'string' && value.en.length > 0;
 
-export function validateRules() {
-  if (Object.keys(missionReferences).length !== 25) throw new Error('Expected 25 mission references');
-  if (twists.length !== 6 || new Set(twists.map(item => item.id)).size !== 6) throw new Error('Expected 6 unique twists');
-  for (const mission of Object.values(missionReferences)) {
-    if (!mission.id || !bilingual(mission.overview) || !mission.sections.length) throw new Error(`${mission.id || 'Mission'} has invalid structure`);
-    for (const section of mission.sections) {
-      if (!bilingual(section.heading) || !bilingual(section.timing) || !section.conditions.length) throw new Error(`${mission.id} has invalid scoring section`);
-      for (const condition of section.conditions) {
-        if (!bilingual(condition.text) || (condition.vp !== null && !Number.isFinite(condition.vp)) || typeof condition.cumulative !== 'boolean') throw new Error(`${mission.id} has invalid scoring condition`);
+const requiredMissionIds = [
+  'battlefield-dominance', 'immovable-object', 'unstoppable-force',
+  'determined-acquisition', 'death-trap', 'purge-and-secure',
+  'reconnaissance-sweep', 'inescapable-dominion', 'secure-asset',
+  'meatgrinder', 'punishment', 'delaying-action', 'consecrate',
+  'triangulation', 'destroyers-wrath', 'vital-link', 'outmanoeuvre',
+  'smoke-and-mirrors', 'surveil-the-foe', 'locate-and-deny',
+  'extract-relic', 'gather-intel', 'search-and-scour',
+  'vanguard-operation', 'sabotage',
+];
+const requiredTwistIds = [
+  'martial-pride', 'mirrored-world', 'night-fighting',
+  'nowhere-to-hide', 'ruinscape', 'scrambled-communications',
+];
+const requiredDetails = {
+  'death-trap': { 'Booby Trap': 5 },
+  'secure-asset': { 'Secure Asset': 5 },
+  punishment: { 'Mission rule': 1 },
+  consecrate: { 'Mission rule': 1 },
+  triangulation: { Triangulate: 5 },
+  'vital-link': { 'Maintain Control': 5 },
+  'smoke-and-mirrors': { Decoy: 5 },
+  'surveil-the-foe': { 'Mission rule': 1, 'Surveil the Foe': 5 },
+  'locate-and-deny': { Setup: 1, 'Sensor Sweep': 6 },
+  'extract-relic': { 'Sensor Sweep': 6 },
+  'gather-intel': { 'Extract Intelligence': 5 },
+  'vanguard-operation': { 'Vanguard Operation': 5 },
+  sabotage: { Sabotage: 5 },
+};
+
+function validateMissionReference(mission) {
+  if (!mission || !requiredMissionIds.includes(mission.id)
+    || Object.keys(mission).sort().join() !== 'id,overview,sections'
+    || !bilingual(mission.overview) || !Array.isArray(mission.sections) || !mission.sections.length) {
+    throw new Error(`${mission?.id || 'Mission'} has invalid structure`);
+  }
+  let limitCount = 0;
+  let hasScoring = false;
+  for (const section of mission.sections) {
+    if (!bilingual(section.heading) || !bilingual(section.timing)
+      || !Array.isArray(section.conditions) || !section.conditions.length) {
+      throw new Error(`${mission.id} has invalid section`);
+    }
+    if (section.limit) {
+      limitCount += 1;
+      if (!bilingual(section.limit.text) || section.limit.total !== 45
+        || section.limit.perBattleRound !== 15 || section.limit.endOfBattleExempt !== true) {
+        throw new Error(`${mission.id} has invalid Primary limit`);
       }
     }
+    for (const condition of section.conditions) {
+      if (!bilingual(condition.text) || (condition.vp !== null && !Number.isFinite(condition.vp))
+        || typeof condition.cumulative !== 'boolean') {
+        throw new Error(`${mission.id} has invalid condition`);
+      }
+      hasScoring ||= condition.vp !== null;
+    }
   }
-  for (const twist of twists) {
-    if (!bilingual(twist.name) || !Array.isArray(twist.effects.ru) || !Array.isArray(twist.effects.en) || !twist.effects.ru.length || !twist.effects.en.length || twist.effects.ru.some(item => !item) || twist.effects.en.some(item => !item)) throw new Error(`${twist.id} has no effects`);
+  if (limitCount !== 1 || !hasScoring) throw new Error(`${mission.id} has incomplete sections or limit`);
+  for (const [heading, conditionCount] of Object.entries(requiredDetails[mission.id] || {})) {
+    const section = mission.sections.find(item => item.heading.en === heading);
+    if (!section || section.conditions.length !== conditionCount
+      || section.conditions.some(condition => condition.vp !== null)) throw new Error(`${mission.id} has incomplete detail sections`);
+  }
+}
+
+export function isCompleteMissionReference(mission) {
+  try {
+    validateMissionReference(mission);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function validateRules(references = missionReferences, twistRecords = twists) {
+  const missionIds = Object.keys(references);
+  if (missionIds.length !== requiredMissionIds.length
+    || new Set(missionIds).size !== missionIds.length
+    || requiredMissionIds.some(id => !missionIds.includes(id) || references[id]?.id !== id)) throw new Error('Expected exact mission IDs');
+  for (const mission of Object.values(references)) validateMissionReference(mission);
+
+  const twistIds = twistRecords.map(item => item?.id);
+  if (twistIds.length !== requiredTwistIds.length
+    || new Set(twistIds).size !== twistIds.length
+    || twistIds.some((id, index) => id !== requiredTwistIds[index])) throw new Error('Expected exact twist IDs');
+  for (const twist of twistRecords) {
+    if (!bilingual(twist.name) || !Array.isArray(twist.effects?.ru) || !Array.isArray(twist.effects?.en)
+      || !twist.effects.ru.length || !twist.effects.en.length
+      || twist.effects.ru.some(item => typeof item !== 'string' || !item)
+      || twist.effects.en.some(item => typeof item !== 'string' || !item)) throw new Error(`${twist.id} has invalid effects`);
   }
 }
