@@ -44,6 +44,19 @@ const detail = (headingEn, headingRu, timing, ...conditions) => ({
   conditions,
 });
 
+const markerMissionIds = [
+  'consecrate', 'death-trap', 'smoke-and-mirrors', 'locate-and-deny',
+  'triangulation', 'surveil-the-foe', 'gather-intel', 'vital-link', 'extract-relic',
+];
+
+const operationMarkerRules = () => detail(
+  'Operation markers',
+  'Маркеры операции',
+  'Always',
+  c('Removing an operation marker also removes the status it applied.', 'Удаление маркера операции также снимает наложенный им статус.', null),
+  c('A Primary Mission operation marker cannot be removed unless that mission specifies how and when.', 'Маркер операции основной миссии нельзя удалить, если эта миссия не указывает, как и когда это сделать.', null),
+);
+
 const mission = (id, overviewEn, overviewRu, scoringSections, extra = {}) => {
   const sections = scoringSections.map((section, index) => index === 0 ? { ...section, limit: primaryLimit } : section);
   for (const [kind, value] of Object.entries(extra)) {
@@ -51,6 +64,7 @@ const mission = (id, overviewEn, overviewRu, scoringSections, extra = {}) => {
     if (kind === 'status') sections.push(detail('Mission rule', 'Правило миссии', 'Always', c(value.en, value.ru, null)));
     if (kind === 'setup') sections.push(detail('Setup', 'Подготовка', 'Start of battle', c(value.en, value.ru, null)));
   }
+  if (markerMissionIds.includes(id)) sections.push(operationMarkerRules());
   return { id, overview: { ru: overviewRu, en: overviewEn }, sections };
 };
 
@@ -325,6 +339,9 @@ const requiredDetails = {
   'vanguard-operation': { 'Vanguard Operation': 5 },
   sabotage: { Sabotage: 5 },
 };
+for (const id of markerMissionIds) {
+  requiredDetails[id] = { ...requiredDetails[id], 'Operation markers': 2 };
+}
 
 function validateMissionReference(mission) {
   if (!mission || !requiredMissionIds.includes(mission.id)

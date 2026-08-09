@@ -24,6 +24,11 @@ const twistIds = [
   'nowhere-to-hide', 'ruinscape', 'scrambled-communications',
 ];
 
+const markerMissionIds = [
+  'consecrate', 'death-trap', 'smoke-and-mirrors', 'locate-and-deny',
+  'triangulation', 'surveil-the-foe', 'gather-intel', 'vital-link', 'extract-relic',
+];
+
 const twistNames = [
   ['Воинская гордость', 'Martial Pride'],
   ['Зеркальный мир', 'Mirrored World'],
@@ -134,6 +139,32 @@ test('preserves exact Booby Trap eligibility through its section', () => {
   assert.ok(section.conditions.some(condition => condition.text.ru === 'Подразделения: Одно дружественное подразделение в пределах одной цели (кроме вашей домашней цели) либо внутри одной зоны ландшафта вне вашей зоны развёртывания, которую вы ещё не заминировали.'));
 });
 
+test('exposes both global operation-marker rules for every affected mission', () => {
+  const expected = [
+    {
+      text: {
+        ru: 'Удаление маркера операции также снимает наложенный им статус.',
+        en: 'Removing an operation marker also removes the status it applied.',
+      },
+      vp: null,
+      cumulative: false,
+    },
+    {
+      text: {
+        ru: 'Маркер операции основной миссии нельзя удалить, если эта миссия не указывает, как и когда это сделать.',
+        en: 'A Primary Mission operation marker cannot be removed unless that mission specifies how and when.',
+      },
+      vp: null,
+      cumulative: false,
+    },
+  ];
+  for (const id of markerMissionIds) {
+    const sections = missionReferences[id].sections.filter(section => section.heading.en === 'Operation markers');
+    assert.equal(sections.length, 1, `${id} operation-marker section`);
+    assert.deepEqual(sections[0].conditions, expected, `${id} operation-marker rules`);
+  }
+});
+
 test('rejects incomplete or unknown rules records', () => {
   assert.equal(isCompleteMissionReference(missionReferences['death-trap']), true);
   assert.equal(isCompleteMissionReference({ ...missionReferences['death-trap'], sections: [] }), false);
@@ -153,6 +184,10 @@ test('rejects incomplete or unknown rules records', () => {
   const missingActionFact = structuredClone(missionReferences);
   missingActionFact['death-trap'].sections.find(section => section.heading.en === 'Booby Trap').conditions.pop();
   assert.throws(() => validateRules(missingActionFact, twists), /death-trap/);
+
+  const missingMarkerRule = structuredClone(missionReferences);
+  missingMarkerRule.consecrate.sections.find(section => section.heading.en === 'Operation markers').conditions.pop();
+  assert.throws(() => validateRules(missingMarkerRule, twists), /consecrate/);
 
   const mismatchedMissionId = structuredClone(missionReferences);
   mismatchedMissionId['battlefield-dominance'].id = 'immovable-object';
