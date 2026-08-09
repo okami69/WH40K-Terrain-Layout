@@ -355,6 +355,25 @@ function createReferenceElement(tag, className, content) {
   return element;
 }
 
+function createEmphasizedParagraph(content, terms) {
+  const paragraph = createReferenceElement('p', 'terrain-rules-paragraph', '');
+  let cursor = 0;
+  while (cursor < content.length) {
+    const match = terms
+      .map(term => ({ term, index: content.indexOf(term, cursor) }))
+      .filter(({ index }) => index >= 0)
+      .sort((left, right) => left.index - right.index)[0];
+    if (!match) {
+      paragraph.append(document.createTextNode(content.slice(cursor)));
+      break;
+    }
+    if (match.index > cursor) paragraph.append(document.createTextNode(content.slice(cursor, match.index)));
+    paragraph.append(createReferenceElement('em', '', match.term));
+    cursor = match.index + match.term.length;
+  }
+  return paragraph;
+}
+
 function createTwistButton(label, action) {
   const button = document.createElement('button');
   button.type = 'button';
@@ -484,7 +503,7 @@ function renderTerrainRules() {
   const copy = terrainRulesCopy[language];
   const intro = copy.intro.map(paragraph => createReferenceElement('p', 'terrain-rules-paragraph', paragraph));
   const footprintsHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.footprintsHeading);
-  const footprintsIntro = createReferenceElement('p', 'terrain-rules-paragraph', copy.footprintsIntro);
+  const footprintsIntro = createEmphasizedParagraph(copy.footprintsIntro, ['warhammer-community.com']);
   const table = document.createElement('table');
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
@@ -506,7 +525,7 @@ function renderTerrainRules() {
   }
   table.append(thead, tbody);
   const featuresHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.featuresHeading);
-  const features = copy.features.map(paragraph => createReferenceElement('p', 'terrain-rules-paragraph', paragraph));
+  const features = copy.features.map(paragraph => createEmphasizedParagraph(paragraph, ['Battlefields: Armageddon', 'Hidden']));
   terrainRulesContent.replaceChildren(...intro, footprintsHeading, footprintsIntro, table, featuresHeading, ...features);
   terrainRulesContent.scrollTop = scrollTop;
 }

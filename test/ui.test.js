@@ -403,6 +403,12 @@ function createAppHarness() {
       element.ownerDocument = document;
       return element;
     },
+    createTextNode(textContent) {
+      const node = new FakeElement();
+      node.textContent = textContent;
+      node.ownerDocument = document;
+      return node;
+    },
     querySelector(selector) {
       if (selector === '#language-toggle') return languageToggle;
       if (selector.startsWith('#')) return elements.get(selector.slice(1)) ?? null;
@@ -446,17 +452,20 @@ test('renders localized semantic terrain rules without resetting scroll', async 
     await import(`../app/app.js?terrain-rules-test=${Date.now()}`);
     const content = elements.get('terrain-rules-content');
     const rows = () => descendants(content).filter(item => item.tagName === 'TR');
+    const emphasized = () => descendants(content).filter(item => item.tagName === 'EM').map(item => item.textContent);
 
     assert.match(textOf(content), /Recommended Terrain Area Footprints/);
     assert.match(textOf(content), /Battlefields: Armageddon/);
     assert.match(textOf(content), /warhammer-community\.com/);
     assert.equal(rows().length, 6);
+    assert.deepEqual(emphasized(), ['warhammer-community.com', 'Battlefields: Armageddon', 'Hidden', 'Battlefields: Armageddon']);
 
     content.scrollTop = 64;
     document.querySelectorAll('[data-lang]')[0].dispatch('click');
     assert.match(textOf(content), /Рекомендуемые размеры зон террейна/);
     assert.match(textOf(content), /Элементы террейна/);
     assert.equal(rows().length, 6);
+    assert.deepEqual(emphasized(), ['warhammer-community.com', 'Battlefields: Armageddon', 'Hidden', 'Battlefields: Armageddon']);
     assert.equal(content.scrollTop, 64);
   } finally {
     for (const [name, descriptor] of Object.entries(saved)) {
