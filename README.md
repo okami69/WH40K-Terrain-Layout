@@ -2,7 +2,7 @@
 
 Offline Windows and Android companion for finding the official Warhammer 40,000 terrain map for a match. Choose both players' Force Dispositions and layout A, B, or C; the app shows the corresponding terrain placement diagram, assigned missions, and detailed scoring references.
 
-**Current source version:** v0.5.0 (release artifacts and physical-device verification pending)
+**Current source version:** v0.5.0 (local artifacts built and automated verification complete; physical-device verification pending)
 
 **Latest published release:** [v0.4.0](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.4.0)
 
@@ -29,21 +29,30 @@ Everything needed at the table is bundled with the application, so it works with
 
 ## Screenshots
 
-These screenshots are verified v0.4.0 evidence. Verified v0.5.0 screenshots will replace or extend them after release checks.
+These screenshots were captured from the verified v0.5.0 source and locally built Windows package.
 
-| Main selector (RU) | Terrain Layouts rules |
+| Centered desktop disposition menu | Mobile mission details |
 | --- | --- |
-| ![Russian main selector with Disruption versus Reconnaissance on Layout A](docs/screenshots/disruption-vs-reconnaissance-layout-a.png) | ![Terrain Layouts rules dialog](docs/screenshots/terrain-layouts-rules.png) |
-| Layouts Key | Mission summary |
-| ![Official Layouts Key dialog](docs/screenshots/layouts-key.png) | ![Russian mission summary for Take and Hold versus Purge the Foe on Layout B](docs/screenshots/take-and-hold-vs-purge-the-foe-layout-b.png) |
-| Another matchup and layout (RU) | English interface |
-| ![Russian Priority Assets versus Disruption matchup on Layout C](docs/screenshots/priority-assets-vs-disruption-layout-c.png) | ![English Reconnaissance versus Priority Assets matchup on Layout A](docs/screenshots/reconnaissance-vs-priority-assets-layout-a.png) |
+| ![English desktop disposition menu with all five centered choices](docs/screenshots/v05-desktop-disposition-menu.png) | ![Mobile Locate and Deny detailed mission reference](docs/screenshots/v05-mobile-mission-details.png) |
+| Mobile Twist chooser | Packaged Windows application |
+| ![Mobile chooser showing all six optional Twists](docs/screenshots/v05-mobile-twist-chooser.png) | ![Locally built v0.5.0 Windows application](docs/screenshots/v05-windows-packaged.png) |
 
 ## Download
 
 Download the signed **Android ARM64** APK from the [v0.4.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.4.0). It is intended for direct installation on modern ARM64 phones without Google Play: download the APK, allow installation from the browser or file manager when Android asks, then open it normally. The Android build is portrait-only, works offline, and packages the original lossless WebP map assets without further resizing. It was physically verified on a OnePlus 15R and checked at 320 x 568, 360 x 800, 412 x 915, and 480 x 1040 portrait viewports.
 
 The Windows x64 NSIS installer is available from the [v0.4.0 release](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.4.0). It uses the Windows WebView2 Runtime and downloads it only if it is not already present.
+
+## Local v0.5.0 verification
+
+The following v0.5.0 artifacts were built and checked locally. They have **not** been published as a GitHub release.
+
+- Windows application: `src-tauri/target/release/wh40k-terrain-layout.exe` — 24,181,248 bytes; SHA-256 `FC7414168A370CBA645EF07A515838CCCD9CC5CEFB9E7175C72D8115051593DC`.
+- Windows NSIS installer: `src-tauri/target/release/bundle/nsis/WH40K Terrain Layout_0.5.0_x64-setup.exe` — 22,053,250 bytes; SHA-256 `A4EDC1E0829A9DD57DBFAF57AA02ED27A121222CD5B7776639F115FBDBE24449`. Both Windows binaries report version `0.5.0`; neither is Authenticode-signed.
+- Signed Android ARM64 release APK: source `src-tauri/gen/android/app/build/outputs/apk/arm64/release/app-arm64-release.apk`; stable copy `output/android/WH40K-Terrain-Layout-v0.5.0-arm64-release.apk` — 32,141,398 bytes; SHA-256 `C4A775D5CB229359641EB0F958AD6873733834823965277A30E2F4D7D2CF4AC7`.
+- APK verification: application ID `com.okami69.wh40kterrainlayout`, version name `0.5.0`, version code `5000`, only `arm64-v8a`, APK Signature Scheme v2 verified, and signer certificate SHA-256 `f26b5207728358d27b718e47c1e09e02c3c80c181b71fb73ca1f34607807ca54` matching v0.4.0. No v3 signature is present.
+
+Automated acceptance passed 60 Node tests and Chromium checks at 320×568, 360×800, 412×915, 480×1040, 560×1280, 768×1080, and 1366×728. The packaged Windows executable also launched successfully. Physical-device v0.5.0 verification is pending; no v0.5.0 release is published yet.
 
 ## Use
 
@@ -86,7 +95,7 @@ The Tauri NSIS installer is written under:
 
 The signed Android APK is written under `src-tauri/gen/android/app/build/outputs/apk/arm64/release/`. Release signing requires the ignored `src-tauri/gen/android/keystore.properties` file and the external private keystore it references. Never commit either file. Keep a secure backup of the same keystore and password: both are required to publish installable upgrades. On Windows, Android builds also require Developer Mode or an elevated shell because Tauri creates JNI symbolic links.
 
-Current published v0.4.0 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, representative portrait Playwright checks, and a physical OnePlus 15R smoke test. v0.5.0 physical-device verification is pending; do not treat the source-version bump as verified release evidence.
+Current published v0.4.0 verification covers the Node test suite, signed APK verification, ARM64-only native contents, packaged offline assets, representative portrait Playwright checks, and a physical OnePlus 15R smoke test. The v0.5.0 evidence above is local automated verification only; physical-device verification and publication remain pending.
 
 ## Re-extract assets
 

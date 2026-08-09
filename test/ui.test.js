@@ -1045,14 +1045,12 @@ test('keeps the disposition menu usable without the Popover API', async () => {
   }
 });
 
-test('publishes six current application screenshots in the README', () => {
+test('publishes four unambiguous verified v0.5 application screenshots in the README', () => {
   const screenshots = [
-    'disruption-vs-reconnaissance-layout-a.png',
-    'terrain-layouts-rules.png',
-    'layouts-key.png',
-    'take-and-hold-vs-purge-the-foe-layout-b.png',
-    'priority-assets-vs-disruption-layout-c.png',
-    'reconnaissance-vs-priority-assets-layout-a.png',
+    'v05-desktop-disposition-menu.png',
+    'v05-mobile-mission-details.png',
+    'v05-mobile-twist-chooser.png',
+    'v05-windows-packaged.png',
   ];
   const readme = readFileSync('README.md', 'utf8');
 
@@ -1060,6 +1058,18 @@ test('publishes six current application screenshots in the README', () => {
     assert.ok(existsSync(`docs/screenshots/${screenshot}`), `Missing ${screenshot}`);
     assert.match(readme, new RegExp(`docs/screenshots/${screenshot.replaceAll('.', '\\.')}`));
   }
+  assert.doesNotMatch(readme, /v05-mobile-twist-detail\.png/);
+});
+
+test('records local v0.5 artifacts without claiming a published release', () => {
+  const readme = readFileSync('README.md', 'utf8');
+  assert.match(readme, /local v0\.5\.0 verification/i);
+  assert.match(readme, /WH40K Terrain Layout_0\.5\.0_x64-setup\.exe/);
+  assert.match(readme, /WH40K-Terrain-Layout-v0\.5\.0-arm64-release\.apk/);
+  assert.match(readme, /C4A775D5CB229359641EB0F958AD6873733834823965277A30E2F4D7D2CF4AC7/);
+  assert.match(readme, /physical-device v0\.5\.0 verification is pending/i);
+  assert.match(readme, /Latest published release:\*\* \[v0\.4\.0\]/);
+  assert.doesNotMatch(readme, /Latest published release:\*\* \[v0\.5\.0\]/);
 });
 
 test('attributes the Twist order to the current official app', () => {
