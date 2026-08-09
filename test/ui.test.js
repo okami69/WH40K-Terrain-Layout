@@ -40,6 +40,8 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<dialog[^>]+id="terrain-rules-viewer"/);
   assert.match(html, /<div id="terrain-rules-content" class="terrain-rules-content">/);
   assert.doesNotMatch(html, /terrain-rules-image|assets\/key\/terrain-rules\.webp/);
+  const terrainRulesDialog = html.match(/<dialog id="terrain-rules-viewer"[\s\S]*?<\/dialog>/)?.[0] ?? '';
+  assert.match(terrainRulesDialog, /<div class="terrain-rules-language-toggle" role="group" aria-label="Language \/ Язык">[\s\S]*data-lang="ru"[^>]*>RU<\/button>[\s\S]*data-lang="en"[^>]*>ENG<\/button>[\s\S]*<\/div>[\s\S]*id="terrain-rules-close"/);
   assert.match(html, /<dialog[^>]+id="layout-key-viewer"/);
   assert.match(html, /<dialog[^>]+id="viewer"/);
   assert.doesNotMatch(html, /id="layout-source"/);
@@ -81,6 +83,11 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /#terrain-rules-viewer\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /\.terrain-rules-content\s*\{[\s\S]*overflow-y:\s*auto/);
   assert.match(css, /\.terrain-footprints\s*\{[\s\S]*border-collapse:\s*collapse/);
+  const terrainLanguageButtonRule = css.match(/\.terrain-rules-language-toggle button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(terrainLanguageButtonRule, /\bmin-width:\s*44px;/);
+  assert.match(terrainLanguageButtonRule, /\bmin-height:\s*44px;/);
+  assert.match(terrainLanguageButtonRule, /\bbackground:\s*var\(--surface\);/);
+  assert.doesNotMatch(terrainLanguageButtonRule, /paper-image/);
   const dispositionRule = css.match(/\.disposition-button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(dispositionRule, /\btext-align:\s*center;/);
   const matchupRule = css.match(/\.matchup\s*\{([\s\S]*?)\}/)?.[1] ?? '';
@@ -347,7 +354,9 @@ function createAppHarness() {
   const left = add('left');
   const right = add('right');
   const layoutButtons = ['A', 'B', 'C'].map(layout => new FakeElement({ dataset: { layout } }));
-  const languageButtons = ['ru', 'en'].map(lang => new FakeElement({ dataset: { lang } }));
+  const mastheadLanguageButtons = ['ru', 'en'].map(lang => new FakeElement({ className: 'masthead-language-button', dataset: { lang } }));
+  const terrainRulesLanguageButtons = ['ru', 'en'].map(lang => new FakeElement({ className: 'terrain-rules-language-button', dataset: { lang } }));
+  const languageButtons = [...mastheadLanguageButtons, ...terrainRulesLanguageButtons];
   const cardKickers = [new FakeElement(), new FakeElement()];
   const missionLabels = [new FakeElement(), new FakeElement()];
   const layouts = new FakeElement({ className: 'layouts' });
@@ -463,13 +472,20 @@ test('renders localized semantic terrain rules without resetting scroll', async 
     assert.equal(rows().length, 6);
     assert.deepEqual(emphasized(), ['warhammer-community.com', 'Battlefields: Armageddon', 'Hidden', 'Battlefields: Armageddon']);
 
+    const dialog = elements.get('terrain-rules-viewer');
+    elements.get('terrain-rules-button').dispatch('click');
+    assert.equal(dialog.open, true);
     content.scrollTop = 64;
-    document.querySelectorAll('[data-lang]')[0].dispatch('click');
+    const languageButtons = document.querySelectorAll('[data-lang]');
+    languageButtons.find(button => button.className === 'terrain-rules-language-button' && button.dataset.lang === 'ru').dispatch('click');
+    assert.equal(dialog.open, true);
     assert.match(textOf(content), /Рекомендуемые размеры зон террейна/);
     assert.match(textOf(content), /Элементы террейна/);
     assert.equal(rows().length, 6);
     assert.deepEqual(emphasized(), ['warhammer-community.com', 'Battlefields: Armageddon', 'Hidden', 'Battlefields: Armageddon']);
     assert.equal(content.scrollTop, 64);
+    assert.equal(languageButtons.filter(button => button.dataset.lang === 'ru').every(button => button.getAttribute('aria-pressed') === 'true'), true);
+    assert.equal(languageButtons.filter(button => button.dataset.lang === 'en').every(button => button.getAttribute('aria-pressed') === 'false'), true);
   } finally {
     for (const [name, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);

@@ -609,6 +609,21 @@ dialog h2 {
   display: none;
 }
 
+.terrain-rules-language-toggle {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  background: var(--surface);
+}
+
+.terrain-rules-language-toggle button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  background: var(--surface);
+  font-size: 0.75rem;
+}
+
 .terrain-rules-content {
   min-height: 0;
   padding: 4px 8px 8px;
