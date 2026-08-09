@@ -62,6 +62,9 @@ const deploymentNames = {
 
 const left = document.querySelector('#left');
 const right = document.querySelector('#right');
+const leftDispositionButton = document.querySelector('#left-disposition-button');
+const rightDispositionButton = document.querySelector('#right-disposition-button');
+const dispositionMenu = document.querySelector('#disposition-menu');
 const leftIcon = document.querySelector('#left-icon');
 const rightIcon = document.querySelector('#right-icon');
 const leftMission = document.querySelector('#left-mission');
@@ -89,11 +92,16 @@ const popover = document.querySelector('#mission-popover');
 const layoutButtons = [...document.querySelectorAll('[data-layout]')];
 const languageButtons = [...document.querySelectorAll('[data-lang]')];
 const summaryTriggers = [leftMission, rightMission];
+const dispositionTriggers = new Map([
+  [leftDispositionButton, left],
+  [rightDispositionButton, right],
+]);
 let layout = 'A';
 let language = initialLanguage();
 let pinnedSummary = null;
 let mapMode = 'official';
 let freeMap = null;
+let activeDispositionTrigger = null;
 
 for (const select of [left, right]) {
   for (const disposition of dispositions) select.add(new Option('', disposition));
@@ -101,6 +109,21 @@ for (const select of [left, right]) {
 
 left.value = 'disruption';
 right.value = 'priority-assets';
+
+const dispositionMenuButtons = dispositions.map(disposition => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.disposition = disposition;
+  button.addEventListener('click', () => {
+    const select = dispositionTriggers.get(activeDispositionTrigger);
+    if (!select) return;
+    select.value = disposition;
+    select.dispatchEvent(new Event('change'));
+    closeDispositionMenu(true);
+  });
+  return button;
+});
+dispositionMenu.append(...dispositionMenuButtons);
 
 function initialLanguage() {
   const saved = localStorage.getItem('wh40k-language');
@@ -147,6 +170,34 @@ function closeSummary() {
   pinnedSummary = null;
   setPopoverVisible(false);
   for (const trigger of summaryTriggers) trigger.setAttribute('aria-expanded', 'false');
+}
+
+function closeDispositionMenu(restoreFocus = false) {
+  const trigger = activeDispositionTrigger;
+  if (!trigger) return;
+  if (dispositionMenu.matches(':popover-open')) dispositionMenu.hidePopover();
+  dispositionMenu.hidden = true;
+  trigger.setAttribute('aria-expanded', 'false');
+  activeDispositionTrigger = null;
+  if (restoreFocus) trigger.focus();
+}
+
+function openDispositionMenu(trigger) {
+  if (activeDispositionTrigger) closeDispositionMenu();
+  activeDispositionTrigger = trigger;
+  const select = dispositionTriggers.get(trigger);
+  const rect = trigger.getBoundingClientRect();
+  for (const button of dispositionMenuButtons) {
+    button.setAttribute('aria-current', String(button.dataset.disposition === select.value));
+  }
+  trigger.setAttribute('aria-expanded', 'true');
+  dispositionMenu.style.width = `${rect.width}px`;
+  dispositionMenu.hidden = false;
+  dispositionMenu.showPopover();
+  const width = dispositionMenu.offsetWidth || rect.width;
+  const height = dispositionMenu.offsetHeight || dispositionMenuButtons.length * 44 + 8;
+  dispositionMenu.style.left = `${Math.max(12, Math.min(rect.left, document.documentElement.clientWidth - width - 12))}px`;
+  dispositionMenu.style.top = `${Math.max(12, Math.min(rect.bottom + 8, document.documentElement.clientHeight - height - 12))}px`;
 }
 
 function openSummary(trigger, pin = false) {
@@ -238,6 +289,8 @@ function render() {
     document.querySelector('#map-description').textContent = copy.mapDescription;
     left.setAttribute('aria-label', copy.leftDisposition);
     right.setAttribute('aria-label', copy.rightDisposition);
+    leftDispositionButton.setAttribute('aria-label', copy.leftDisposition);
+    rightDispositionButton.setAttribute('aria-label', copy.rightDisposition);
     keyButton.setAttribute('aria-label', copy.openKey);
     keyButton.title = copy.openKey;
     mapButton.setAttribute('aria-label', copy.openMap);
@@ -262,8 +315,17 @@ function render() {
     mapButton.hidden = false;
     leftIcon.src = labels[left.value].icon;
     leftIcon.alt = leftLabel;
+    leftDispositionButton.textContent = leftLabel;
     rightIcon.src = labels[right.value].icon;
     rightIcon.alt = rightLabel;
+    rightDispositionButton.textContent = rightLabel;
+    for (const button of dispositionMenuButtons) {
+      button.textContent = labels[button.dataset.disposition][language];
+      if (activeDispositionTrigger) {
+        const select = dispositionTriggers.get(activeDispositionTrigger);
+        button.setAttribute('aria-current', String(button.dataset.disposition === select.value));
+      }
+    }
     leftMission.textContent = missions[matchup.leftMission].name[language];
     leftMission.dataset.mission = matchup.leftMission;
     leftMission.setAttribute('aria-label', `${copy.mission}: ${missions[matchup.leftMission].name[language]}`);
@@ -292,6 +354,10 @@ right.addEventListener('change', () => {
   closeSummary();
   render();
 });
+
+for (const trigger of dispositionTriggers.keys()) {
+  trigger.addEventListener('click', () => openDispositionMenu(trigger));
+}
 
 for (const button of layoutButtons) {
   button.addEventListener('click', () => {
@@ -334,7 +400,15 @@ document.querySelector('#terrain-rules-close').addEventListener('click', () => t
 keyButton.addEventListener('click', () => keyViewer.showModal());
 document.querySelector('#layout-key-close').addEventListener('click', () => keyViewer.close());
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') closeSummary();
+  if (event.key === 'Escape') {
+    closeDispositionMenu(true);
+    closeSummary();
+  }
+});
+document.addEventListener('pointerdown', event => {
+  if (activeDispositionTrigger
+      && !activeDispositionTrigger.contains(event.target)
+      && !dispositionMenu.contains(event.target)) closeDispositionMenu();
 });
 window.addEventListener('resize', fitSheet);
 window.visualViewport?.addEventListener('resize', fitSheet);

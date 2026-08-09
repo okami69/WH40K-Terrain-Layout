@@ -31,8 +31,15 @@
       <section class="matchup" aria-label="Force disposition matchup">
         <article class="selector-card">
           <img id="left-icon" class="disposition-icon" alt="">
-          <label class="card-kicker" for="left">Force Disposition</label>
-          <select id="left" class="disposition-select" aria-label="Left Force Disposition"></select>
+          <span class="card-kicker">Force Disposition</span>
+          <select id="left" hidden tabindex="-1" aria-hidden="true"></select>
+          <button
+            id="left-disposition-button"
+            class="disposition-button"
+            type="button"
+            aria-controls="disposition-menu"
+            aria-expanded="false"
+          ></button>
           <hr>
           <span class="mission-label">Mission</span>
           <button
@@ -49,8 +56,15 @@
 
         <article class="selector-card">
           <img id="right-icon" class="disposition-icon" alt="">
-          <label class="card-kicker" for="right">Force Disposition</label>
-          <select id="right" class="disposition-select" aria-label="Right Force Disposition"></select>
+          <span class="card-kicker">Force Disposition</span>
+          <select id="right" hidden tabindex="-1" aria-hidden="true"></select>
+          <button
+            id="right-disposition-button"
+            class="disposition-button"
+            type="button"
+            aria-controls="disposition-menu"
+            aria-expanded="false"
+          ></button>
           <hr>
           <span class="mission-label">Mission</span>
           <button
@@ -82,6 +96,7 @@
     </main>
   </div>
 
+  <div id="disposition-menu" class="disposition-menu" popover="manual" hidden></div>
   <div id="mission-popover" class="mission-popover" popover="manual" role="tooltip" hidden></div>
 
   <dialog id="terrain-rules-viewer" aria-labelledby="terrain-rules-title">

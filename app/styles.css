@@ -204,8 +204,7 @@ select:disabled {
   text-transform: uppercase;
 }
 
-.disposition-select {
-  appearance: none;
+.disposition-button {
   width: 100%;
   min-height: 48px;
   margin-top: 4px;
@@ -215,16 +214,11 @@ select:disabled {
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
-  text-align-last: center;
   text-transform: uppercase;
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
-}
-
-.disposition-select::-ms-expand {
-  display: none;
 }
 
 .selector-card hr {
@@ -287,11 +281,6 @@ select:disabled {
   text-transform: uppercase;
 }
 
-.disposition-select option {
-  padding-inline-end: 30px;
-  text-align: center;
-}
-
 .map-button {
   display: grid;
   width: 100%;
@@ -341,6 +330,40 @@ select:disabled {
   line-height: 1.35;
   overflow-wrap: anywhere;
   text-align: left;
+}
+
+.disposition-menu {
+  position: fixed;
+  inset: auto;
+  z-index: 30;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 6px 14px oklch(0 0 0 / 0.18);
+}
+
+.disposition-menu button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 4px 28px;
+  border-color: transparent;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.disposition-menu button::after {
+  position: absolute;
+  right: 8px;
+  content: "✓";
+  opacity: 0;
+}
+
+.disposition-menu button[aria-current="true"]::after {
+  opacity: 1;
 }
 
 dialog {

@@ -16,11 +16,14 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /data-lang="en"[^>]*>ENG<\/button>/);
   assert.match(html, /<img[^>]+id="left-icon"[^>]+class="disposition-icon"/);
   assert.match(html, /<img[^>]+id="right-icon"[^>]+class="disposition-icon"/);
-  assert.match(html, /<select[^>]+id="left"[^>]+class="disposition-select"/);
-  assert.match(html, /<select[^>]+id="right"[^>]+class="disposition-select"/);
+  assert.match(html, /<select[^>]+id="left"[^>]+hidden[^>]+tabindex="-1"[^>]+aria-hidden="true"/);
+  assert.match(html, /<select[^>]+id="right"[^>]+hidden[^>]+tabindex="-1"[^>]+aria-hidden="true"/);
+  assert.match(html, /<button[^>]+id="left-disposition-button"[^>]+class="disposition-button"[^>]+aria-controls="disposition-menu"/);
+  assert.match(html, /<button[^>]+id="right-disposition-button"[^>]+class="disposition-button"[^>]+aria-controls="disposition-menu"/);
   assert.match(html, /<button[^>]+id="left-mission"[^>]+class="mission-summary-trigger"/);
   assert.match(html, /<button[^>]+id="right-mission"[^>]+class="mission-summary-trigger"/);
   assert.match(html, /id="mission-popover"/);
+  assert.match(html, /<div[^>]+id="disposition-menu"[^>]+popover="manual"/);
   assert.match(html, /<div class="layouts" role="group" aria-label="Terrain layout">/);
   assert.match(html, /<button[^>]+id="free-layout-button"[^>]+aria-pressed="false"[^>]*>\+<\/button>/);
   assert.match(html, /<button[^>]+id="terrain-rules-button"[^>]+class="title-button"/);
@@ -48,15 +51,22 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /#terrain-rules-viewer\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /#terrain-rules-image\s*\{[\s\S]*height:\s*auto/);
   assert.match(css, /#terrain-rules-image\s*\{[\s\S]*max-height:\s*calc\(100vh - 106px\)/);
-  const dispositionRule = css.match(/\.disposition-select\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-  assert.match(dispositionRule, /\bappearance:\s*none;/);
-  assert.match(dispositionRule, /\bpadding:\s*0 34px;/);
+  const dispositionRule = css.match(/\.disposition-button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(dispositionRule, /\btext-align:\s*center;/);
-  assert.match(dispositionRule, /\btext-align-last:\s*center;/);
-  assert.match(dispositionRule, /\bbackground-position:\s*calc\(100% - 18px\) 50%, calc\(100% - 12px\) 50%;/);
-  const dispositionOptionRule = css.match(/\.disposition-select option\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-  assert.match(dispositionOptionRule, /\btext-align:\s*center;/);
-  assert.match(dispositionOptionRule, /\bpadding-inline-end:\s*30px;/);
+  assert.doesNotMatch(css, /\.disposition-select option/);
+  const dispositionMenuRule = css.match(/\.disposition-menu\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(dispositionMenuRule, /\bposition:\s*fixed;/);
+  assert.match(dispositionMenuRule, /\binset:\s*auto;/);
+  assert.match(dispositionMenuRule, /\bz-index:\s*30;/);
+  assert.match(dispositionMenuRule, /\bmargin:\s*0;/);
+  assert.match(dispositionMenuRule, /\bpadding:\s*4px;/);
+  assert.match(dispositionMenuRule, /\bborder:/);
+  assert.match(dispositionMenuRule, /\bbackground:/);
+  const dispositionMenuButtonRule = css.match(/\.disposition-menu button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(dispositionMenuButtonRule, /\bwidth:\s*100%;/);
+  assert.match(dispositionMenuButtonRule, /\btext-align:\s*center;/);
+  assert.match(dispositionMenuButtonRule, /\bfont-weight:\s*900;/);
+  assert.match(dispositionMenuButtonRule, /\btext-transform:\s*uppercase;/);
   const popoverRule = css.match(/\.mission-popover\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(popoverRule, /\binset:\s*auto;/);
   assert.match(popoverRule, /\bmargin:\s*0;/);
@@ -188,6 +198,33 @@ class FakeElement {
   showModal() {
     this.open = true;
   }
+
+  showPopover() {
+    this.hidden = false;
+    this.open = true;
+  }
+
+  hidePopover() {
+    this.open = false;
+    this.hidden = true;
+  }
+
+  dispatchEvent(event) {
+    for (const listener of this.listeners.get(event.type) ?? []) listener(event);
+    return true;
+  }
+
+  focus() {
+    this.focused = true;
+  }
+
+  contains(target) {
+    return target === this || descendants(this).includes(target);
+  }
+
+  getBoundingClientRect() {
+    return this.rect ?? { left: 24, right: 324, top: 100, bottom: 148, width: 300, height: 48 };
+  }
 }
 
 function descendants(element) {
@@ -211,21 +248,27 @@ function createAppHarness() {
 
   for (const id of [
     'sheet',
-    'left-icon', 'right-icon', 'left-mission', 'right-mission', 'layout-title', 'terrain-rules-button', 'viewer-title',
+    'left-icon', 'right-icon', 'left-disposition-button', 'right-disposition-button', 'left-mission', 'right-mission', 'layout-title', 'terrain-rules-button', 'viewer-title',
     'terrain-rules-title', 'terrain-rules-image', 'layout-key-title', 'map', 'large-map', 'layout-key-button', 'layout-key-image',
     'error', 'free-layout-button', 'viewer', 'terrain-rules-viewer', 'layout-key-viewer', 'layout-gallery',
-    'layout-gallery-title', 'layout-gallery-scroll', 'mission-popover', 'terrain-rules-close', 'layout-key-close', 'close',
+    'layout-gallery-title', 'layout-gallery-scroll', 'mission-popover', 'disposition-menu', 'terrain-rules-close', 'layout-key-close', 'close',
     'layout-gallery-close', 'map-description',
-  ]) add(id, { hidden: id === 'error' || id === 'mission-popover' });
+  ]) add(id, { hidden: ['error', 'mission-popover', 'disposition-menu'].includes(id) });
 
   const mapButton = new FakeElement({ className: 'map-button' });
   const languageToggle = new FakeElement({ className: 'language-toggle' });
   const window = new FakeElement();
   window.visualViewport = new FakeElement();
+  const documentListeners = new Map();
   const document = {
     body: new FakeElement(),
     documentElement: new FakeElement(),
-    addEventListener() {},
+    addEventListener(type, listener) {
+      documentListeners.set(type, [...(documentListeners.get(type) ?? []), listener]);
+    },
+    dispatch(type, event = {}) {
+      for (const listener of documentListeners.get(type) ?? []) listener({ type, ...event });
+    },
     createElement() { return new FakeElement(); },
     querySelector(selector) {
       if (selector === '#language-toggle') return languageToggle;
@@ -325,6 +368,67 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
     assert.equal(brokenCard.children[2].hidden, false);
     assert.equal(brokenCard.disabled, true);
     assert.equal(cards()[1].disabled, undefined);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('runs the shared disposition menu through the existing select change path', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const { document, elements, window } = createAppHarness();
+  const sheet = elements.get('sheet');
+  sheet.computedWidth = '768px';
+  sheet.computedHeight = '1080px';
+  Object.defineProperties(globalThis, {
+    document: { configurable: true, value: document },
+    window: { configurable: true, value: window },
+    navigator: { configurable: true, value: { language: 'en-US' } },
+    localStorage: { configurable: true, value: { getItem() { return null; }, setItem() {} } },
+    getComputedStyle: { configurable: true, value: element => element === sheet
+      ? { width: sheet.computedWidth, height: sheet.computedHeight }
+      : { paddingLeft: '0', paddingRight: '0', paddingTop: '0', paddingBottom: '0' } },
+    Option: { configurable: true, value: function Option(text, value) { this.textContent = text; this.value = value; } },
+  });
+
+  try {
+    await import(`../app/app.js?disposition-test=${Date.now()}`);
+    const left = elements.get('left');
+    const right = elements.get('right');
+    const leftTrigger = elements.get('left-disposition-button');
+    const rightTrigger = elements.get('right-disposition-button');
+    const menu = elements.get('disposition-menu');
+    const map = elements.get('map');
+
+    leftTrigger.dispatch('click');
+    assert.equal(menu.open, true);
+    assert.equal(menu.children.length, 5);
+    assert.equal(menu.children.filter(button => button.getAttribute('aria-current') === 'true').length, 1);
+    assert.equal(menu.children.find(button => button.getAttribute('aria-current') === 'true').dataset.disposition, 'disruption');
+
+    const reconnaissance = menu.children.find(button => button.dataset.disposition === 'reconnaissance');
+    reconnaissance.dispatch('click');
+    assert.equal(left.value, 'reconnaissance');
+    assert.equal(leftTrigger.textContent, 'Reconnaissance');
+    assert.match(map.alt, /^Reconnaissance versus /);
+    assert.equal(menu.open, false);
+    assert.equal(leftTrigger.focused, true);
+
+    rightTrigger.rect = { left: 700, right: 1000, top: 1012, bottom: 1060, width: 300, height: 48 };
+    rightTrigger.dispatch('click');
+    assert.equal(menu.open, true);
+    assert.equal(menu.style.left, '456px');
+    assert.equal(menu.style.top, '840px');
+    document.dispatch('keydown', { key: 'Escape' });
+    assert.equal(menu.open, false);
+    assert.equal(rightTrigger.focused, true);
+
+    rightTrigger.dispatch('click');
+    document.dispatch('pointerdown', { target: new FakeElement() });
+    assert.equal(menu.open, false);
+    assert.equal(right.value, 'priority-assets');
   } finally {
     for (const [name, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);
