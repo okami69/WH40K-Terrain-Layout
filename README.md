@@ -2,11 +2,18 @@
 
 Offline Windows and Android companion for finding the official Warhammer 40,000 terrain map for a match. Choose both players' Force Dispositions and layout A, B, or C; the app shows the corresponding terrain placement diagram, assigned missions, and detailed scoring references.
 
-**Current source version:** v0.5.0
+**Current source version:** v0.5.1
 
 **Latest published release:** [v0.5.0](https://github.com/okami69/WH40K-Terrain-Layout/releases/tag/v0.5.0)
 
 Everything needed at the table is bundled with the application, so it works without an internet connection after installation. The interface supports Russian and English, includes the official Layouts Key and Terrain Layouts rules, and can enlarge any map for closer inspection.
+
+## What's new in v0.5.1
+
+- Uses the authentic Event Companion v1.1 paper as one continuous rear background, aligned with every terrain-map crop.
+- Adds a single accessible close control to every dialog while keeping dialog and control surfaces solid white.
+- Replaces the Terrain Layout screenshot with readable bilingual semantic rules and the official five-row footprint table.
+- Keeps the selected Twist detail focused on its only next action: **Change**.
 
 ## What's new in v0.5.0
 
@@ -29,31 +36,21 @@ Everything needed at the table is bundled with the application, so it works with
 
 ## Screenshots
 
-All screenshots below use the English interface and were captured from the verified v0.5.0 source.
+All screenshots below use the English interface and were captured from the verified v0.5.1 source at the application's default desktop window size, 768 × 1080. The application was not stretched to fill the screen.
 
 ### Desktop
 
 | Main screen | Force Disposition menu |
 | --- | --- |
-| ![English desktop main screen](docs/screenshots/v05-desktop-main.png) | ![English desktop Force Disposition menu with all five centered choices](docs/screenshots/v05-desktop-disposition-menu.png) |
+| ![English desktop main screen](docs/screenshots/v051-desktop-main.png) | ![English desktop Force Disposition menu with all five centered choices](docs/screenshots/v051-desktop-disposition-menu.png) |
 | Mission details | Twist chooser |
-| ![English desktop Locate and Deny mission details](docs/screenshots/v05-desktop-mission-details.png) | ![English desktop chooser with all six optional Twists](docs/screenshots/v05-desktop-twist-chooser.png) |
+| ![English desktop Locate and Deny mission details](docs/screenshots/v051-desktop-mission-details.png) | ![English desktop chooser with all six optional Twists](docs/screenshots/v051-desktop-twist-chooser.png) |
 | Selected Twist | Layouts Key |
-| ![English desktop Martial Pride Twist details](docs/screenshots/v05-desktop-twist-detail.png) | ![English desktop official Layouts Key](docs/screenshots/v05-desktop-layouts-key.png) |
+| ![English desktop Martial Pride Twist details](docs/screenshots/v051-desktop-twist-detail.png) | ![English desktop official Layouts Key](docs/screenshots/v051-desktop-layouts-key.png) |
 | Terrain Layout rules | All-layout gallery |
-| ![English desktop official Terrain Layout rules](docs/screenshots/v05-desktop-terrain-rules.png) | ![English desktop all-layout gallery](docs/screenshots/v05-desktop-gallery.png) |
+| ![English desktop official Terrain Layout rules](docs/screenshots/v051-desktop-terrain-rules.png) | ![English desktop all-layout gallery](docs/screenshots/v051-desktop-gallery.png) |
 | Enlarged map | |
-| ![English desktop enlarged terrain map](docs/screenshots/v05-desktop-map-viewer.png) | |
-
-### Mobile
-
-| Main screen | Force Disposition menu |
-| --- | --- |
-| ![English mobile main screen](docs/screenshots/v05-mobile-main.png) | ![English mobile Force Disposition menu with all five centered choices](docs/screenshots/v05-mobile-disposition-menu.png) |
-| Mission details | Twist chooser |
-| ![English mobile Locate and Deny mission details](docs/screenshots/v05-mobile-mission-details.png) | ![English mobile chooser with all six optional Twists](docs/screenshots/v05-mobile-twist-chooser.png) |
-| Selected Twist | |
-| ![English mobile Martial Pride Twist details](docs/screenshots/v05-mobile-twist-detail.png) | |
+| ![English desktop enlarged terrain map](docs/screenshots/v051-desktop-map-viewer.png) | |
 
 ## Download
 

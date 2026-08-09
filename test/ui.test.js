@@ -1167,22 +1167,17 @@ test('keeps the disposition menu usable without the Popover API', async () => {
   }
 });
 
-test('publishes the complete English v0.5 application screenshot gallery in the README', () => {
+test('publishes the complete English v0.5.1 desktop screenshot gallery at the default window size', () => {
   const screenshots = [
-    'v05-desktop-main.png',
-    'v05-desktop-disposition-menu.png',
-    'v05-desktop-mission-details.png',
-    'v05-desktop-twist-chooser.png',
-    'v05-desktop-twist-detail.png',
-    'v05-desktop-layouts-key.png',
-    'v05-desktop-terrain-rules.png',
-    'v05-desktop-gallery.png',
-    'v05-desktop-map-viewer.png',
-    'v05-mobile-main.png',
-    'v05-mobile-disposition-menu.png',
-    'v05-mobile-mission-details.png',
-    'v05-mobile-twist-chooser.png',
-    'v05-mobile-twist-detail.png',
+    'v051-desktop-main.png',
+    'v051-desktop-disposition-menu.png',
+    'v051-desktop-mission-details.png',
+    'v051-desktop-twist-chooser.png',
+    'v051-desktop-twist-detail.png',
+    'v051-desktop-layouts-key.png',
+    'v051-desktop-terrain-rules.png',
+    'v051-desktop-gallery.png',
+    'v051-desktop-map-viewer.png',
   ];
   const readme = readFileSync('README.md', 'utf8');
 
@@ -1191,6 +1186,8 @@ test('publishes the complete English v0.5 application screenshot gallery in the 
     assert.match(readme, new RegExp(`docs/screenshots/${screenshot.replaceAll('.', '\\.')}`));
   }
   assert.match(readme, /All screenshots below use the English interface/i);
+  assert.match(readme, /768\s*[×x]\s*1080/i);
+  assert.doesNotMatch(readme, /### Mobile/i);
 });
 
 test('records the published v0.5 release artifacts', () => {

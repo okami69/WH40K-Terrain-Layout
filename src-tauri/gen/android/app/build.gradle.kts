@@ -21,8 +21,8 @@ android {
         applicationId = "com.okami69.wh40kterrainlayout"
         minSdk = 24
         targetSdk = 36
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "5000").toInt()
-        versionName = tauriProperties.getProperty("tauri.android.versionName", "0.5.0")
+        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "5001").toInt()
+        versionName = tauriProperties.getProperty("tauri.android.versionName", "0.5.1")
     }
     signingConfigs {
         create("release") {
