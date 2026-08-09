@@ -55,6 +55,15 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /body\s*\{[\s\S]*?background:\s*transparent/);
   assert.match(css, /\.map-button\s*\{[\s\S]*?background-image:\s*var\(--paper-image\)/);
   assert.match(css, /\.map-button\s*\{[\s\S]*?background-size:\s*var\(--map-paper-size, cover\)/);
+  const buttonHoverRule = css.match(/button:hover\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(buttonHoverRule, /\bbackground-color:\s*var\(--error-bg\);/);
+  assert.doesNotMatch(buttonHoverRule, /\bbackground\s*:/);
+  const buttonActiveRule = css.match(/button:active\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(buttonActiveRule, /\bbackground-color:\s*var\(--disabled\);/);
+  assert.doesNotMatch(buttonActiveRule, /\bbackground\s*:/);
+  const mapButtonStateRule = css.match(/\.map-button:hover,\s*\n\.map-button:active\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(mapButtonStateRule, /\bbackground-color:\s*transparent;/);
+  assert.doesNotMatch(mapButtonStateRule, /\bbackground\s*:/);
   assert.doesNotMatch(css, /\.layout-source\s*\{/);
   assert.match(css, /min-height:\s*100dvh/);
   assert.match(css, /padding-top:\s*env\(safe-area-inset-top\)/);
@@ -349,7 +358,7 @@ function createAppHarness() {
   map.naturalHeight = 1040;
   map.clientWidth = 704;
   map.clientHeight = 600;
-  map.rect = { left: 0, right: 704, top: 0, bottom: 600, width: 704, height: 600 };
+  map.rect = { left: 48, right: 400, top: 72, bottom: 372, width: 352, height: 300 };
   mapButton.clientWidth = 704;
   mapButton.clientHeight = 600;
   const languageToggle = new FakeElement({ className: 'language-toggle' });
@@ -916,13 +925,17 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
   try {
     await import(`../app/app.js?gallery-test=${Date.now()}`);
     const mapButton = document.querySelector('.map-button');
-    elements.get('map').dispatch('load');
     assert.equal(mapButton.style.getPropertyValue('--map-paper-size'), '2059.6153846153843px 2914.6153846153843px');
     assert.equal(mapButton.style.getPropertyValue('--map-paper-position'), '-677.8076923076922px -1254.230769230769px');
-    assert.equal(document.documentElement.style.getPropertyValue('--paper-size'), '2059.6153846153843px 2914.6153846153843px');
-    assert.equal(document.documentElement.style.getPropertyValue('--paper-position'), '-677.8076923076922px -1254.230769230769px');
+    assert.equal(document.documentElement.style.getPropertyValue('--paper-size'), '1029.8076923076922px 1457.3076923076922px');
+    assert.equal(document.documentElement.style.getPropertyValue('--paper-position'), '-290.9038461538461px -555.1153846153845px');
     assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '1');
+    elements.get('map').rect = { left: 20, right: 548, top: 30, bottom: 480, width: 528, height: 450 };
     window.dispatch('resize');
+    assert.equal(mapButton.style.getPropertyValue('--map-paper-size'), '2059.6153846153843px 2914.6153846153843px');
+    assert.equal(mapButton.style.getPropertyValue('--map-paper-position'), '-677.8076923076922px -1254.230769230769px');
+    assert.equal(document.documentElement.style.getPropertyValue('--paper-size'), '1544.7115384615386px 2185.9615384615386px');
+    assert.equal(document.documentElement.style.getPropertyValue('--paper-position'), '-488.3557692307693px -910.6730769230769px');
     assert.equal(document.documentElement.style.getPropertyValue('--sheet-height'), '1080px');
     assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '1');
     const gallery = elements.get('layout-gallery');

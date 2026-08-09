@@ -68,11 +68,11 @@ button {
 
 button:hover {
   border-color: var(--primary);
-  background: var(--error-bg);
+  background-color: var(--error-bg);
 }
 
 button:active {
-  background: var(--disabled);
+  background-color: var(--disabled);
 }
 
 button:disabled,
