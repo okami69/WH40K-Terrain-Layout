@@ -1,4 +1,5 @@
 import { deployments, dispositions, labels, languages, layoutCatalog, missions, resolveMatchup } from './matchups.js';
+import { missionReferences } from './rules.js';
 
 const text = {
   ru: {
@@ -8,6 +9,12 @@ const text = {
     rightDisposition: 'Диспозиция правой армии',
     forceDisposition: 'Диспозиция армии',
     mission: 'Миссия',
+    exactScoring: 'Физическая карта миссии или официальное приложение задает точный подсчет очков.',
+    vp: value => `${value} ПО`,
+    cumulative: 'Дополнительно',
+    alternative: 'Альтернатива',
+    per: { objective: 'За цель', 'terrain-area': 'За зону ландшафта', unit: 'За подразделение' },
+    primaryLimit: limit => `${limit.text.ru}: ${limit.total} ПО всего; ${limit.perBattleRound} ПО за боевой раунд; подсчёт в конце боя не входит в лимит.`,
     layout: layout => `Расстановка ${layout}`,
     layoutGroup: 'Расстановка террейна',
     openMap: 'Открыть карту в полном размере',
@@ -32,6 +39,12 @@ const text = {
     rightDisposition: 'Right Force Disposition',
     forceDisposition: 'Force Disposition',
     mission: 'Mission',
+    exactScoring: 'Use the physical mission card or official app for exact scoring.',
+    vp: value => `${value} VP`,
+    cumulative: 'Cumulative',
+    alternative: 'Alternative',
+    per: { objective: 'Per objective', 'terrain-area': 'Per terrain area', unit: 'Per unit' },
+    primaryLimit: limit => `${limit.text.en}: ${limit.total} VP total; ${limit.perBattleRound} VP per battle round; end-of-battle scoring is exempt.`,
     layout: layout => `Layout ${layout}`,
     layoutGroup: 'Terrain layout',
     openMap: 'Open layout at full size',
@@ -102,6 +115,7 @@ let pinnedSummary = null;
 let mapMode = 'official';
 let freeMap = null;
 let activeDispositionTrigger = null;
+let activeSummaryTrigger = null;
 
 for (const select of [left, right]) {
   for (const disposition of dispositions) select.add(new Option('', disposition));
@@ -168,6 +182,7 @@ function setPopoverVisible(visible) {
 
 function closeSummary() {
   pinnedSummary = null;
+  activeSummaryTrigger = null;
   setPopoverVisible(false);
   for (const trigger of summaryTriggers) trigger.setAttribute('aria-expanded', 'false');
 }
@@ -214,18 +229,75 @@ function openDispositionMenu(trigger) {
   currentButton.focus();
 }
 
+function createReferenceElement(tag, className, content) {
+  const element = document.createElement(tag);
+  element.className = className;
+  element.textContent = content;
+  return element;
+}
+
+function renderMissionReference(missionId) {
+  const reference = missionReferences[missionId];
+  const copy = text[language];
+  const title = createReferenceElement('h3', 'mission-reference-title', `${copy.mission}: ${missions[missionId].name[language]}`);
+  const overview = createReferenceElement('p', 'mission-reference-overview', reference.overview[language]);
+  const sections = reference.sections.map(item => {
+    const section = createReferenceElement('section', 'mission-reference-section', '');
+    const heading = createReferenceElement('h4', 'mission-reference-heading', item.heading[language]);
+    const timing = createReferenceElement('p', 'mission-reference-timing', item.timing[language]);
+    const conditions = document.createElement('ul');
+    conditions.className = 'mission-reference-conditions';
+
+    for (const condition of item.conditions) {
+      const row = document.createElement('li');
+      const conditionText = createReferenceElement('span', 'mission-reference-condition-text', condition.text[language]);
+      const badges = document.createElement('span');
+      badges.className = 'mission-reference-badges';
+      if (condition.vp !== null) badges.append(createReferenceElement('span', 'mission-reference-vp', copy.vp(condition.vp)));
+      if (condition.cumulative) badges.append(createReferenceElement('span', 'mission-reference-tag', copy.cumulative));
+      if (condition.per) badges.append(createReferenceElement('span', 'mission-reference-tag', copy.per[condition.per]));
+      if (condition.alternative) badges.append(createReferenceElement('span', 'mission-reference-tag', copy.alternative));
+      row.append(conditionText, badges);
+      conditions.append(row);
+    }
+
+    section.append(heading, timing);
+    if (item.limit) section.append(createReferenceElement('p', 'mission-reference-limit', copy.primaryLimit(item.limit)));
+    section.append(conditions);
+    return section;
+  });
+  const reminder = createReferenceElement('p', 'mission-reference-reminder', copy.exactScoring);
+  popover.replaceChildren(title, overview, ...sections, reminder);
+}
+
 function openSummary(trigger, pin = false) {
   const mission = trigger.dataset.mission;
   if (!mission) return;
 
+  renderMissionReference(mission);
   const rect = trigger.getBoundingClientRect();
-  popover.textContent = missions[mission].summary[language];
-  popover.style.width = `${rect.width}px`;
-  popover.style.left = `${rect.left}px`;
-  popover.style.top = `${rect.bottom + 8}px`;
+  const cardRect = trigger.closest('.selector-card').getBoundingClientRect();
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  const width = Math.min(500, viewportWidth - 24);
+  const anchor = trigger === rightMission ? 'right' : 'left';
+  const targetLeft = anchor === 'right' ? cardRect.right - width : cardRect.left;
+  const left = Math.max(12, Math.min(targetLeft, viewportWidth - width - 12));
+  const top = rect.bottom + 8;
+  popover.dataset.anchor = anchor;
+  popover.style.setProperty('--mission-popover-width', '500px');
+  popover.style.width = `${width}px`;
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+  popover.style.maxHeight = `${Math.max(0, Math.min(viewportHeight * 0.65, viewportHeight - top - 12))}px`;
   setPopoverVisible(true);
   for (const item of summaryTriggers) item.setAttribute('aria-expanded', String(item === trigger));
+  activeSummaryTrigger = trigger;
   pinnedSummary = pin ? trigger : pinnedSummary;
+}
+
+function withinSummary(target, trigger = activeSummaryTrigger) {
+  return Boolean(target && (trigger?.contains(target) || popover.contains(target)));
 }
 
 function sourceText(item) {
@@ -392,17 +464,24 @@ for (const button of languageButtons) {
 for (const trigger of summaryTriggers) {
   trigger.addEventListener('pointerenter', () => openSummary(trigger));
   trigger.addEventListener('focus', () => openSummary(trigger));
-  trigger.addEventListener('pointerleave', () => {
-    if (pinnedSummary !== trigger) closeSummary();
+  trigger.addEventListener('pointerleave', event => {
+    if (pinnedSummary !== trigger && !withinSummary(event.relatedTarget, trigger)) closeSummary();
   });
-  trigger.addEventListener('blur', () => {
-    if (pinnedSummary !== trigger) closeSummary();
+  trigger.addEventListener('focusout', event => {
+    if (pinnedSummary !== trigger && !withinSummary(event.relatedTarget, trigger)) closeSummary();
   });
   trigger.addEventListener('click', () => {
     if (pinnedSummary === trigger) closeSummary();
     else openSummary(trigger, true);
   });
 }
+
+popover.addEventListener('pointerleave', event => {
+  if (!pinnedSummary && !withinSummary(event.relatedTarget)) closeSummary();
+});
+popover.addEventListener('focusout', event => {
+  if (!pinnedSummary && !withinSummary(event.relatedTarget)) closeSummary();
+});
 
 map.addEventListener('error', () => showError(text[language].missingImage(mapMode === 'free' ? freeMap?.layout ?? layout : layout)));
 mapButton.addEventListener('click', () => viewer.showModal());
@@ -423,6 +502,7 @@ document.addEventListener('pointerdown', event => {
   if (activeDispositionTrigger
       && !activeDispositionTrigger.contains(event.target)
       && !dispositionMenu.contains(event.target)) closeDispositionMenu();
+  if (activeSummaryTrigger && !withinSummary(event.target)) closeSummary();
 });
 window.addEventListener('resize', fitSheet);
 window.visualViewport?.addEventListener('resize', fitSheet);

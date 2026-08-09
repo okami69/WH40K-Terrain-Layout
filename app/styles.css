@@ -318,6 +318,8 @@ select:disabled {
 .mission-popover {
   position: fixed;
   inset: auto;
+  width: min(500px, calc(100vw - 24px));
+  max-height: 65dvh;
   margin: 0;
   z-index: 20;
   padding: 10px 12px;
@@ -328,8 +330,79 @@ select:disabled {
   box-shadow: 0 6px 14px oklch(0 0 0 / 0.18);
   font-size: 0.9rem;
   line-height: 1.35;
+  overflow-y: auto;
   overflow-wrap: anywhere;
   text-align: left;
+}
+
+.mission-reference-title,
+.mission-reference-heading,
+.mission-reference-overview,
+.mission-reference-timing,
+.mission-reference-limit,
+.mission-reference-reminder {
+  margin: 0;
+}
+
+.mission-reference-overview,
+.mission-reference-section,
+.mission-reference-reminder {
+  margin-top: 10px;
+}
+
+.mission-reference-section {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.mission-reference-heading {
+  font-size: 0.95rem;
+}
+
+.mission-reference-timing {
+  color: var(--muted-ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mission-reference-limit {
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+.mission-reference-conditions {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.mission-reference-conditions li + li {
+  margin-top: 6px;
+}
+
+.mission-reference-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 6px;
+}
+
+.mission-reference-vp,
+.mission-reference-tag {
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--disabled);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.mission-reference-vp {
+  color: var(--surface);
+  background: var(--primary-dark);
+}
+
+.mission-reference-reminder {
+  font-size: 0.78rem;
+  font-style: italic;
 }
 
 .disposition-menu {

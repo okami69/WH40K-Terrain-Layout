@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { missionReferences } from '../app/rules.js';
 
 test('provides the compact bilingual terrain sheet UI', () => {
   assert.ok(existsSync('app/index.html'), 'Missing app/index.html');
@@ -68,10 +69,14 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(dispositionMenuButtonRule, /\bfont-weight:\s*900;/);
   assert.match(dispositionMenuButtonRule, /\btext-transform:\s*uppercase;/);
   const popoverRule = css.match(/\.mission-popover\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(popoverRule, /\bposition:\s*fixed;/);
   assert.match(popoverRule, /\binset:\s*auto;/);
   assert.match(popoverRule, /\bmargin:\s*0;/);
-  assert.doesNotMatch(popoverRule, /\bmax-width:/);
+  assert.match(popoverRule, /\bwidth:\s*min\(500px, calc\(100vw - 24px\)\);/);
+  assert.match(popoverRule, /\bmax-height:\s*65dvh;/);
+  assert.match(popoverRule, /\boverflow-y:\s*auto;/);
   assert.match(popoverRule, /\boverflow-wrap:\s*anywhere;/);
+  assert.match(css, /\.mission-reference-section\s*\{/);
   assert.match(css, /#layout-key-viewer\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /#layout-key-image\s*\{[\s\S]*height:\s*auto/);
   assert.match(css, /#layout-key-image\s*\{[\s\S]*max-height:\s*calc\(100vh - 106px\)/);
@@ -126,9 +131,13 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /terrainRulesImage\.alt = copy\.mapDescription/);
   assert.match(js, /terrainRulesButton\.addEventListener\('click', \(\) => terrainRulesViewer\.showModal\(\)\)/);
   assert.match(js, /setDialogBackdropClose\(terrainRulesViewer\)/);
-  assert.match(js, /popover\.style\.width\s*=\s*`\$\{rect\.width\}px`/);
-  assert.match(js, /popover\.style\.left\s*=\s*`\$\{rect\.left\}px`/);
-  assert.match(js, /popover\.style\.top\s*=\s*`\$\{rect\.bottom \+ 8\}px`/);
+  assert.match(js, /missionReferences/);
+  assert.match(js, /mission-reference-section/);
+  assert.match(js, /--mission-popover-width/);
+  assert.match(js, /trigger\.closest\('\.selector-card'\)\.getBoundingClientRect\(\)/);
+  assert.match(js, /popover\.dataset\.anchor/);
+  assert.doesNotMatch(js, /popover\.textContent\s*=\s*missions\[mission\]\.summary\[language\]/);
+  assert.doesNotMatch(js, /innerHTML/);
   assert.match(js, /layoutCatalog/);
   assert.match(js, /image\.loading\s*=\s*'lazy'/);
   assert.match(js, /image\.decoding\s*=\s*'async'/);
@@ -160,6 +169,7 @@ class FakeElement {
   }
 
   append(...children) {
+    for (const child of children) child.parentElement = this;
     this.children.push(...children);
   }
 
@@ -167,8 +177,8 @@ class FakeElement {
     this.open = false;
   }
 
-  dispatch(type) {
-    for (const listener of this.listeners.get(type) ?? []) listener({ target: this, key: type === 'keydown' ? 'Escape' : undefined });
+  dispatch(type, event = {}) {
+    for (const listener of this.listeners.get(type) ?? []) listener({ target: this, key: type === 'keydown' ? 'Escape' : undefined, ...event });
   }
 
   getAttribute(name) {
@@ -179,11 +189,19 @@ class FakeElement {
     return selector === ':popover-open' && Boolean(this.open);
   }
 
+  closest(selector) {
+    for (let element = this; element; element = element.parentElement) {
+      if (selector === '.selector-card' && element.className === 'selector-card') return element;
+    }
+    return null;
+  }
+
   querySelector(selector) {
     return descendants(this).find(item => selector === '[aria-pressed="true"]' && item.getAttribute('aria-pressed') === 'true') ?? null;
   }
 
   replaceChildren(...children) {
+    for (const child of children) child.parentElement = this;
     this.children = children;
   }
 
@@ -256,6 +274,13 @@ function createAppHarness() {
     'layout-gallery-close', 'map-description',
   ]) add(id, { hidden: ['error', 'mission-popover', 'disposition-menu'].includes(id) });
 
+  const leftCard = new FakeElement({ className: 'selector-card' });
+  const rightCard = new FakeElement({ className: 'selector-card' });
+  leftCard.rect = { left: 24, right: 360, top: 40, bottom: 180, width: 336, height: 140 };
+  rightCard.rect = { left: 408, right: 744, top: 40, bottom: 180, width: 336, height: 140 };
+  leftCard.append(elements.get('left-mission'));
+  rightCard.append(elements.get('right-mission'));
+
   const mapButton = new FakeElement({ className: 'map-button' });
   const languageToggle = new FakeElement({ className: 'language-toggle' });
   const window = new FakeElement();
@@ -295,6 +320,66 @@ function createAppHarness() {
   for (const element of elements.values()) element.ownerDocument = document;
   return { document, elements, layoutButtons, window };
 }
+
+test('renders and positions detailed bilingual mission references without moving the map', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements } = harness;
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?mission-reference-test=${Date.now()}`);
+    const trigger = elements.get('left-mission');
+    const popover = elements.get('mission-popover');
+    const map = elements.get('map');
+    const reference = missionReferences[trigger.dataset.mission];
+    const mapRect = map.getBoundingClientRect();
+
+    trigger.dispatch('pointerenter');
+    assert.equal(popover.open, true);
+    assert.equal(popover.dataset.anchor, 'left');
+    assert.equal(popover.style.getPropertyValue('--mission-popover-width'), '500px');
+    assert.equal(popover.style.left, '24px');
+    assert.equal(popover.style.top, '156px');
+    assert.equal(popover.style.maxHeight, '702px');
+    assert.deepEqual(map.getBoundingClientRect(), mapRect);
+
+    const sections = descendants(popover).filter(item => item.className === 'mission-reference-section');
+    assert.equal(sections.length, reference.sections.length);
+    assert.match(descendants(popover)[0].textContent, /Mission: /);
+    assert.ok(descendants(popover).some(item => item.textContent === reference.overview.en));
+    assert.equal(descendants(popover).filter(item => item.className === 'mission-reference-condition-text').length,
+      reference.sections.reduce((count, section) => count + section.conditions.length, 0));
+    assert.ok(descendants(popover).some(item => item.className === 'mission-reference-vp' && / VP$/.test(item.textContent)));
+    assert.ok(descendants(popover).some(item => item.className === 'mission-reference-limit' && /45 VP total/.test(item.textContent) && /15 VP per battle round/.test(item.textContent) && /end-of-battle scoring is exempt/i.test(item.textContent)));
+    assert.match(popover.children.at(-1).textContent, /physical mission card or official app/i);
+
+    trigger.dispatch('pointerleave', { relatedTarget: popover });
+    assert.equal(popover.open, true);
+    popover.dispatch('pointerleave', { relatedTarget: new FakeElement() });
+    assert.equal(popover.open, false);
+
+    const rightTrigger = elements.get('right-mission');
+    rightTrigger.rect = { left: 420, right: 732, top: 100, bottom: 148, width: 312, height: 48 };
+    rightTrigger.dispatch('click');
+    assert.equal(popover.dataset.anchor, 'right');
+    assert.equal(popover.style.left, '244px');
+    assert.equal(popover.open, true);
+    document.dispatch('pointerdown', { target: new FakeElement() });
+    assert.equal(popover.open, false);
+
+    harness.document.querySelectorAll('[data-lang]').find(button => button.dataset.lang === 'ru').dispatch('click');
+    trigger.dispatch('pointerenter');
+    assert.ok(descendants(popover).some(item => item.textContent === reference.overview.ru));
+    assert.ok(descendants(popover).some(item => item.className === 'mission-reference-vp' && / ПО$/.test(item.textContent)));
+    assert.match(popover.children.at(-1).textContent, /Физическая карта миссии/);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
 
 function installAppGlobals({ document, elements, window }) {
   const sheet = elements.get('sheet');
