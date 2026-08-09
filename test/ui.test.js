@@ -747,6 +747,8 @@ test('balances the logical sheet across tall and short portrait viewports and re
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   const harness = createAppHarness();
   const { document, window } = harness;
+  document.documentElement.clientWidth = window.innerWidth = 412;
+  document.documentElement.clientHeight = window.innerHeight = 915;
   window.visualViewport.width = 412;
   window.visualViewport.height = 915;
   installAppGlobals(harness);
@@ -767,6 +769,8 @@ test('balances the logical sheet across tall and short portrait viewports and re
 
     window.visualViewport.width = 800;
     window.visualViewport.height = 600;
+    document.documentElement.clientWidth = window.innerWidth = 800;
+    document.documentElement.clientHeight = window.innerHeight = 600;
     window.visualViewport.dispatch('resize');
     metrics = sheetMetrics(document);
     assert.equal(metrics.height, 1080, 'desktop restores the desktop logical height');
@@ -783,8 +787,11 @@ test('fits portrait sheets to VisualViewport dimensions inside safe-area padding
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   const harness = createAppHarness();
   const { document, elements, window } = harness;
+  document.documentElement.clientWidth = window.innerWidth = 420;
+  document.documentElement.clientHeight = window.innerHeight = 900;
   window.visualViewport.width = 420;
   window.visualViewport.height = 900;
+  window.visualViewport.scale = 1;
   const sheet = installAppGlobals(harness);
   Object.defineProperty(globalThis, 'getComputedStyle', { configurable: true, value: element => element === sheet
     ? { width: sheet.computedWidth, height: sheet.computedHeight }
@@ -797,6 +804,80 @@ test('fits portrait sheets to VisualViewport dimensions inside safe-area padding
     assert.equal(metrics.scale, widthScale);
     assert.equal(metrics.height, 870 / widthScale);
     assert.equal(metrics.height * metrics.scale, 870, 'safe-area-adjusted height has no unused top/bottom space');
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('uses the layout viewport for page zoom and never classifies a zoomed desktop as portrait', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, window } = harness;
+  document.documentElement.clientWidth = window.innerWidth = 412;
+  document.documentElement.clientHeight = window.innerHeight = 915;
+  Object.assign(window.visualViewport, { width: 206, height: 457.5, scale: 2, offsetLeft: 80, offsetTop: 120 });
+  installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?portrait-zoom-fit-test=${Date.now()}`);
+    let metrics = sheetMetrics(document);
+    const widthScale = 412 / 768;
+    assert.equal(metrics.scale, widthScale);
+    assert.equal(metrics.height, 915 / widthScale);
+
+    document.documentElement.clientWidth = window.innerWidth = 800;
+    document.documentElement.clientHeight = window.innerHeight = 600;
+    Object.assign(window.visualViewport, { width: 400, height: 300, offsetLeft: 200, offsetTop: 150 });
+    window.visualViewport.dispatch('resize');
+    metrics = sheetMetrics(document);
+    assert.equal(metrics.height, 1080, 'zoomed VisualViewport width must not trigger portrait layout');
+    assert.equal(metrics.scale, 600 / 1080);
+  } finally {
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('falls back from invalid viewport values and clamps oversized safe-area insets', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const harness = createAppHarness();
+  const { document, elements, window } = harness;
+  document.documentElement.clientWidth = window.innerWidth = 412;
+  document.documentElement.clientHeight = window.innerHeight = 915;
+  Object.assign(window.visualViewport, { width: Infinity, height: -10, scale: 1 });
+  const sheet = installAppGlobals(harness);
+
+  try {
+    await import(`../app/app.js?invalid-viewport-fit-test=${Date.now()}`);
+    let metrics = sheetMetrics(document);
+    const widthScale = 412 / 768;
+    assert.equal(metrics.scale, widthScale, 'invalid VisualViewport falls back to layout dimensions');
+    assert.equal(metrics.height, 915 / widthScale);
+
+    Object.defineProperty(globalThis, 'getComputedStyle', { configurable: true, value: element => element === sheet
+      ? { width: sheet.computedWidth, height: sheet.computedHeight }
+      : { paddingLeft: '1000px', paddingRight: '1000px', paddingTop: '1000px', paddingBottom: '1000px' } });
+    window.visualViewport.dispatch('resize');
+    metrics = sheetMetrics(document);
+    assert.ok(Number.isFinite(metrics.height) && metrics.height > 0);
+    assert.ok(Number.isFinite(metrics.scale) && metrics.scale > 0);
+
+    document.documentElement.clientWidth = 0;
+    document.documentElement.clientHeight = Number.NaN;
+    window.innerWidth = 500;
+    window.innerHeight = 800;
+    Object.defineProperty(globalThis, 'getComputedStyle', { configurable: true, value: element => element === sheet
+      ? { width: sheet.computedWidth, height: sheet.computedHeight }
+      : { paddingLeft: '0', paddingRight: '0', paddingTop: '0', paddingBottom: '0' } });
+    window.visualViewport.dispatch('resize');
+    metrics = sheetMetrics(document);
+    assert.equal(metrics.scale, 800 / 1280, 'invalid layout dimensions fall back to window dimensions');
+    assert.equal(metrics.height, 1280);
   } finally {
     for (const [name, descriptor] of Object.entries(saved)) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);

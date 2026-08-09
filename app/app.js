@@ -181,14 +181,29 @@ function cssPixels(value) {
   return Number.parseFloat(value) || 0;
 }
 
+function positiveDimension(...values) {
+  return values.find(value => Number.isFinite(value) && value > 0) ?? 1;
+}
+
 function fitSheet() {
   const bodyStyle = getComputedStyle(document.body);
   const horizontalInsets = cssPixels(bodyStyle.paddingLeft) + cssPixels(bodyStyle.paddingRight);
   const verticalInsets = cssPixels(bodyStyle.paddingTop) + cssPixels(bodyStyle.paddingBottom);
-  const availableWidth = (window.visualViewport?.width || document.documentElement.clientWidth) - horizontalInsets;
-  const availableHeight = (window.visualViewport?.height || document.documentElement.clientHeight) - verticalInsets;
+  const layoutWidth = positiveDimension(document.documentElement.clientWidth, window.innerWidth, 768);
+  const layoutHeight = positiveDimension(document.documentElement.clientHeight, window.innerHeight, 1080);
+  const visualViewport = window.visualViewport;
+  const viewportScale = visualViewport?.scale ?? 1;
+  const useVisualViewport = visualViewport
+    && Number.isFinite(viewportScale)
+    && Math.abs(viewportScale - 1) < 0.01
+    && Number.isFinite(visualViewport.width) && visualViewport.width > 0
+    && Number.isFinite(visualViewport.height) && visualViewport.height > 0;
+  const viewportWidth = useVisualViewport ? visualViewport.width : layoutWidth;
+  const viewportHeight = useVisualViewport ? visualViewport.height : layoutHeight;
+  const availableWidth = positiveDimension(viewportWidth - horizontalInsets);
+  const availableHeight = positiveDimension(viewportHeight - verticalInsets);
   const sheetWidth = 768;
-  const portrait = availableWidth <= 600 && availableHeight > availableWidth;
+  const portrait = layoutWidth <= 600 && layoutHeight > layoutWidth;
   const widthScale = availableWidth / sheetWidth;
   let sheetHeight = portrait ? 1280 : 1080;
   if (portrait && sheetHeight * widthScale < availableHeight) sheetHeight = availableHeight / widthScale;
