@@ -196,6 +196,9 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /const terrainRulesViewer = document\.querySelector\('#terrain-rules-viewer'\)/);
   assert.match(js, /const terrainRulesCopy = \{/);
   assert.match(js, /function renderTerrainRules\(\)/);
+  assert.match(js, /function createTerrainParagraph\(segments\)/);
+  assert.match(js, /\{ emphasis: 'warhammer-community\.com' \}/);
+  assert.doesNotMatch(js, /content\.indexOf/);
   assert.match(js, /warhammer-community\.com/);
   assert.match(js, /Battlefields: Armageddon/);
   assert.match(js, /terrainRulesButton\.addEventListener\('click', \(\) => terrainRulesViewer\.showModal\(\)\)/);

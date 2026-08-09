@@ -93,14 +93,28 @@ const terrainRulesCopy = {
       'Each combination of Primary Missions has three recommended layouts, labelled A, B and C. As directed by the Warhammer Event organiser, the players either use the layout specified or randomly determine which of these layouts to use.',
     ],
     footprintsHeading: 'Recommended Terrain Area Footprints',
-    footprintsIntro: 'We have listed the terrain area footprints these recommended layouts use. You can find a PDF with these footprints ready for you to print on warhammer-community.com.',
+    footprintsIntro: [
+      'We have listed the terrain area footprints these recommended layouts use. You can find a PDF with these footprints ready for you to print on ',
+      { emphasis: 'warhammer-community.com' },
+      '.',
+    ],
     sizeHeading: 'Terrain area footprint size',
     quantityHeading: 'Quantity',
     polygon: 'Polygon',
     featuresHeading: 'Terrain Features',
     features: [
-      "Each layout is shown with the terrain features from the Battlefields: Armageddon box using the 'Warhammer recommended' build configuration from the construction booklet. We've denoted each terrain feature from that set as either a dense or light terrain feature in these layouts. The configurations of the terrain features and terrain areas are designed to create the best experience with the Hidden rule and movement rules for various units, and to create plenty of interesting decisions during a battle. We've also purposely left space between a terrain feature and the edge of the terrain area to allow a line of models to be on the terrain area from the 'outside'.",
-      'If you do not have the Battlefields: Armageddon terrain, it is possible to recreate these layouts with your own terrain that is close to the same size of the various terrain features by denoting for all players if they are dense or light terrain features.',
+      [
+        'Each layout is shown with the terrain features from the ',
+        { emphasis: 'Battlefields: Armageddon' },
+        " box using the 'Warhammer recommended' build configuration from the construction booklet. We've denoted each terrain feature from that set as either a dense or light terrain feature in these layouts. The configurations of the terrain features and terrain areas are designed to create the best experience with the ",
+        { emphasis: 'Hidden' },
+        " rule and movement rules for various units, and to create plenty of interesting decisions during a battle. We've also purposely left space between a terrain feature and the edge of the terrain area to allow a line of models to be on the terrain area from the 'outside'.",
+      ],
+      [
+        'If you do not have the ',
+        { emphasis: 'Battlefields: Armageddon' },
+        ' terrain, it is possible to recreate these layouts with your own terrain that is close to the same size of the various terrain features by denoting for all players if they are dense or light terrain features.',
+      ],
     ],
   },
   ru: {
@@ -109,14 +123,28 @@ const terrainRulesCopy = {
       'Для каждой комбинации основных миссий предусмотрены три рекомендуемые схемы: A, B и C. По указанию организатора мероприятия Warhammer игроки используют назначенную схему или определяют одну из этих схем случайным образом.',
     ],
     footprintsHeading: 'Рекомендуемые размеры зон террейна',
-    footprintsIntro: 'Ниже перечислены размеры зон террейна, используемых в рекомендуемых схемах. На сайте warhammer-community.com можно найти готовый к печати PDF с этими контурами.',
+    footprintsIntro: [
+      'Ниже перечислены размеры зон террейна, используемых в рекомендуемых схемах. На сайте ',
+      { emphasis: 'warhammer-community.com' },
+      ' можно найти готовый к печати PDF с этими контурами.',
+    ],
     sizeHeading: 'Размер зоны террейна',
     quantityHeading: 'Количество',
     polygon: 'Многоугольник',
     featuresHeading: 'Элементы террейна',
     features: [
-      'Каждая схема показана с элементами террейна из набора Battlefields: Armageddon в рекомендованной Warhammer конфигурации сборки из инструкции. Каждый элемент этого набора обозначен на схемах как плотный или лёгкий элемент террейна. Конфигурации элементов и зон террейна рассчитаны на наиболее интересную игру с учётом правила Hidden и правил перемещения различных подразделений и создают множество значимых решений во время боя. Между элементом террейна и краем зоны террейна намеренно оставлено место, чтобы ряд моделей мог размещаться в зоне террейна со стороны внешнего края.',
-      'Если у вас нет террейна Battlefields: Armageddon, эти схемы можно воспроизвести с собственным террейном близкого размера. Перед игрой сообщите всем игрокам, какие элементы считаются плотными, а какие лёгкими.',
+      [
+        'Каждая схема показана с элементами террейна из набора ',
+        { emphasis: 'Battlefields: Armageddon' },
+        ' в рекомендованной Warhammer конфигурации сборки из инструкции. Каждый элемент этого набора обозначен на схемах как плотный или лёгкий элемент террейна. Конфигурации элементов и зон террейна рассчитаны на наиболее интересную игру с учётом правила ',
+        { emphasis: 'Hidden' },
+        ' и правил перемещения различных подразделений и создают множество значимых решений во время боя. Между элементом террейна и краем зоны террейна намеренно оставлено место, чтобы ряд моделей мог размещаться в зоне террейна со стороны внешнего края.',
+      ],
+      [
+        'Если у вас нет террейна ',
+        { emphasis: 'Battlefields: Armageddon' },
+        ', эти схемы можно воспроизвести с собственным террейном близкого размера. Перед игрой сообщите всем игрокам, какие элементы считаются плотными, а какие лёгкими.',
+      ],
     ],
   },
 };
@@ -355,21 +383,12 @@ function createReferenceElement(tag, className, content) {
   return element;
 }
 
-function createEmphasizedParagraph(content, terms) {
+function createTerrainParagraph(segments) {
   const paragraph = createReferenceElement('p', 'terrain-rules-paragraph', '');
-  let cursor = 0;
-  while (cursor < content.length) {
-    const match = terms
-      .map(term => ({ term, index: content.indexOf(term, cursor) }))
-      .filter(({ index }) => index >= 0)
-      .sort((left, right) => left.index - right.index)[0];
-    if (!match) {
-      paragraph.append(document.createTextNode(content.slice(cursor)));
-      break;
-    }
-    if (match.index > cursor) paragraph.append(document.createTextNode(content.slice(cursor, match.index)));
-    paragraph.append(createReferenceElement('em', '', match.term));
-    cursor = match.index + match.term.length;
+  for (const segment of segments) {
+    paragraph.append(typeof segment === 'string'
+      ? document.createTextNode(segment)
+      : createReferenceElement('em', '', segment.emphasis));
   }
   return paragraph;
 }
@@ -503,7 +522,7 @@ function renderTerrainRules() {
   const copy = terrainRulesCopy[language];
   const intro = copy.intro.map(paragraph => createReferenceElement('p', 'terrain-rules-paragraph', paragraph));
   const footprintsHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.footprintsHeading);
-  const footprintsIntro = createEmphasizedParagraph(copy.footprintsIntro, ['warhammer-community.com']);
+  const footprintsIntro = createTerrainParagraph(copy.footprintsIntro);
   const table = document.createElement('table');
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
@@ -525,7 +544,7 @@ function renderTerrainRules() {
   }
   table.append(thead, tbody);
   const featuresHeading = createReferenceElement('h3', 'terrain-rules-heading', copy.featuresHeading);
-  const features = copy.features.map(paragraph => createEmphasizedParagraph(paragraph, ['Battlefields: Armageddon', 'Hidden']));
+  const features = copy.features.map(createTerrainParagraph);
   terrainRulesContent.replaceChildren(...intro, footprintsHeading, footprintsIntro, table, featuresHeading, ...features);
   terrainRulesContent.scrollTop = scrollTop;
 }
