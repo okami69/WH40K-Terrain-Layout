@@ -49,6 +49,12 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<script[^>]+type="module"[^>]+src="app\.js"/);
 
   const css = readFileSync('app/styles.css', 'utf8');
+  assert.match(css, /--paper-image:\s*url\("assets\/backgrounds\/event-companion-paper\.webp"\)/);
+  assert.match(css, /html\s*\{[\s\S]*?background-image:\s*var\(--paper-image\)/);
+  assert.match(css, /html\s*\{[\s\S]*?background-size:\s*var\(--paper-size, cover\)/);
+  assert.match(css, /body\s*\{[\s\S]*?background:\s*transparent/);
+  assert.match(css, /\.map-button\s*\{[\s\S]*?background-image:\s*var\(--paper-image\)/);
+  assert.match(css, /\.map-button\s*\{[\s\S]*?background-size:\s*var\(--map-paper-size, cover\)/);
   assert.doesNotMatch(css, /\.layout-source\s*\{/);
   assert.match(css, /min-height:\s*100dvh/);
   assert.match(css, /padding-top:\s*env\(safe-area-inset-top\)/);
@@ -160,6 +166,9 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(portraitMapRule, /\bmax-height:\s*100%;/);
 
   const js = readFileSync('app/app.js', 'utf8');
+  assert.match(js, /const paperGeometry = Object\.freeze\(\{ width: 3570, height: 5052, cropLeft: 1354, cropTop: 2174 \}\);/);
+  assert.match(js, /function syncMapPaper\(\)/);
+  assert.match(js, /map\.addEventListener\('load', syncMapPaper\)/);
   assert.doesNotMatch(js, /querySelector\('#layout-source'\)/);
   assert.doesNotMatch(js, /layoutSource\.(?:textContent|hidden)/);
   assert.match(js, /document\.documentElement\.clientWidth/);
@@ -335,6 +344,14 @@ function createAppHarness() {
   rightCard.append(elements.get('right-mission'));
 
   const mapButton = new FakeElement({ className: 'map-button' });
+  const map = elements.get('map');
+  map.naturalWidth = 862;
+  map.naturalHeight = 1040;
+  map.clientWidth = 704;
+  map.clientHeight = 600;
+  map.rect = { left: 0, right: 704, top: 0, bottom: 600, width: 704, height: 600 };
+  mapButton.clientWidth = 704;
+  mapButton.clientHeight = 600;
   const languageToggle = new FakeElement({ className: 'language-toggle' });
   const window = new FakeElement();
   window.innerWidth = 768;
@@ -898,6 +915,12 @@ test('runs the free-layout gallery interactions without duplicate cards', async 
 
   try {
     await import(`../app/app.js?gallery-test=${Date.now()}`);
+    const mapButton = document.querySelector('.map-button');
+    elements.get('map').dispatch('load');
+    assert.equal(mapButton.style.getPropertyValue('--map-paper-size'), '2059.6153846153843px 2914.6153846153843px');
+    assert.equal(mapButton.style.getPropertyValue('--map-paper-position'), '-677.8076923076922px -1254.230769230769px');
+    assert.equal(document.documentElement.style.getPropertyValue('--paper-size'), '2059.6153846153843px 2914.6153846153843px');
+    assert.equal(document.documentElement.style.getPropertyValue('--paper-position'), '-677.8076923076922px -1254.230769230769px');
     assert.equal(document.documentElement.style.getPropertyValue('--sheet-scale'), '1');
     window.dispatch('resize');
     assert.equal(document.documentElement.style.getPropertyValue('--sheet-height'), '1080px');

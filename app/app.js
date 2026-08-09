@@ -148,6 +148,7 @@ let activeSummaryTrigger = null;
 let selectedTwist = null;
 let twistPanelView = 'chooser';
 let expandedTwist = null;
+const paperGeometry = Object.freeze({ width: 3570, height: 5052, cropLeft: 1354, cropTop: 2174 });
 
 for (const select of [left, right]) {
   for (const disposition of dispositions) select.add(new Option('', disposition));
@@ -211,6 +212,21 @@ function fitSheet() {
   document.documentElement.style.setProperty('--sheet-height', `${sheetHeight}px`);
   document.documentElement.style.setProperty('--sheet-scale', String(scale));
   document.documentElement.style.setProperty('--disposition-menu-font-size', `${scale}rem`);
+}
+
+function syncMapPaper() {
+  if (!map.naturalWidth || !map.naturalHeight || !map.clientWidth || !map.clientHeight) return;
+  const logicalScale = Math.min(map.clientWidth / map.naturalWidth, map.clientHeight / map.naturalHeight);
+  const logicalLeft = (mapButton.clientWidth - map.naturalWidth * logicalScale) / 2;
+  const logicalTop = (mapButton.clientHeight - map.naturalHeight * logicalScale) / 2;
+  mapButton.style.setProperty('--map-paper-size', `${paperGeometry.width * logicalScale}px ${paperGeometry.height * logicalScale}px`);
+  mapButton.style.setProperty('--map-paper-position', `${logicalLeft - paperGeometry.cropLeft * logicalScale}px ${logicalTop - paperGeometry.cropTop * logicalScale}px`);
+  const rect = map.getBoundingClientRect();
+  const viewportScale = Math.min(rect.width / map.naturalWidth, rect.height / map.naturalHeight);
+  const viewportLeft = rect.left + (rect.width - map.naturalWidth * viewportScale) / 2;
+  const viewportTop = rect.top + (rect.height - map.naturalHeight * viewportScale) / 2;
+  document.documentElement.style.setProperty('--paper-size', `${paperGeometry.width * viewportScale}px ${paperGeometry.height * viewportScale}px`);
+  document.documentElement.style.setProperty('--paper-position', `${viewportLeft - paperGeometry.cropLeft * viewportScale}px ${viewportTop - paperGeometry.cropTop * viewportScale}px`);
 }
 
 function showError(message) {
@@ -706,6 +722,7 @@ popover.addEventListener('focusout', event => {
 });
 
 map.addEventListener('error', () => showError(text[language].missingImage(mapMode === 'free' ? freeMap?.layout ?? layout : layout)));
+map.addEventListener('load', syncMapPaper);
 twistButton.addEventListener('click', openTwistDialog);
 twistDialogClose.addEventListener('click', () => twistDialog.close());
 twistDialog.addEventListener('close', () => twistButton.focus());
@@ -735,6 +752,7 @@ document.addEventListener('pointerdown', event => {
 });
 function handleViewportResize() {
   fitSheet();
+  syncMapPaper();
   positionSummary();
 }
 
@@ -749,3 +767,4 @@ setDialogBackdropClose(twistDialog);
 
 fitSheet();
 render();
+syncMapPaper();
