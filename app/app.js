@@ -324,20 +324,19 @@ function renderTwistChooser({ focusTwist = null, focusChooser = false, focusConf
       expandedTwist = expandedTwist === twist.id ? null : twist.id;
       renderTwistPanel({ focusTwist: twist.id });
     });
-    row.append(toggle);
-
-    if (available && expandedTwist === twist.id) {
-      const panel = document.createElement('div');
-      panel.className = 'twist-row-panel';
-      panel.id = `twist-panel-${twist.id}`;
-      panel.setAttribute('role', 'region');
-      panel.setAttribute('aria-labelledby', toggle.id);
+    const panel = document.createElement('div');
+    panel.className = 'twist-row-panel';
+    panel.id = `twist-panel-${twist.id}`;
+    panel.hidden = !available || expandedTwist !== twist.id;
+    panel.setAttribute('role', 'region');
+    panel.setAttribute('aria-labelledby', toggle.id);
+    if (!panel.hidden) {
       const select = createTwistButton(copy.select, 'select');
       select.className = 'twist-select';
       select.addEventListener('click', () => selectTwist(twist));
       panel.append(createTwistEffects(twist), select);
-      row.append(panel);
     }
+    row.append(toggle, panel);
     return row;
   });
   const children = [note];

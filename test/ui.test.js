@@ -403,6 +403,14 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.match(body.children[0].textContent, /optional/i);
     assert.equal(chooserRows().at(-1).children[0].disabled, true);
     assert.equal(chooserRows().slice(0, -1).some(row => row.children[0].disabled), false);
+    for (const row of chooserRows()) {
+      const header = row.children[0];
+      const panel = row.children[1];
+      assert.equal(header.getAttribute('aria-controls'), panel.id);
+      assert.equal(panel.getAttribute('role'), 'region');
+      assert.equal(panel.getAttribute('aria-labelledby'), header.id);
+      assert.equal(panel.hidden, true);
+    }
 
     chooserRows()[0].children[0].dispatch('click');
     const firstHeader = chooserRows()[0].children[0];
@@ -412,6 +420,8 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(firstPanel.id, 'twist-panel-martial-pride');
     assert.equal(firstPanel.getAttribute('role'), 'region');
     assert.equal(firstPanel.getAttribute('aria-labelledby'), firstHeader.id);
+    assert.equal(firstPanel.hidden, false);
+    assert.equal(chooserRows().slice(1).every(row => row.children[1].hidden), true);
     assert.equal(document.activeElement, firstHeader);
     assert.equal(byClass(body, 'twist-effects').length, 1);
     assert.notEqual(byAction(body, 'select').disabled, true);
@@ -428,7 +438,8 @@ test('keeps optional twists stable until No Twist is explicitly selected', async
     assert.equal(document.activeElement, chooserRows()[0].children[0]);
     chooserRows()[1].children[0].dispatch('click');
     assert.equal(document.activeElement, chooserRows()[1].children[0]);
-    assert.equal(byClass(body, 'twist-row-panel').length, 1);
+    assert.equal(byClass(body, 'twist-row-panel').length, 6);
+    assert.equal(byClass(body, 'twist-row-panel').filter(panel => !panel.hidden).length, 1);
     byAction(body, 'select').dispatch('click');
     assert.equal(dialog.showModalCalls, 1);
     assert.equal(button.title, twists[1].name.en);
