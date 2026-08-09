@@ -52,15 +52,15 @@ test('uses Tauri scripts and no Electron packaging dependencies', () => {
   assert.equal(packageJson.devDependencies['@tauri-apps/cli'], '2.11.4');
 });
 
-test('keeps package and Tauri versions at v0.3.0', () => {
+test('keeps package and Tauri versions at v0.4.0', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
   const packageLock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
   const tauriConfig = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8'));
 
-  assert.equal(packageJson.version, '0.3.0');
-  assert.equal(packageLock.version, '0.3.0');
-  assert.equal(packageLock.packages[''].version, '0.3.0');
-  assert.equal(tauriConfig.version, '0.3.0');
+  assert.equal(packageJson.version, '0.4.0');
+  assert.equal(packageLock.version, '0.4.0');
+  assert.equal(packageLock.packages[''].version, '0.4.0');
+  assert.equal(tauriConfig.version, '0.4.0');
 });
 
 test('tracks the Android scaffold without committing local signing secrets', () => {
@@ -85,7 +85,7 @@ test('defines the Tauri mobile library entry point', () => {
 test('documents the signed ARM64 Android release', () => {
   const readme = readFileSync('README.md', 'utf8');
 
-  assert.match(readme, /v0\.3\.0/);
+  assert.match(readme, /v0\.4\.0/);
   assert.match(readme, /Android ARM64/);
   assert.match(readme, /OnePlus 15R/);
   assert.match(readme, /npm\.cmd run android:build/);
