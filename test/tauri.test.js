@@ -52,15 +52,23 @@ test('uses Tauri scripts and no Electron packaging dependencies', () => {
   assert.equal(packageJson.devDependencies['@tauri-apps/cli'], '2.11.4');
 });
 
-test('keeps package and Tauri versions at v0.4.0', () => {
+test('keeps package, Tauri, and Android versions at v0.5.0', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
   const packageLock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
   const tauriConfig = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+  const androidGradle = readFileSync('src-tauri/gen/android/app/build.gradle.kts', 'utf8');
 
-  assert.equal(packageJson.version, '0.4.0');
-  assert.equal(packageLock.version, '0.4.0');
-  assert.equal(packageLock.packages[''].version, '0.4.0');
-  assert.equal(tauriConfig.version, '0.4.0');
+  assert.equal(packageJson.version, '0.5.0');
+  assert.equal(packageLock.version, '0.5.0');
+  assert.equal(packageLock.packages[''].version, '0.5.0');
+  assert.equal(tauriConfig.version, '0.5.0');
+  assert.match(androidGradle, /tauri\.android\.versionCode", "5"/);
+  assert.match(androidGradle, /tauri\.android\.versionName", "0\.5\.0"/);
+  assert.equal(tauriConfig.identifier, 'com.okami69.wh40kterrainlayout');
+  assert.match(androidGradle, /applicationId = "com\.okami69\.wh40kterrainlayout"/);
+  assert.match(androidGradle, /rootProject\.file\("keystore\.properties"\)/);
+  assert.match(androidGradle, /keyAlias = requiredProperty\("keyAlias"\)/);
+  assert.match(androidGradle, /signingConfig = signingConfigs\.getByName\("release"\)/);
 });
 
 test('tracks the Android scaffold without committing local signing secrets', () => {
