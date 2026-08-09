@@ -1,5 +1,5 @@
 import { deployments, dispositions, labels, languages, layoutCatalog, missions, resolveMatchup } from './matchups.js';
-import { missionReferences } from './rules.js';
+import { missionReferences, pickRandomTwist, twists } from './rules.js';
 
 const text = {
   ru: {
@@ -31,6 +31,16 @@ const text = {
     chooseFreeLayout: 'Выбрать любую расстановку',
     galleryTitle: 'Все расстановки',
     layoutSource: (left, right, value) => `${left} / ${right} · Расстановка ${value}`,
+    twistTitle: 'Особенность',
+    twistOptional: 'Необязательно. Выберите одну, только если оба игрока хотят её использовать.',
+    noTwist: 'Без особенности',
+    noTwistSelected: 'Особенность не выбрана. Играйте стандартную миссию.',
+    twistButtonEmpty: 'Необязательная особенность: ничего не выбрано',
+    twistButtonSelected: name => `Необязательная особенность: ${name}`,
+    select: 'Выбрать',
+    random: 'Случайная',
+    change: 'Изменить',
+    unavailable: 'Описание недоступно',
   },
   en: {
     title: 'Terrain Layout',
@@ -61,6 +71,16 @@ const text = {
     chooseFreeLayout: 'Choose any layout',
     galleryTitle: 'All layouts',
     layoutSource: (left, right, value) => `${left} / ${right} · Layout ${value}`,
+    twistTitle: 'Twist',
+    twistOptional: 'Optional. Select one only if both players want to use it.',
+    noTwist: 'No Twist',
+    noTwistSelected: 'No twist selected. Play the standard mission.',
+    twistButtonEmpty: 'Optional Twist: no Twist selected',
+    twistButtonSelected: name => `Optional Twist: ${name}`,
+    select: 'Select',
+    random: 'Random',
+    change: 'Change',
+    unavailable: 'Details unavailable',
   },
 };
 
@@ -102,6 +122,13 @@ const layoutGallery = document.querySelector('#layout-gallery');
 const layoutGalleryTitle = document.querySelector('#layout-gallery-title');
 const layoutGalleryScroll = document.querySelector('#layout-gallery-scroll');
 const popover = document.querySelector('#mission-popover');
+const twistButton = document.querySelector('#twist-button');
+const twistButtonLabel = document.querySelector('#twist-button-label');
+const twistDialog = document.querySelector('#twist-dialog');
+const twistDialogTitle = document.querySelector('#twist-dialog-title');
+const twistDialogBody = document.querySelector('#twist-dialog-body');
+const twistDialogFooter = document.querySelector('#twist-dialog-footer');
+const twistDialogClose = document.querySelector('#twist-dialog-close');
 const layoutButtons = [...document.querySelectorAll('[data-layout]')];
 const languageButtons = [...document.querySelectorAll('[data-lang]')];
 const summaryTriggers = [leftMission, rightMission];
@@ -116,6 +143,9 @@ let mapMode = 'official';
 let freeMap = null;
 let activeDispositionTrigger = null;
 let activeSummaryTrigger = null;
+let selectedTwist = null;
+let twistPanelView = 'chooser';
+let expandedTwist = null;
 
 for (const select of [left, right]) {
   for (const disposition of dispositions) select.add(new Option('', disposition));
@@ -236,6 +266,129 @@ function createReferenceElement(tag, className, content) {
   element.className = className;
   element.textContent = content;
   return element;
+}
+
+function createTwistButton(label, action) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.dataset.action = action;
+  return button;
+}
+
+function hasTwistEffects(twist) {
+  return Array.isArray(twist.effects?.[language])
+    && twist.effects[language].length > 0
+    && twist.effects[language].every(effect => typeof effect === 'string' && effect.length > 0);
+}
+
+function createTwistEffects(twist) {
+  const list = document.createElement('ul');
+  list.className = 'twist-effects';
+  for (const effect of twist.effects[language]) list.append(createReferenceElement('li', '', effect));
+  return list;
+}
+
+function selectTwist(twist) {
+  selectedTwist = twist;
+  expandedTwist = twist.id;
+  twistPanelView = 'detail';
+  delete twistDialog.dataset.cleared;
+  renderTwistButton();
+  renderTwistPanel();
+}
+
+function renderTwistChooser() {
+  const copy = text[language];
+  const note = createReferenceElement('p', 'twist-note', copy.twistOptional);
+  const rows = twists.map(twist => {
+    const row = document.createElement('section');
+    row.className = 'twist-row';
+    row.dataset.twist = twist.id;
+    const available = hasTwistEffects(twist);
+    const toggle = createTwistButton(twist.name[language], 'expand');
+    toggle.className = 'twist-row-toggle';
+    toggle.disabled = !available;
+    toggle.setAttribute('aria-expanded', String(available && expandedTwist === twist.id));
+    toggle.setAttribute('aria-current', String(selectedTwist?.id === twist.id));
+    if (!available) toggle.title = copy.unavailable;
+    toggle.addEventListener('click', () => {
+      expandedTwist = expandedTwist === twist.id ? null : twist.id;
+      renderTwistPanel();
+    });
+    row.append(toggle);
+
+    if (available && expandedTwist === twist.id) {
+      const panel = document.createElement('div');
+      panel.className = 'twist-row-panel';
+      const select = createTwistButton(copy.select, 'select');
+      select.className = 'twist-select';
+      select.addEventListener('click', () => selectTwist(twist));
+      panel.append(createTwistEffects(twist), select);
+      row.append(panel);
+    }
+    return row;
+  });
+  const children = [note];
+  if (twistDialog.dataset.cleared === 'true') {
+    children.push(createReferenceElement('p', 'twist-confirmation', copy.noTwistSelected));
+  }
+  twistDialogBody.replaceChildren(...children, ...rows);
+
+  const random = createTwistButton(copy.random, 'random');
+  random.addEventListener('click', () => selectTwist(pickRandomTwist()));
+  const none = createTwistButton(copy.noTwist, 'none');
+  none.addEventListener('click', () => {
+    selectedTwist = null;
+    expandedTwist = null;
+    twistPanelView = 'chooser';
+    twistDialog.dataset.cleared = 'true';
+    renderTwistButton();
+    renderTwistPanel();
+  });
+  twistDialogFooter.replaceChildren(random, none);
+}
+
+function renderTwistDetail() {
+  const copy = text[language];
+  const detail = document.createElement('section');
+  detail.className = 'twist-detail';
+  detail.append(createReferenceElement('h3', '', selectedTwist.name[language]));
+  if (hasTwistEffects(selectedTwist)) detail.append(createTwistEffects(selectedTwist));
+  else detail.append(createReferenceElement('p', 'twist-confirmation', copy.unavailable));
+  twistDialogBody.replaceChildren(detail);
+
+  const change = createTwistButton(copy.change, 'change');
+  change.addEventListener('click', () => {
+    twistPanelView = 'chooser';
+    expandedTwist = null;
+    renderTwistPanel();
+  });
+  const close = createTwistButton(copy.close, 'close');
+  close.addEventListener('click', () => twistDialog.close());
+  twistDialogFooter.replaceChildren(change, close);
+}
+
+function renderTwistPanel() {
+  twistDialogTitle.textContent = text[language].twistTitle;
+  twistDialogClose.textContent = text[language].close;
+  if (twistPanelView === 'detail' && selectedTwist) renderTwistDetail();
+  else renderTwistChooser();
+}
+
+function renderTwistButton() {
+  const copy = text[language];
+  const name = selectedTwist?.name[language] ?? copy.noTwist;
+  twistButtonLabel.textContent = name;
+  twistButton.title = name;
+  twistButton.setAttribute('aria-label', selectedTwist ? copy.twistButtonSelected(name) : copy.twistButtonEmpty);
+  twistButton.setAttribute('aria-pressed', String(Boolean(selectedTwist)));
+}
+
+function openTwistDialog() {
+  twistPanelView = selectedTwist ? 'detail' : 'chooser';
+  renderTwistPanel();
+  if (!twistDialog.open) twistDialog.showModal();
 }
 
 function renderMissionReference(missionId) {
@@ -410,6 +563,8 @@ function render() {
     document.querySelector('#close').textContent = copy.close;
     layoutGalleryTitle.textContent = copy.galleryTitle;
     document.querySelector('#layout-gallery-close').textContent = copy.close;
+    renderTwistButton();
+    if (twistDialog.open) renderTwistPanel();
 
     for (const select of [left, right]) {
       for (const option of select.options) option.textContent = labels[option.value][language];
@@ -503,6 +658,10 @@ popover.addEventListener('focusout', event => {
 });
 
 map.addEventListener('error', () => showError(text[language].missingImage(mapMode === 'free' ? freeMap?.layout ?? layout : layout)));
+twistButton.addEventListener('click', openTwistDialog);
+twistDialogClose.addEventListener('click', () => twistDialog.close());
+twistDialog.addEventListener('close', () => twistButton.focus());
+twistDialog.addEventListener('cancel', () => twistButton.focus());
 mapButton.addEventListener('click', () => viewer.showModal());
 document.querySelector('#close').addEventListener('click', () => viewer.close());
 freeLayoutButton.addEventListener('click', openGallery);
@@ -538,6 +697,7 @@ setDialogBackdropClose(viewer);
 setDialogBackdropClose(terrainRulesViewer);
 setDialogBackdropClose(keyViewer);
 setDialogBackdropClose(layoutGallery);
+setDialogBackdropClose(twistDialog);
 
 fitSheet();
 render();

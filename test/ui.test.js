@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { missionReferences } from '../app/rules.js';
+import { missionReferences, twists } from '../app/rules.js';
 
 test('provides the compact bilingual terrain sheet UI', () => {
   assert.ok(existsSync('app/index.html'), 'Missing app/index.html');
@@ -23,6 +23,14 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(html, /<button[^>]+id="right-disposition-button"[^>]+class="disposition-button"[^>]+aria-controls="disposition-menu"/);
   assert.match(html, /<button[^>]+id="left-mission"[^>]+class="mission-summary-trigger"/);
   assert.match(html, /<button[^>]+id="right-mission"[^>]+class="mission-summary-trigger"/);
+  assert.equal(html.match(/<b class="versus" aria-hidden="true">VS<\/b>/g)?.length, 1);
+  assert.match(html, /<button[^>]+id="twist-button"[^>]+aria-controls="twist-dialog"/);
+  assert.equal(html.match(/<dialog[^>]+id="twist-dialog"/g)?.length, 1);
+  assert.match(html, /<dialog[^>]+id="twist-dialog"[^>]+aria-labelledby="twist-dialog-title"/);
+  assert.match(html, /id="twist-dialog-title"/);
+  assert.match(html, /id="twist-dialog-body"/);
+  assert.match(html, /id="twist-dialog-footer"/);
+  assert.match(html, /id="twist-dialog-close"/);
   assert.match(html, /<div[^>]+id="mission-popover"[^>]+role="region"[^>]+tabindex="0"[^>]+aria-labelledby="mission-popover-title"/);
   assert.match(html, /<div[^>]+id="disposition-menu"[^>]+popover="manual"/);
   assert.match(html, /<div class="layouts" role="group" aria-label="Terrain layout">/);
@@ -54,6 +62,16 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(css, /#terrain-rules-image\s*\{[\s\S]*max-height:\s*calc\(100vh - 106px\)/);
   const dispositionRule = css.match(/\.disposition-button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(dispositionRule, /\btext-align:\s*center;/);
+  const matchupRule = css.match(/\.matchup\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(matchupRule, /\bgrid-template-columns:\s*minmax\(0, 1fr\) 38px minmax\(0, 1fr\);/);
+  assert.match(matchupRule, /\bgap:\s*12px;/);
+  const twistButtonRule = css.match(/\.twist-button\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(twistButtonRule, /\bposition:\s*absolute;/);
+  assert.match(twistButtonRule, /\bleft:\s*50%;/);
+  assert.match(twistButtonRule, /\bbottom:\s*0;/);
+  assert.match(twistButtonRule, /\bwidth:\s*44px;/);
+  assert.match(twistButtonRule, /\bheight:\s*44px;/);
+  assert.match(twistButtonRule, /\btransform:\s*translate\(-50%, 50%\);/);
   assert.doesNotMatch(css, /\.disposition-select option/);
   const dispositionMenuRule = css.match(/\.disposition-menu\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(dispositionMenuRule, /\bposition:\s*fixed;/);
@@ -107,6 +125,13 @@ test('provides the compact bilingual terrain sheet UI', () => {
   const galleryGridRule = css.match(/\.layout-gallery-grid\s*\{([\s\S]*?)\}/)?.[1] ?? '';
   assert.match(galleryGridRule, /\bgrid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
   assert.match(css, /@media \(max-width: 600px\)\s*\{[\s\S]*?\.layout-gallery-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr;/);
+  const twistDialogRule = css.match(/#twist-dialog\s*\{([\s\S]*?)\}/)?.[1] ?? '';
+  assert.match(twistDialogRule, /\bdisplay:\s*grid;/);
+  assert.match(twistDialogRule, /\bgrid-template-rows:\s*auto minmax\(0, 1fr\) auto;/);
+  assert.match(twistDialogRule, /\bwidth:\s*min\(calc\(100% - env\(safe-area-inset-left\) - env\(safe-area-inset-right\) - 24px\), 620px\);/);
+  assert.match(css, /#twist-dialog-body\s*\{[\s\S]*?overflow-y:\s*auto;/);
+  assert.match(css, /#twist-dialog-footer\s*\{[\s\S]*?position:\s*sticky;/);
+  assert.doesNotMatch(css, /#twist-dialog[^{]*\{[^}]*\b(?:transform|opacity|animation|view-transition-name)\s*:/);
   const portraitRule = css.match(/@media \(orientation: portrait\) and \(max-width: 600px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
   assert.match(portraitRule, /:root\s*\{[\s\S]*?--sheet-height:\s*1280px;/);
   assert.match(portraitRule, /body\s*\{[\s\S]*?place-items:\s*start center;/);
@@ -177,6 +202,7 @@ class FakeElement {
 
   close() {
     this.open = false;
+    this.dispatch('close');
   }
 
   dispatch(type, event = {}) {
@@ -217,6 +243,7 @@ class FakeElement {
 
   showModal() {
     this.open = true;
+    this.showModalCalls = (this.showModalCalls ?? 0) + 1;
   }
 
   showPopover() {
@@ -279,7 +306,8 @@ function createAppHarness() {
     'terrain-rules-title', 'terrain-rules-image', 'layout-key-title', 'map', 'large-map', 'layout-key-button', 'layout-key-image',
     'error', 'free-layout-button', 'viewer', 'terrain-rules-viewer', 'layout-key-viewer', 'layout-gallery',
     'layout-gallery-title', 'layout-gallery-scroll', 'mission-popover', 'disposition-menu', 'terrain-rules-close', 'layout-key-close', 'close',
-    'layout-gallery-close', 'map-description',
+    'layout-gallery-close', 'map-description', 'twist-button', 'twist-button-label', 'twist-dialog', 'twist-dialog-title',
+    'twist-dialog-body', 'twist-dialog-footer', 'twist-dialog-close',
   ]) add(id, { hidden: ['error', 'mission-popover', 'disposition-menu'].includes(id) });
 
   const leftCard = new FakeElement({ className: 'selector-card' });
@@ -330,6 +358,121 @@ function createAppHarness() {
   for (const element of elements.values()) element.ownerDocument = document;
   return { document, elements, layoutButtons, window };
 }
+
+function byClass(root, className) {
+  return descendants(root).filter(item => item.className === className);
+}
+
+function byAction(root, action) {
+  return descendants(root).find(item => item.dataset.action === action);
+}
+
+function textOf(root) {
+  return [root, ...descendants(root)].map(item => item.textContent ?? '').join(' ');
+}
+
+test('keeps optional twists stable until No Twist is explicitly selected', async () => {
+  const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  const originalRandom = Math.random;
+  const missingEffects = twists.at(-1).effects.en;
+  const harness = createAppHarness();
+  const { document, elements, layoutButtons } = harness;
+  installAppGlobals(harness);
+  twists.at(-1).effects.en = [];
+
+  try {
+    await import(`../app/app.js?twist-test=${Date.now()}`);
+    const button = elements.get('twist-button');
+    const dialog = elements.get('twist-dialog');
+    const body = elements.get('twist-dialog-body');
+    const footer = elements.get('twist-dialog-footer');
+    const close = elements.get('twist-dialog-close');
+    const chooserRows = () => byClass(body, 'twist-row');
+
+    assert.equal(button.title, 'No Twist');
+    assert.equal(elements.get('twist-button-label').textContent, 'No Twist');
+    assert.equal(button.getAttribute('aria-pressed'), 'false');
+    assert.match(button.getAttribute('aria-label'), /optional/i);
+
+    button.focus();
+    button.dispatch('click');
+    assert.equal(dialog.open, true);
+    assert.equal(dialog.showModalCalls, 1);
+    assert.equal(chooserRows().length, 6);
+    assert.deepEqual(chooserRows().map(row => row.dataset.twist), twists.map(twist => twist.id));
+    assert.match(body.children[0].textContent, /optional/i);
+    assert.equal(chooserRows().at(-1).children[0].disabled, true);
+    assert.equal(chooserRows().slice(0, -1).some(row => row.children[0].disabled), false);
+
+    chooserRows()[0].children[0].dispatch('click');
+    assert.equal(byClass(body, 'twist-effects').length, 1);
+    assert.notEqual(byAction(body, 'select').disabled, true);
+    byAction(body, 'select').dispatch('click');
+    assert.equal(dialog.open, true);
+    assert.equal(dialog.showModalCalls, 1);
+    assert.equal(button.title, twists[0].name.en);
+    assert.equal(button.getAttribute('aria-pressed'), 'true');
+    assert.match(textOf(body), new RegExp(twists[0].name.en));
+
+    byAction(footer, 'change').dispatch('click');
+    assert.equal(chooserRows().length, 6);
+    chooserRows()[1].children[0].dispatch('click');
+    byAction(body, 'select').dispatch('click');
+    assert.equal(dialog.showModalCalls, 1);
+    assert.equal(button.title, twists[1].name.en);
+    assert.match(textOf(body), new RegExp(twists[1].name.en));
+
+    close.dispatch('click');
+    assert.equal(dialog.open, false);
+    assert.equal(document.activeElement, button);
+    button.dispatch('click');
+    assert.equal(dialog.showModalCalls, 2);
+    assert.match(textOf(body), new RegExp(twists[1].name.en));
+
+    byAction(footer, 'change').dispatch('click');
+    Math.random = () => 0.5;
+    byAction(footer, 'random').dispatch('click');
+    assert.equal(dialog.open, true);
+    assert.equal(dialog.showModalCalls, 2);
+    assert.equal(button.title, twists[3].name.en);
+    button.dispatch('click');
+    button.dispatch('click');
+    assert.equal(button.title, twists[3].name.en);
+    assert.equal(dialog.showModalCalls, 2);
+
+    byAction(footer, 'change').dispatch('click');
+    byAction(footer, 'none').dispatch('click');
+    assert.equal(dialog.open, true);
+    assert.equal(button.title, 'No Twist');
+    assert.equal(button.getAttribute('aria-pressed'), 'false');
+    assert.match(byClass(body, 'twist-confirmation')[0].textContent, /no twist selected/i);
+
+    for (const control of [
+      elements.get('left-disposition-button'), elements.get('right-disposition-button'),
+      elements.get('left-mission'), elements.get('right-mission'), elements.get('free-layout-button'),
+      elements.get('layout-key-button'), elements.get('terrain-rules-button'), ...layoutButtons,
+    ]) assert.notEqual(control.disabled, true);
+
+    document.querySelectorAll('[data-lang]')[0].dispatch('click');
+    assert.equal(button.title, 'Без особенности');
+    assert.match(button.getAttribute('aria-label'), /необязатель/i);
+
+    dialog.dispatch('click', { target: dialog });
+    assert.equal(dialog.open, false);
+    assert.equal(document.activeElement, button);
+    button.dispatch('click');
+    dialog.dispatch('cancel');
+    dialog.close();
+    assert.equal(button.title, 'Без особенности');
+  } finally {
+    Math.random = originalRandom;
+    twists.at(-1).effects.en = missingEffects;
+    for (const [name, descriptor] of Object.entries(saved)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
 
 test('renders and positions detailed bilingual mission references without moving the map', async () => {
   const saved = Object.fromEntries(['document', 'window', 'navigator', 'localStorage', 'getComputedStyle', 'Option'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
