@@ -96,7 +96,7 @@ test('provides complete bilingual structured references for all primary missions
 });
 
 test('locks every audited mission and Twist fact to canonical source-oracle hashes', () => {
-  assert.equal(sha256(missionReferences), 'aedc628626be67403c7b501777a41fd469af5596fc0e7a57b0de474ec17b9426');
+  assert.equal(sha256(missionReferences), '95c1b6b0e6a3bff4a0aa7a708e4ab3c0c0cccdd52c40d7b6cdce29ce450903f9');
   assert.equal(sha256(twists), '3d19696fd59c255dd8a09f7092d4bbf64857027b3e436790099f106dce799770');
 });
 
@@ -149,10 +149,31 @@ test('keeps setup, status, marker, and all reverse-side action facts in renderab
   assert.match(details, /At the start of battle, select five terrain areas/);
   assert.match(details, /condemned until the start of your next turn/);
   assert.match(details, /becomes a consecration unit/);
-  assert.match(details, /Removing the marker removes the status/);
+  assert.match(details, /Removing an operation marker also removes the status it applied/);
   assert.match(details, /When a friendly unit ends a move.*remove those markers/);
   assert.match(details, /Restriction: A unit cannot start this action if only one operation marker remains/);
   assert.match(details, /Effect: Place one of your operation markers/);
+});
+
+test('preserves operation-marker ownership and Sensor Sweep scope exactly', () => {
+  const detailText = (id, heading) => missionReferences[id].sections
+    .find(section => section.heading.en === heading).conditions.map(condition => condition.text.en);
+
+  assert.ok(detailText('consecrate', 'Mission rule').some(text => /place one of your operation markers within range/.test(text)));
+  assert.ok(detailText('triangulation', 'Triangulate').some(text => text === 'Effect: The objective is triangulated; place one of your operation markers within range.'));
+  assert.ok(detailText('smoke-and-mirrors', 'Decoy').some(text => text === 'Effect: The objective is decoyed; place one of your operation markers within range.'));
+  assert.ok(detailText('locate-and-deny', 'Setup').some(text => /place one of your operation markers in each/.test(text)));
+
+  const extractSweep = detailText('extract-relic', 'Sensor Sweep');
+  assert.ok(extractSweep.includes('Effect: Remove one operation marker from the battlefield.'));
+  assert.ok(extractSweep.includes('Restriction: A unit cannot start this action if only one operation marker remains.'));
+});
+
+test('labels marker and qualifying-unit scoring by the item that awards VP', () => {
+  const vitalMarker = missionReferences['vital-link'].sections[0].conditions[1];
+  const sabotageBonus = missionReferences.sabotage.sections[0].conditions[1];
+  assert.equal(vitalMarker.per, 'marker');
+  assert.equal(sabotageBonus.per, 'unit');
 });
 
 test('preserves exact Booby Trap eligibility through its section', () => {

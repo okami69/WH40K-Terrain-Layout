@@ -10,7 +10,7 @@ Everything needed at the table is bundled with the application, so it works with
 
 ## What's new in v0.5.0
 
-- Added optional Twists, defaulting to **No Twist**. The six choices follow Event Companion v1.1 order: Martial Pride, Mirrored World, Night Fighting, Nowhere to Hide, Ruinscape, and Scrambled Communications.
+- Added optional Twists, defaulting to **No Twist**. The six choices follow the current official Warhammer 40,000 app order: Martial Pride, Mirrored World, Night Fighting, Nowhere to Hide, Ruinscape, and Scrambled Communications.
 - Supports choosing a named Twist, selecting one at random, returning to No Twist, and reviewing the selected Twist's full effects.
 - Expanded mission references with scoring conditions, timing, per-condition VP, and the 45 VP total / 15 VP per battle round limit where applicable.
 - Made Force Disposition menus open in a deterministic centered position and balanced the map and controls in portrait layouts.

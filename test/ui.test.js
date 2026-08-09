@@ -172,6 +172,8 @@ test('provides the compact bilingual terrain sheet UI', () => {
   assert.match(js, /setDialogBackdropClose\(terrainRulesViewer\)/);
   assert.match(js, /missionReferences/);
   assert.match(js, /mission-reference-section/);
+  assert.match(js, /marker:\s*'Per marker'/);
+  assert.match(js, /marker:\s*'За маркер'/);
   assert.match(js, /--mission-popover-width/);
   assert.match(js, /trigger\.closest\('\.selector-card'\)\.getBoundingClientRect\(\)/);
   assert.match(js, /popover\.dataset\.anchor/);
@@ -1058,4 +1060,10 @@ test('publishes six current application screenshots in the README', () => {
     assert.ok(existsSync(`docs/screenshots/${screenshot}`), `Missing ${screenshot}`);
     assert.match(readme, new RegExp(`docs/screenshots/${screenshot.replaceAll('.', '\\.')}`));
   }
+});
+
+test('attributes the Twist order to the current official app', () => {
+  const readme = readFileSync('README.md', 'utf8');
+  assert.match(readme, /six choices follow the current official Warhammer 40,000 app order/i);
+  assert.doesNotMatch(readme, /six choices follow Event Companion v1\.1 order/i);
 });
